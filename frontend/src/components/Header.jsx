@@ -59,7 +59,15 @@ export const Header = () => {
       <nav className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center">
+          <Link
+            to="/"
+            onClick={() => {
+              if (isHome) window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center cursor-pointer"
+            aria-label="SkiFi Designs Home"
+            data-testid="header-logo"
+          >
             <img
               src={theme === 'dark' 
                 ? "https://customer-assets.emergentagent.com/job_4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/artifacts/hrib62cx_logo-b.svg"
@@ -68,7 +76,7 @@ export const Header = () => {
               alt="SkiFi Designs"
               className="h-7 w-auto"
             />
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
