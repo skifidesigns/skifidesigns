@@ -38,21 +38,8 @@ export const Header = () => {
 
   return (
     <>
-      {/* Availability Banner */}
-      <div className="fixed top-0 left-1/2 transform -translate-x-1/2 z-[60] mt-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-foreground/95 backdrop-blur-lg rounded-full shadow-lg shadow-black/20 border border-border">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-          </span>
-          <span className="text-xs font-medium text-background whitespace-nowrap">
-            Available for New Projects
-          </span>
-        </div>
-      </div>
-
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 mt-12 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? 'bg-background/90 backdrop-blur-lg border-b border-border shadow-xl'
             : 'bg-transparent'

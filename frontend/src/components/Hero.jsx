@@ -29,6 +29,19 @@ export const Hero = () => {
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-32 text-center">
         <div className="space-y-8 animate-fade-in">
+          {/* Availability Badge */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-foreground/10 backdrop-blur-lg rounded-full border border-border">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+              <span className="text-xs font-medium text-foreground whitespace-nowrap">
+                Available for New Projects
+              </span>
+            </div>
+          </div>
+
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-tight tracking-tight">
             Design Presentations That
             <span className="block mt-2 bg-gradient-to-r from-[#2A7AFE] to-[#3B82F6] bg-clip-text text-transparent">
