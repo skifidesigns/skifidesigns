@@ -18,13 +18,13 @@ export const Process = () => {
           {processSteps.map((step, index) => (
             <div
               key={step.id}
-              className="relative group"
+              className="relative group h-full"
             >
               {index < processSteps.length - 1 && (
                 <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-[#2A7AFE] to-transparent transform translate-x-8"></div>
               )}
               
-              <div className="relative p-8 bg-card backdrop-blur-sm border border-border rounded-2xl hover:bg-accent hover:border-[#2A7AFE]/50 transition-all duration-300 hover:scale-105">
+              <div className="relative p-8 bg-card backdrop-blur-sm border border-border rounded-2xl hover:bg-accent hover:border-[#2A7AFE]/50 transition-all duration-300 hover:scale-105 h-full flex flex-col">
                 <div className="text-6xl font-semibold text-transparent bg-gradient-to-br from-[#2A7AFE] to-[#3B82F6] bg-clip-text mb-6">
                   {step.step}
                 </div>

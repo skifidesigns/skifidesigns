@@ -26,10 +26,13 @@ export const Founder = () => {
               
               <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
                 <p>
-                  We're a creative presentation design studio based in Kerala, India, helping startups, agencies, and businesses communicate better through impactful visual storytelling.
+                  Hi, I'm Ishaque, founder of SkiFi Designs, a creative studio specializing in presentation design, pitch decks, branding, business reports, and visual storytelling.
                 </p>
                 <p>
-                  With 7+ years of experience and a team of skilled in-house designers, we create presentations that don't just look beautiful — they help brands close deals, raise funding, and stand out.
+                  With a talented in-house team of 10 experienced designers, we help startups, agencies, and businesses create modern, persuasive, and visually impactful designs that communicate ideas clearly and professionally.
+                </p>
+                <p>
+                  Our focus is on clean aesthetics, strategic layouts, premium visuals, and presentation designs that leave a lasting impression.
                 </p>
               </div>
             </div>
