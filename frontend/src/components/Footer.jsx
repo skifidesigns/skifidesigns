@@ -74,8 +74,7 @@ export const Footer = () => {
                   SKIFI GROUP LLC
                 </p>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  30 N Gould St Ste R<br />
-                  Sheridan, WY 82801<br />
+                  30 N Gould St Ste R, Sheridan, WY 82801<br />
                   United States
                 </p>
               </div>
