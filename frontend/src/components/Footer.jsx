@@ -69,9 +69,16 @@ export const Footer = () => {
                 <Phone className="w-4 h-4" />
                 WhatsApp
               </a>
-              <p className="text-muted-foreground text-sm">
-                Kerala, India
-              </p>
+              <div className="pt-2">
+                <p className="text-foreground font-semibold text-sm mb-1">
+                  SKIFI GROUP LLC
+                </p>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  30 N Gould St Ste R<br />
+                  Sheridan, WY 82801<br />
+                  United States
+                </p>
+              </div>
             </div>
           </div>
         </div>
