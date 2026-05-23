@@ -63,7 +63,7 @@ export const Header = () => {
             <img
               src={theme === 'dark' 
                 ? "https://customer-assets.emergentagent.com/job_4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/artifacts/hrib62cx_logo-b.svg"
-                : "https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/s0w69y0v_logo%20clr.svg"
+                : "https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/rl617jri_logo%20clr.svg"
               }
               alt="SkiFi Designs"
               className="h-7 w-auto"
