@@ -1,17 +1,19 @@
-import React from 'react';
-import { ArrowRight, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Calendar } from 'lucide-react';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeContext';
+import { OnboardingWizard } from './OnboardingWizard';
 
 export const Hero = () => {
   const { theme } = useTheme();
-  
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   const handleBookCall = () => {
     window.open('https://cal.com/skifi/30min', '_blank');
   };
 
-  const handleViewPortfolio = () => {
-    document.getElementById('portfolio')?.scrollIntoView({ behavior: 'smooth' });
+  const handleStartProject = () => {
+    setWizardOpen(true);
   };
 
   return (
@@ -64,13 +66,14 @@ export const Hero = () => {
             </Button>
             
             <Button
-              onClick={handleViewPortfolio}
+              onClick={handleStartProject}
               size="lg"
               variant="outline"
               className="border-2 border-border bg-card/50 backdrop-blur-sm text-foreground hover:bg-accent hover:border-[#2A7AFE]/40 px-8 py-6 text-lg font-medium rounded-lg transition-all duration-300 group"
+              data-testid="hero-start-project-btn"
             >
-              View Portfolio
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <Sparkles className="w-5 h-5 mr-2 text-[#2A7AFE] group-hover:rotate-12 transition-transform" />
+              Start a Project
             </Button>
           </div>
 
@@ -102,6 +105,12 @@ export const Hero = () => {
           <div className="w-1 h-3 bg-foreground rounded-full animate-bounce"></div>
         </div>
       </div>
+
+      <OnboardingWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        initialPlan="per_slide"
+      />
     </section>
   );
 };
