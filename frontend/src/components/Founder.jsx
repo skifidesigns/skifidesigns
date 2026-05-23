@@ -26,7 +26,7 @@ export const Founder = () => {
               
               <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
                 <p>
-                  Hi, I'm Ishaque, founder of SkiFi Designs, a creative studio specializing in presentation design, pitch decks, branding, business reports, and visual storytelling.
+                  We're SkiFi Designs, a creative studio specializing in presentation design, pitch decks, branding, business reports, and visual storytelling.
                 </p>
                 <p>
                   With a talented in-house team of 10 experienced designers, we help startups, agencies, and businesses create modern, persuasive, and visually impactful designs that communicate ideas clearly and professionally.

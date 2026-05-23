@@ -2,14 +2,14 @@ import React from 'react';
 import { Phone } from 'lucide-react';
 
 export const FloatingContact = () => {
-  const phoneNumber = '+919746018630';
+  const phoneNumber = '+917827087878';
   const whatsappMessage = encodeURIComponent(
     "Hi SkiFi Team, I'd like to get a FREE Pitchdeck Review."
   );
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-40 flex items-stretch shadow-2xl rounded-full bg-white border border-gray-200 overflow-hidden"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-stretch shadow-2xl rounded-full bg-white border border-gray-200 overflow-hidden"
       data-testid="floating-contact"
     >
       {/* WhatsApp side */}

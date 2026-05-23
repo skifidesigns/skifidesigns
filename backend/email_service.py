@@ -63,7 +63,7 @@ def _client_html(full_name: str, package_label: str, amount: float, currency: st
             <li>First drafts delivered within your selected timeline.</li>
           </ol>
           <p style="margin:0;font-size:14px;color:#555;">
-            Questions? Reply to this email or WhatsApp us on <a href="https://wa.me/919746018630" style="color:{BRAND_COLOR};text-decoration:none;">+91 97460 18630</a>.
+            Questions? Reply to this email or WhatsApp us on <a href="https://wa.me/917827087878" style="color:{BRAND_COLOR};text-decoration:none;">+91 78270 87878</a>.
           </p>
         </td></tr>
         <tr><td style="padding:24px 40px;background:#fafafa;border-top:1px solid #eee;text-align:center;">
