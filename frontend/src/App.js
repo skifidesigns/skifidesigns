@@ -18,6 +18,7 @@ import { FinalCTA } from "./components/FinalCTA";
 import { Footer } from "./components/Footer";
 import { FloatingContact } from "./components/FloatingContact";
 import { PaymentSuccess } from "./components/PaymentSuccess";
+import { AdminPanel } from "./components/AdminPanel";
 
 const Home = () => {
   return (
@@ -59,6 +60,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/admin" element={<AdminPanel />} />
           </Routes>
         </BrowserRouter>
       </div>
