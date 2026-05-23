@@ -1,0 +1,10 @@
+# SkiFi Designs — robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /payment-success
+Disallow: /auth/callback
+
+# Sitemap
+Sitemap: https://skifidesigns.com/sitemap.xml

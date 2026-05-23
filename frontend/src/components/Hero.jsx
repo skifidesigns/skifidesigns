@@ -50,7 +50,7 @@ export const Hero = () => {
           </h1>
           
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Premium presentation design studio helping founders, agencies, and global brands communicate with clarity, confidence, and impact.
+            Premium presentation design agency specialising in investor pitch decks, sales decks and PowerPoint design for founders, agencies, and global brands.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
