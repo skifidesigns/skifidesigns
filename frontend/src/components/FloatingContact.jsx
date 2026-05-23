@@ -9,7 +9,7 @@ export const FloatingContact = () => {
 
   return (
     <div
-      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 flex items-stretch rounded-full overflow-hidden bg-white/20 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.2)] supports-[backdrop-filter]:bg-white/20"
+      className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-stretch rounded-full overflow-hidden bg-white/20 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.2)] supports-[backdrop-filter]:bg-white/20"
       data-testid="floating-contact"
     >
       {/* WhatsApp side */}
