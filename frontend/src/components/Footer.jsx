@@ -20,7 +20,7 @@ export const Footer = () => {
   return (
     <footer className="bg-background border-t border-border">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-8">
           <div>
             <img
               src={theme === 'dark' 
@@ -55,6 +55,13 @@ export const Footer = () => {
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a
+                href="/blog"
+                className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200"
+              >
+                Blog
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <a
                 href="https://cal.com/skifi/30min"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -63,6 +70,16 @@ export const Footer = () => {
                 Book a Meeting
                 <ExternalLink className="w-4 h-4" />
               </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-foreground font-semibold mb-4 text-lg">Legal</h3>
+            <div className="space-y-3">
+              <a href="/privacy" className="block text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200" data-testid="footer-privacy">Privacy Policy</a>
+              <a href="/terms" className="block text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200" data-testid="footer-terms">Terms of Service</a>
+              <a href="/refund-policy" className="block text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200" data-testid="footer-refund">Refund Policy</a>
+              <a href="/cookies" className="block text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200" data-testid="footer-cookies">Cookie Policy</a>
             </div>
           </div>
 

@@ -1000,6 +1000,10 @@ async def dynamic_sitemap():
         (f"{base}/", today, "1.0", "weekly"),
         (f"{base}/resources", today, "0.8", "weekly"),
         (f"{base}/blog", today, "0.9", "daily"),
+        (f"{base}/privacy", today, "0.3", "yearly"),
+        (f"{base}/terms", today, "0.3", "yearly"),
+        (f"{base}/refund-policy", today, "0.3", "yearly"),
+        (f"{base}/cookies", today, "0.3", "yearly"),
     ]
     posts = await db.blog_posts.find(
         {"is_published": True}, {"_id": 0, "slug": 1, "updated_at": 1, "created_at": 1}
