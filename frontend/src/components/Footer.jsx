@@ -37,12 +37,10 @@ export const Footer = () => {
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a
-                href="https://www.fiverr.com/skifidesigns"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/resources"
                 className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200"
               >
-                Order on Fiverr
+                Free Templates
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a

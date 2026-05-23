@@ -7,6 +7,10 @@ export const FinalCTA = () => {
     window.open('https://cal.com/skifi/30min', '_blank');
   };
 
+  const handleStartProject = () => {
+    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="py-24 bg-background relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -32,7 +36,7 @@ export const FinalCTA = () => {
           </Button>
           
           <Button
-            onClick={() => window.open('https://www.fiverr.com/skifidesigns', '_blank')}
+            onClick={handleStartProject}
             size="lg"
             variant="outline"
             className="border-2 border-border bg-card backdrop-blur-sm text-foreground hover:bg-accent hover:border-[#2A7AFE]/40 px-10 py-7 text-lg font-medium rounded-xl transition-all duration-300 group"
