@@ -1,6 +1,17 @@
 import React from 'react';
 import { ExternalLink, Phone } from 'lucide-react';
+import { FaInstagram, FaFacebookF, FaLinkedinIn, FaBehance, FaPinterestP } from 'react-icons/fa';
+import { SiFiverr } from 'react-icons/si';
 import { useTheme } from '../context/ThemeContext';
+
+const SOCIALS = [
+  { label: 'Instagram', href: 'https://www.instagram.com/skifidesigns/', Icon: FaInstagram },
+  { label: 'Facebook', href: 'https://www.facebook.com/skifidesigns/', Icon: FaFacebookF },
+  { label: 'LinkedIn', href: 'https://in.linkedin.com/company/skifi', Icon: FaLinkedinIn },
+  { label: 'Behance', href: 'https://www.behance.net/skifidesigns', Icon: FaBehance },
+  { label: 'Pinterest', href: 'https://in.pinterest.com/skifidesigns/', Icon: FaPinterestP },
+  { label: 'Fiverr', href: 'https://www.fiverr.com/skifidesigns', Icon: SiFiverr },
+];
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -63,10 +74,30 @@ export const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200"
+                data-testid="footer-whatsapp"
               >
                 <Phone className="w-4 h-4" />
                 WhatsApp
               </a>
+
+              {/* Social links */}
+              <div className="flex flex-wrap gap-2 pt-1" data-testid="footer-socials">
+                {SOCIALS.map(({ label, href, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    data-testid={`footer-social-${label.toLowerCase()}`}
+                    className="w-9 h-9 inline-flex items-center justify-center rounded-full border border-border bg-card/40 text-muted-foreground hover:text-white hover:bg-[#2A7AFE] hover:border-[#2A7AFE] hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+
               <div className="pt-2">
                 <p className="text-foreground font-semibold text-sm mb-1">
                   SKIFI GROUP LLC
@@ -87,28 +118,24 @@ export const Footer = () => {
             </p>
             <div className="flex gap-6">
               <a
-                href="https://www.linkedin.com/in/skifidesigns"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/blog"
                 className="text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 text-sm"
               >
-                LinkedIn
+                Blog
               </a>
               <a
-                href="https://www.behance.net/skifidesigns"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/resources"
                 className="text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 text-sm"
               >
-                Behance
+                Resources
               </a>
               <a
-                href="http://www.skifidesigns.com/"
+                href="https://cal.com/skifi/30min"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 text-sm"
               >
-                Website
+                Book a Call
               </a>
             </div>
           </div>
