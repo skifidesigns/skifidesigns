@@ -55,8 +55,8 @@ export const TrustedBy = () => {
             <div className="text-sm text-muted-foreground">Clients Worldwide</div>
           </div>
           <div className="text-center p-6 bg-gradient-to-br from-[#2A7AFE]/10 to-[#3B82F6]/10 backdrop-blur-sm border border-[#2A7AFE]/20 rounded-xl">
-            <div className="text-3xl font-semibold text-foreground mb-2">Fast</div>
-            <div className="text-sm text-muted-foreground">Turnarounds</div>
+            <div className="text-3xl font-semibold text-foreground mb-2">43+</div>
+            <div className="text-sm text-muted-foreground">Countries</div>
           </div>
         </div>
       </div>
