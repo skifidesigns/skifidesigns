@@ -1,8 +1,11 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Cookie
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Cookie, UploadFile, File
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
+from bson import ObjectId
 import os
+import io
 import logging
 import secrets
 import httpx
@@ -37,6 +40,7 @@ from email_service import send_payment_emails  # noqa: E402
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+fs_bucket = AsyncIOMotorGridFSBucket(db, bucket_name="onboarding_uploads")
 
 # Stripe config
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
@@ -90,6 +94,7 @@ class OnboardingRequest(BaseModel):
     timeline: str = Field(..., max_length=80)
     description: str = Field(..., min_length=10, max_length=2000)
     origin_url: str
+    file_ids: List[str] = Field(default_factory=list, max_length=10)
 
 
 class PaymentTransaction(BaseModel):
@@ -111,6 +116,7 @@ class PaymentTransaction(BaseModel):
     status: str = "initiated"
     mode: str = "payment"           # payment | subscription
     emails_sent: bool = False
+    file_ids: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, str] = Field(default_factory=dict)
@@ -283,12 +289,24 @@ async def create_onboarding_checkout(payload: OnboardingRequest, http_request: R
         payment_status="pending",
         status="initiated",
         mode=mode,
+        file_ids=payload.file_ids or [],
         metadata=metadata,
     )
     doc = tx.model_dump()
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     await db.payment_transactions.insert_one(doc)
+
+    # Tag GridFS files with this session for traceability
+    if payload.file_ids:
+        for fid in payload.file_ids:
+            try:
+                await db["onboarding_uploads.files"].update_one(
+                    {"_id": ObjectId(fid)},
+                    {"$set": {"metadata.session_id": session_id, "metadata.email": payload.email}},
+                )
+            except Exception:
+                pass
 
     return {
         "url": session_url,
@@ -304,6 +322,21 @@ async def _maybe_send_emails(tx: dict):
     if tx.get("emails_sent"):
         return
     try:
+        # Look up attached files (if any) for admin notification
+        files_info = []
+        for fid in (tx.get("file_ids") or []):
+            try:
+                fdoc = await db["onboarding_uploads.files"].find_one(
+                    {"_id": ObjectId(fid)}, {"filename": 1, "length": 1}
+                )
+                if fdoc:
+                    files_info.append({
+                        "filename": fdoc.get("filename"),
+                        "size": fdoc.get("length", 0),
+                    })
+            except Exception:
+                pass
+
         result = await send_payment_emails(
             full_name=tx["full_name"],
             email=tx["email"],
@@ -315,6 +348,7 @@ async def _maybe_send_emails(tx: dict):
             timeline=tx["timeline"],
             slide_count=tx.get("slide_count"),
             description=tx["description"],
+            files=files_info,
         )
         await db.payment_transactions.update_one(
             {"session_id": tx["session_id"]},
@@ -818,6 +852,127 @@ async def my_library(user: dict = Depends(require_user)):
             "purchased_at": p.get("created_at"),
         })
     return {"items": items}
+
+
+# ===================== Onboarding File Uploads (GridFS) =====================
+ALLOWED_UPLOAD_EXT = {
+    ".pdf", ".pptx", ".ppt", ".key", ".doc", ".docx", ".odp",
+    ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg",
+    ".ai", ".psd", ".fig", ".sketch",
+    ".zip", ".rar",
+    ".txt", ".md", ".csv", ".xlsx",
+}
+MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB per file
+
+
+def _safe_filename(name: str) -> str:
+    name = (name or "upload.bin").replace("\\", "/").split("/")[-1]
+    # Strip null bytes & control chars
+    return "".join(c for c in name if c.isprintable())[:160] or "upload.bin"
+
+
+@api_router.post("/onboarding/upload")
+async def upload_onboarding_file(file: UploadFile = File(...)):
+    """Accepts a single file from the onboarding wizard and stores it in GridFS.
+    Returns the file id and metadata so the frontend can attach it to the order."""
+    filename = _safe_filename(file.filename)
+    ext = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+    if ext not in ALLOWED_UPLOAD_EXT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type {ext or 'unknown'} is not allowed.",
+        )
+
+    # Stream in chunks while enforcing size limit
+    buffer = io.BytesIO()
+    total = 0
+    chunk_size = 1024 * 256  # 256KB
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="File exceeds 50 MB limit.")
+        buffer.write(chunk)
+    buffer.seek(0)
+
+    if total == 0:
+        raise HTTPException(status_code=400, detail="Empty file.")
+
+    metadata = {
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "content_type": file.content_type or "application/octet-stream",
+        "original_name": filename,
+    }
+    file_id = await fs_bucket.upload_from_stream(
+        filename, buffer, metadata=metadata,
+    )
+    return {
+        "file_id": str(file_id),
+        "filename": filename,
+        "size": total,
+        "content_type": metadata["content_type"],
+    }
+
+
+@api_router.get("/admin/files/{file_id}")
+async def admin_download_file(file_id: str, _: str = Depends(require_admin)):
+    """Admin-only: stream a previously uploaded onboarding file."""
+    try:
+        oid = ObjectId(file_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid file id")
+
+    file_doc = await db["onboarding_uploads.files"].find_one({"_id": oid})
+    if not file_doc:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    stream = await fs_bucket.open_download_stream(oid)
+    content_type = (file_doc.get("metadata") or {}).get("content_type", "application/octet-stream")
+    filename = file_doc.get("filename", "download.bin")
+
+    async def iterator():
+        while True:
+            chunk = await stream.readchunk()
+            if not chunk:
+                break
+            yield chunk
+
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(iterator(), media_type=content_type, headers=headers)
+
+
+@api_router.get("/admin/orders/{session_id}/files")
+async def admin_list_order_files(session_id: str, _: str = Depends(require_admin)):
+    """Admin-only: list files attached to a specific order/session."""
+    tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0, "file_ids": 1})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    file_ids = tx.get("file_ids") or []
+    if not file_ids:
+        return {"items": []}
+
+    object_ids = []
+    for fid in file_ids:
+        try:
+            object_ids.append(ObjectId(fid))
+        except Exception:
+            continue
+    docs = await db["onboarding_uploads.files"].find(
+        {"_id": {"$in": object_ids}}, {"_id": 1, "filename": 1, "length": 1, "metadata": 1}
+    ).to_list(20)
+    return {
+        "items": [
+            {
+                "file_id": str(d["_id"]),
+                "filename": d.get("filename"),
+                "size": d.get("length", 0),
+                "content_type": (d.get("metadata") or {}).get("content_type"),
+            }
+            for d in docs
+        ]
+    }
 
 
 # ===================== Admin Templates =====================

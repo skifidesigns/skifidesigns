@@ -133,13 +133,19 @@ def _send_sync(params: dict) -> Optional[str]:
 async def send_payment_emails(*, full_name: str, email: str, company: Optional[str],
                               package_id: str, amount: float, currency: str,
                               project_type: str, timeline: str,
-                              slide_count: Optional[int], description: str) -> dict:
+                              slide_count: Optional[int], description: str,
+                              files: Optional[list] = None) -> dict:
     """Sends client receipt + admin notification. Non-blocking."""
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY not set — skipping emails")
         return {"client": None, "admin": None, "skipped": True}
 
     package_label = "Per Slide" if package_id == "per_slide" else "Monthly Retainer"
+    files = files or []
+    if files:
+        description = description + "\n\n📎 Client attached " + str(len(files)) + " file(s): " + \
+            ", ".join(f.get("filename", "file") for f in files) + \
+            "\n→ Download from Admin Panel → Orders."
 
     client_params = {
         "from": f"SkiFi Designs <{SENDER_EMAIL}>",

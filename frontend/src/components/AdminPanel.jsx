@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
-  Layout, Plus, Trash2, Pencil, X, BookOpen, Eye
+  Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -830,6 +830,98 @@ const BlogManager = ({ token }) => {
   );
 };
 
+// =================== ORDER FILES (admin) ===================
+const formatBytes = (b) => {
+  if (!b && b !== 0) return '';
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const OrderFiles = ({ sessionId, fileCount, token }) => {
+  const [open, setOpen] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const toggleOpen = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && files.length === 0) {
+      setLoading(true);
+      try {
+        const { data } = await axios.get(`${API}/admin/orders/${sessionId}/files`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFiles(data.items || []);
+      } catch {
+        toast.error('Could not load files');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const downloadFile = async (file_id, filename) => {
+    try {
+      const resp = await axios.get(`${API}/admin/files/${file_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(resp.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(`Could not download ${filename}`);
+    }
+  };
+
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={toggleOpen}
+        data-testid={`order-files-toggle-${sessionId}`}
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2A7AFE] hover:underline"
+      >
+        <Paperclip className="w-3 h-3" />
+        {open ? 'Hide' : 'Show'} {fileCount} attached file{fileCount !== 1 ? 's' : ''}
+      </button>
+      {open && (
+        <ul className="mt-2 space-y-1.5" data-testid={`order-files-list-${sessionId}`}>
+          {loading && (
+            <li className="text-xs text-muted-foreground">
+              <Loader2 className="w-3 h-3 animate-spin inline mr-1" /> Loading…
+            </li>
+          )}
+          {!loading && files.length === 0 && (
+            <li className="text-xs text-muted-foreground">No files found.</li>
+          )}
+          {!loading && files.map((f) => (
+            <li key={f.file_id} className="flex items-center gap-2 text-xs bg-background border border-border rounded-md px-2 py-1.5">
+              <FileText className="w-3.5 h-3.5 text-[#2A7AFE] shrink-0" />
+              <span className="flex-grow truncate text-foreground" title={f.filename}>{f.filename}</span>
+              <span className="text-muted-foreground shrink-0">{formatBytes(f.size)}</span>
+              <button
+                onClick={() => downloadFile(f.file_id, f.filename)}
+                data-testid={`download-file-${f.file_id}`}
+                aria-label="Download"
+                className="p-1 rounded hover:bg-accent text-[#2A7AFE] shrink-0"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
@@ -1064,6 +1156,13 @@ const Dashboard = ({ token, onLogout }) => {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-xs" title={item.description}>
                         {item.description}
                       </p>
+                      {(item.file_ids?.length || 0) > 0 && (
+                        <OrderFiles
+                          sessionId={item.session_id}
+                          fileCount={item.file_ids.length}
+                          token={token}
+                        />
+                      )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <p className="text-foreground font-medium">

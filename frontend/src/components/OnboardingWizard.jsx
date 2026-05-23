@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { X, ArrowRight, ArrowLeft, Loader2, Check } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Loader2, Check, Upload, File as FileIcon, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -22,9 +22,22 @@ const PROJECT_TYPES = [
 
 const TIMELINES = ['ASAP (1–3 days)', 'Within 1 week', '1–2 weeks', 'Flexible'];
 
+const MAX_FILES = 5;
+const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+const ACCEPT_EXT = '.pdf,.pptx,.ppt,.key,.doc,.docx,.odp,.png,.jpg,.jpeg,.webp,.gif,.svg,.ai,.psd,.fig,.sketch,.zip,.rar,.txt,.md,.csv,.xlsx';
+
+const formatBytes = (b) => {
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);  // [{file_id, filename, size}]
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     package_id: initialPlan || 'per_slide',
     slide_count: 10,
@@ -43,11 +56,56 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
   }, [initialPlan]);
 
   useEffect(() => {
-    if (open) setStep(1);
+    if (open) {
+      setStep(1);
+      setUploadedFiles([]);
+    }
   }, [open]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFilesSelected = async (fileList) => {
+    if (!fileList?.length) return;
+    const slotsLeft = MAX_FILES - uploadedFiles.length;
+    if (slotsLeft <= 0) {
+      toast.error(`You can upload up to ${MAX_FILES} files.`);
+      return;
+    }
+    const incoming = Array.from(fileList).slice(0, slotsLeft);
+    setUploading(true);
+
+    for (const file of incoming) {
+      if (file.size > MAX_BYTES) {
+        toast.error(`${file.name} exceeds 50 MB.`);
+        continue;
+      }
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const { data } = await axios.post(`${API}/onboarding/upload`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setUploadedFiles((prev) => [...prev, data]);
+        toast.success(`${data.filename} uploaded`);
+      } catch (err) {
+        const msg = err?.response?.data?.detail || 'Upload failed';
+        toast.error(`${file.name}: ${msg}`);
+      }
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveFile = (file_id) => {
+    setUploadedFiles((prev) => prev.filter((f) => f.file_id !== file_id));
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleFilesSelected(e.dataTransfer.files);
   };
 
   const totalSteps = 4;
@@ -89,6 +147,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
         timeline: formData.timeline,
         description: formData.description.trim(),
         origin_url: window.location.origin,
+        file_ids: uploadedFiles.map((f) => f.file_id),
       };
 
       const { data } = await axios.post(`${API}/onboarding/create-checkout`, payload);
@@ -292,6 +351,63 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                   Minimum 10 characters ({formData.description.trim().length}/10)
                 </p>
               </div>
+
+              {/* File uploads */}
+              <div>
+                <Label className="text-foreground mb-2 block">
+                  Upload existing decks, brief, brand assets <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <div
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-border hover:border-[#2A7AFE]/60 hover:bg-[#2A7AFE]/5 rounded-xl px-4 py-6 text-center cursor-pointer transition-colors"
+                  data-testid="wizard-dropzone"
+                >
+                  <Upload className="w-7 h-7 mx-auto text-[#2A7AFE] mb-2" />
+                  <p className="text-sm text-foreground font-medium">
+                    {uploading ? 'Uploading…' : 'Drop files here or click to browse'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PPTX, PDF, images, brand kits · up to 50 MB each · max {MAX_FILES} files
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPT_EXT}
+                  className="hidden"
+                  data-testid="wizard-file-input"
+                  onChange={(e) => handleFilesSelected(e.target.files)}
+                />
+
+                {uploadedFiles.length > 0 && (
+                  <ul className="mt-3 space-y-2" data-testid="wizard-uploaded-list">
+                    {uploadedFiles.map((f) => (
+                      <li
+                        key={f.file_id}
+                        className="flex items-center gap-3 bg-card border border-border rounded-lg px-3 py-2"
+                      >
+                        <FileIcon className="w-4 h-4 text-[#2A7AFE] shrink-0" />
+                        <div className="flex-grow min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{f.filename}</p>
+                          <p className="text-xs text-muted-foreground">{formatBytes(f.size)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(f.file_id)}
+                          data-testid={`remove-file-${f.file_id}`}
+                          aria-label="Remove file"
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 
@@ -327,6 +443,12 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                     <span className="text-muted-foreground">Contact</span>
                     <span className="text-foreground font-medium">{formData.email}</span>
                   </div>
+                  {uploadedFiles.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Attached files</span>
+                      <span className="text-foreground font-medium">{uploadedFiles.length}</span>
+                    </div>
+                  )}
                   <div className="pt-3 mt-3 border-t border-border flex justify-between items-baseline">
                     <span className="text-foreground font-semibold">Total</span>
                     <span className="text-2xl font-semibold text-[#2A7AFE]">
