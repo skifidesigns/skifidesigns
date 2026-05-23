@@ -1,12 +1,13 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Cookie
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import secrets
+import httpx
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, HttpUrl
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -327,27 +328,34 @@ async def _maybe_send_emails(tx: dict):
 
 @api_router.get("/payments/status/{session_id}")
 async def get_payment_status(session_id: str):
+    # Check both payment_transactions (projects) and template_purchases (templates)
     tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    template_tx = None
     if not tx:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+        template_tx = await db.template_purchases.find_one({"session_id": session_id}, {"_id": 0})
+        if not template_tx:
+            raise HTTPException(status_code=404, detail="Transaction not found")
 
-    if tx.get("payment_status") in ("paid", "failed", "expired"):
-        # Ensure emails sent if missed
-        if tx.get("payment_status") == "paid":
-            await _maybe_send_emails(tx)
+    active_tx = tx or template_tx
+    is_template = tx is None
+
+    if active_tx.get("payment_status") in ("paid", "failed", "expired"):
+        if active_tx.get("payment_status") == "paid" and not is_template:
+            await _maybe_send_emails(active_tx)
         return {
             "session_id": session_id,
-            "payment_status": tx["payment_status"],
-            "status": tx.get("status", "complete"),
-            "amount": tx["amount"],
-            "currency": tx["currency"],
+            "payment_status": active_tx["payment_status"],
+            "status": active_tx.get("status", "complete"),
+            "amount": active_tx["amount"],
+            "currency": active_tx["currency"],
+            "kind": "template" if is_template else "project",
         }
 
     # Poll Stripe — different path for subscription vs payment
     new_payment_status = "pending"
     new_status = "open"
     try:
-        if tx.get("mode") == "subscription":
+        if (not is_template) and tx.get("mode") == "subscription":
             session = stripe_sdk.checkout.Session.retrieve(session_id)
             new_payment_status = session.payment_status or "pending"
             new_status = session.status or "open"
@@ -360,23 +368,32 @@ async def get_payment_status(session_id: str):
         logger.exception("Failed to fetch Stripe status")
         raise HTTPException(status_code=500, detail=str(e))
 
-    await db.payment_transactions.update_one(
-        {"session_id": session_id},
-        {"$set": {"payment_status": new_payment_status, "status": new_status,
-                  "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
-
-    if new_payment_status == "paid":
-        updated_tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-        if updated_tx:
-            await _maybe_send_emails(updated_tx)
+    # Update whichever collection this session belongs to
+    if not is_template:
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": new_payment_status, "status": new_status,
+                      "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        if new_payment_status == "paid":
+            updated_tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+            if updated_tx:
+                await _maybe_send_emails(updated_tx)
+    else:
+        await db.template_purchases.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": new_payment_status,
+                      "status": "complete" if new_payment_status == "paid" else new_status,
+                      "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
 
     return {
         "session_id": session_id,
         "payment_status": new_payment_status,
         "status": new_status,
-        "amount": tx["amount"],
-        "currency": tx["currency"],
+        "amount": active_tx["amount"],
+        "currency": active_tx["currency"],
+        "kind": "template" if is_template else "project",
     }
 
 
@@ -393,6 +410,7 @@ async def stripe_webhook(request: Request):
         return {"received": True}
 
     if event.session_id:
+        # First check payment_transactions
         tx = await db.payment_transactions.find_one({"session_id": event.session_id}, {"_id": 0})
         if tx and tx.get("payment_status") not in ("paid", "failed", "expired"):
             await db.payment_transactions.update_one(
@@ -405,6 +423,14 @@ async def stripe_webhook(request: Request):
                 updated_tx = await db.payment_transactions.find_one({"session_id": event.session_id}, {"_id": 0})
                 if updated_tx:
                     await _maybe_send_emails(updated_tx)
+        else:
+            # Then check template_purchases
+            await db.template_purchases.update_one(
+                {"session_id": event.session_id, "payment_status": {"$ne": "paid"}},
+                {"$set": {"payment_status": event.payment_status,
+                          "status": "complete" if event.payment_status == "paid" else "open",
+                          "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
 
     return {"received": True}
 
@@ -468,6 +494,376 @@ async def admin_list_submissions(
 @api_router.get("/admin/me")
 async def admin_me(_: str = Depends(require_admin)):
     return {"authenticated": True}
+
+
+# ===================== Auth (Google via Emergent) =====================
+EMERGENT_AUTH_SESSION_DATA_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+
+
+class UserModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    email: str
+    name: Optional[str] = None
+    picture: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+async def _get_user_from_token(session_token: Optional[str]) -> Optional[dict]:
+    if not session_token:
+        return None
+    sess = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+    if not sess:
+        return None
+    expires_at = sess.get("expires_at")
+    if isinstance(expires_at, str):
+        try:
+            expires_at = datetime.fromisoformat(expires_at)
+        except Exception:
+            return None
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at and expires_at < datetime.now(timezone.utc):
+        return None
+    user = await db.users.find_one({"user_id": sess["user_id"]}, {"_id": 0})
+    return user
+
+
+async def require_user(
+    request: Request,
+    session_token: Optional[str] = Cookie(None),
+    authorization: Optional[str] = Header(None),
+) -> dict:
+    token = session_token
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+    user = await _get_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+@api_router.post("/auth/session")
+async def auth_session(request: Request, response: Response):
+    """Exchange Emergent session_id (sent in X-Session-ID header) for backend session."""
+    sess_id = request.headers.get("X-Session-ID") or request.headers.get("x-session-id")
+    if not sess_id:
+        raise HTTPException(status_code=400, detail="Missing X-Session-ID header")
+
+    # Call Emergent Auth to get user data
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http_client:
+            r = await http_client.get(
+                EMERGENT_AUTH_SESSION_DATA_URL,
+                headers={"X-Session-ID": sess_id},
+            )
+        if r.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        data = r.json()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Emergent Auth verification failed")
+        raise HTTPException(status_code=502, detail=f"Auth service error: {str(e)}")
+
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No email returned from auth provider")
+
+    # Find existing user or create one
+    existing = await db.users.find_one({"email": email}, {"_id": 0})
+    if existing:
+        user_id = existing["user_id"]
+        # Update name/picture if changed
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": data.get("name") or existing.get("name"),
+                "picture": data.get("picture") or existing.get("picture"),
+                "last_login_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+    else:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id,
+            "email": email,
+            "name": data.get("name"),
+            "picture": data.get("picture"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_login_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    # Use Emergent's session_token if provided, else generate our own
+    session_token = data.get("session_token") or secrets.token_urlsafe(48)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    # Set httpOnly cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        max_age=7 * 24 * 3600,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+    )
+
+    return {
+        "user_id": user_id,
+        "email": email,
+        "name": data.get("name"),
+        "picture": data.get("picture"),
+        "session_token": session_token,
+    }
+
+
+@api_router.get("/auth/me")
+async def auth_me(user: dict = Depends(require_user)):
+    return {
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "name": user.get("name"),
+        "picture": user.get("picture"),
+    }
+
+
+@api_router.post("/auth/logout")
+async def auth_logout(response: Response, session_token: Optional[str] = Cookie(None)):
+    if session_token:
+        await db.user_sessions.delete_one({"session_token": session_token})
+    response.delete_cookie("session_token", path="/", samesite="none", secure=True)
+    return {"success": True}
+
+
+# ===================== Templates =====================
+class TemplateModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str = Field(..., min_length=2, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
+    category: str = Field(..., max_length=80)  # Pitch Deck, Sales Deck, etc.
+    type: str = Field(..., pattern="^(free|paid)$")
+    price: float = Field(0.0, ge=0)
+    thumbnail_url: str
+    file_url: Optional[str] = None             # download URL (hidden from public)
+    preview_url: Optional[str] = None          # optional online preview link
+    tags: List[str] = Field(default_factory=list)
+    is_published: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class TemplateCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
+    category: str = Field(..., max_length=80)
+    type: str = Field(..., pattern="^(free|paid)$")
+    price: float = Field(0.0, ge=0)
+    thumbnail_url: str
+    file_url: Optional[str] = None
+    preview_url: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_published: bool = True
+
+
+def _public_template(doc: dict) -> dict:
+    """Strip file_url from public response (download requires auth/payment)."""
+    return {
+        "id": doc["id"],
+        "title": doc["title"],
+        "description": doc.get("description"),
+        "category": doc["category"],
+        "type": doc["type"],
+        "price": doc.get("price", 0),
+        "thumbnail_url": doc["thumbnail_url"],
+        "preview_url": doc.get("preview_url"),
+        "tags": doc.get("tags", []),
+        "created_at": doc.get("created_at"),
+    }
+
+
+@api_router.get("/templates")
+async def list_templates(
+    category: Optional[str] = None,
+    type: Optional[str] = None,
+    search: Optional[str] = None,
+):
+    query = {"is_published": True}
+    if category and category != "all":
+        query["category"] = category
+    if type and type in ("free", "paid"):
+        query["type"] = type
+    if search:
+        query["title"] = {"$regex": search, "$options": "i"}
+
+    docs = await db.templates.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"items": [_public_template(d) for d in docs]}
+
+
+@api_router.get("/templates/{template_id}")
+async def get_template(template_id: str):
+    doc = await db.templates.find_one({"id": template_id, "is_published": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return _public_template(doc)
+
+
+@api_router.post("/templates/{template_id}/access")
+async def access_template(
+    template_id: str,
+    request: Request,
+    user: dict = Depends(require_user),
+):
+    """For FREE templates → return download URL immediately.
+    For PAID templates → create a Stripe checkout session and return its URL.
+    """
+    doc = await db.templates.find_one({"id": template_id, "is_published": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    if doc["type"] == "free":
+        # Log download
+        await db.template_downloads.insert_one({
+            "id": str(uuid.uuid4()),
+            "template_id": template_id,
+            "user_id": user["user_id"],
+            "email": user["email"],
+            "downloaded_at": datetime.now(timezone.utc).isoformat(),
+        })
+        return {
+            "type": "free",
+            "download_url": doc.get("file_url"),
+        }
+
+    # Paid: check if user already purchased
+    existing_purchase = await db.template_purchases.find_one(
+        {"template_id": template_id, "user_id": user["user_id"], "payment_status": "paid"},
+        {"_id": 0},
+    )
+    if existing_purchase:
+        return {
+            "type": "paid",
+            "already_purchased": True,
+            "download_url": doc.get("file_url"),
+        }
+
+    # Create Stripe checkout for paid template
+    body = await request.json() if request.headers.get("content-length") not in ("0", None) else {}
+    origin = (body.get("origin_url") or str(request.base_url)).rstrip("/")
+    success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&template=1"
+    cancel_url = f"{origin}/resources?payment=cancelled"
+
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+
+    metadata = {
+        "kind": "template_purchase",
+        "template_id": template_id,
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "title": doc["title"][:200],
+    }
+    checkout_request = CheckoutSessionRequest(
+        amount=float(doc["price"]),
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+    )
+    try:
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+    except Exception as e:
+        logger.exception("Template checkout creation failed")
+        raise HTTPException(status_code=500, detail=f"Payment provider error: {str(e)}")
+
+    await db.template_purchases.insert_one({
+        "id": str(uuid.uuid4()),
+        "template_id": template_id,
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "session_id": session.session_id,
+        "amount": float(doc["price"]),
+        "currency": "usd",
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {
+        "type": "paid",
+        "checkout_url": session.url,
+        "session_id": session.session_id,
+    }
+
+
+@api_router.get("/me/library")
+async def my_library(user: dict = Depends(require_user)):
+    """User's purchased + downloaded templates with full file URLs."""
+    purchases = await db.template_purchases.find(
+        {"user_id": user["user_id"], "payment_status": "paid"},
+        {"_id": 0},
+    ).to_list(500)
+    template_ids = list({p["template_id"] for p in purchases})
+    templates = await db.templates.find({"id": {"$in": template_ids}}, {"_id": 0}).to_list(500)
+    by_id = {t["id"]: t for t in templates}
+    items = []
+    for p in purchases:
+        t = by_id.get(p["template_id"])
+        if not t:
+            continue
+        items.append({
+            **_public_template(t),
+            "download_url": t.get("file_url"),
+            "purchased_at": p.get("created_at"),
+        })
+    return {"items": items}
+
+
+# ===================== Admin Templates =====================
+@api_router.post("/admin/templates")
+async def admin_create_template(payload: TemplateCreate, _: str = Depends(require_admin)):
+    if payload.type == "paid" and payload.price <= 0:
+        raise HTTPException(status_code=400, detail="Paid templates require price > 0")
+    tpl = TemplateModel(**payload.model_dump())
+    doc = tpl.model_dump()
+    doc["created_at"] = doc["created_at"].isoformat()
+    await db.templates.insert_one(doc)
+    return _public_template(doc) | {"file_url": doc.get("file_url")}
+
+
+@api_router.patch("/admin/templates/{template_id}")
+async def admin_update_template(template_id: str, payload: dict, _: str = Depends(require_admin)):
+    allowed = {"title", "description", "category", "type", "price", "thumbnail_url",
+               "file_url", "preview_url", "tags", "is_published"}
+    update_data = {k: v for k, v in payload.items() if k in allowed}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    result = await db.templates.update_one({"id": template_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    doc = await db.templates.find_one({"id": template_id}, {"_id": 0})
+    return doc
+
+
+@api_router.delete("/admin/templates/{template_id}")
+async def admin_delete_template(template_id: str, _: str = Depends(require_admin)):
+    result = await db.templates.delete_one({"id": template_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"success": True}
+
+
+@api_router.get("/admin/templates")
+async def admin_list_templates(_: str = Depends(require_admin)):
+    docs = await db.templates.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    # Include file_url for admin
+    return {"items": docs}
 
 
 # ===================== App wiring =====================

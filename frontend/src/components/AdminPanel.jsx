@@ -3,10 +3,13 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
-  Mail, Building2, Calendar, FileText, Search, Lock, Loader2
+  Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
+  Layout, Plus, Trash2, Pencil, X
 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -97,11 +100,378 @@ const LoginForm = ({ onSuccess }) => {
   );
 };
 
+const TEMPLATE_CATEGORIES = [
+  'Pitch Deck', 'Sales Deck', 'Corporate Presentation', 'Investor Deck',
+  'Webinar / Keynote', 'Infographic', 'Brand Presentation',
+];
+
+const emptyTemplateForm = {
+  title: '',
+  description: '',
+  category: 'Pitch Deck',
+  type: 'free',
+  price: 0,
+  thumbnail_url: '',
+  file_url: '',
+  preview_url: '',
+  tags: '',
+  is_published: true,
+};
+
+const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
+  const [form, setForm] = useState(emptyTemplateForm);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        ...emptyTemplateForm,
+        ...initial,
+        tags: Array.isArray(initial.tags) ? initial.tags.join(', ') : (initial.tags || ''),
+      });
+    } else {
+      setForm(emptyTemplateForm);
+    }
+  }, [initial, open]);
+
+  if (!open) return null;
+  const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title || !form.thumbnail_url) {
+      toast.error('Title and thumbnail URL are required');
+      return;
+    }
+    if (form.type === 'paid' && (!form.price || form.price <= 0)) {
+      toast.error('Paid templates need a price > 0');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        ...form,
+        price: Number(form.price) || 0,
+        tags: form.tags
+          ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : [],
+      };
+      if (initial?.id) {
+        await axios.patch(`${API}/admin/templates/${initial.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Template updated');
+      } else {
+        await axios.post(`${API}/admin/templates`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Template created');
+      }
+      onSave();
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-8 overflow-y-auto" onClick={onClose}>
+      <form
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 my-auto"
+        data-testid="template-form-modal"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-foreground">
+            {initial?.id ? 'Edit template' : 'Add template'}
+          </h3>
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+          <div>
+            <Label className="text-sm text-foreground">Title *</Label>
+            <Input
+              data-testid="tpl-form-title"
+              value={form.title}
+              onChange={(e) => update('title', e.target.value)}
+              placeholder="Modern Pitch Deck"
+              className="bg-background border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Description</Label>
+            <Textarea
+              data-testid="tpl-form-description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => update('description', e.target.value)}
+              placeholder="Short description shown on the card"
+              className="bg-background border-border mt-1 resize-none"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm text-foreground">Category</Label>
+              <select
+                data-testid="tpl-form-category"
+                value={form.category}
+                onChange={(e) => update('category', e.target.value)}
+                className="w-full mt-1 px-3 py-2 rounded-md bg-background border border-border text-foreground text-sm"
+              >
+                {TEMPLATE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label className="text-sm text-foreground">Type</Label>
+              <select
+                data-testid="tpl-form-type"
+                value={form.type}
+                onChange={(e) => update('type', e.target.value)}
+                className="w-full mt-1 px-3 py-2 rounded-md bg-background border border-border text-foreground text-sm"
+              >
+                <option value="free">Free</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
+          {form.type === 'paid' && (
+            <div>
+              <Label className="text-sm text-foreground">Price (USD)</Label>
+              <Input
+                data-testid="tpl-form-price"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.price}
+                onChange={(e) => update('price', e.target.value)}
+                className="bg-background border-border mt-1"
+              />
+            </div>
+          )}
+          <div>
+            <Label className="text-sm text-foreground">Thumbnail URL *</Label>
+            <Input
+              data-testid="tpl-form-thumbnail"
+              value={form.thumbnail_url}
+              onChange={(e) => update('thumbnail_url', e.target.value)}
+              placeholder="https://..."
+              className="bg-background border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Download File URL</Label>
+            <Input
+              data-testid="tpl-form-file"
+              value={form.file_url}
+              onChange={(e) => update('file_url', e.target.value)}
+              placeholder="Direct link to PPTX, PDF, or zip"
+              className="bg-background border-border mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Host your file on Drive / Dropbox / S3 and paste the direct link here. Only revealed to authenticated (free) or paid users.
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Preview URL (optional)</Label>
+            <Input
+              data-testid="tpl-form-preview"
+              value={form.preview_url}
+              onChange={(e) => update('preview_url', e.target.value)}
+              placeholder="Behance link, Figma, etc."
+              className="bg-background border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Tags (comma-separated)</Label>
+            <Input
+              data-testid="tpl-form-tags"
+              value={form.tags}
+              onChange={(e) => update('tags', e.target.value)}
+              placeholder="startup, investor, modern"
+              className="bg-background border-border mt-1"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={form.is_published}
+              onChange={(e) => update('is_published', e.target.checked)}
+              className="w-4 h-4"
+            />
+            Published (visible on /resources)
+          </label>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button
+            type="submit"
+            data-testid="tpl-form-save"
+            disabled={saving}
+            className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : initial?.id ? 'Save changes' : 'Create template'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const TemplatesManager = ({ token }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/admin/templates`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setItems(data.items || []);
+    } catch {
+      toast.error('Failed to load templates');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this template? This cannot be undone.')) return;
+    try {
+      await axios.delete(`${API}/admin/templates/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Template deleted');
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Delete failed');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Templates</h2>
+          <p className="text-sm text-muted-foreground">Manage free and paid resources for the /resources page</p>
+        </div>
+        <Button
+          data-testid="add-template-btn"
+          onClick={() => { setEditing(null); setModalOpen(true); }}
+          className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add template
+        </Button>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 className="w-6 h-6 animate-spin inline-block text-[#2A7AFE]" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground">
+            <Layout className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            No templates yet. Click "Add template" to create your first one.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-background/50 border-b border-border">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Template</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Price</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((t) => (
+                  <tr key={t.id} className="border-b border-border last:border-b-0 hover:bg-accent/40">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={t.thumbnail_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                        <div>
+                          <p className="font-semibold text-foreground">{t.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1 max-w-xs">{t.description}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{t.category}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        t.type === 'paid' ? 'bg-[#2A7AFE]/10 text-[#2A7AFE]' : 'bg-green-500/10 text-green-600'
+                      }`}>
+                        {t.type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-foreground">
+                      {t.type === 'paid' ? `$${t.price?.toFixed(2)}` : 'Free'}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-xs ${t.is_published ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {t.is_published ? 'Published' : 'Draft'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex gap-1">
+                        <button
+                          data-testid={`edit-tpl-${t.id}`}
+                          onClick={() => { setEditing(t); setModalOpen(true); }}
+                          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+                          aria-label="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          data-testid={`delete-tpl-${t.id}`}
+                          onClick={() => handleDelete(t.id)}
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500"
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <TemplateFormModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditing(null); }}
+        onSave={load}
+        initial={editing}
+        token={token}
+      />
+    </div>
+  );
+};
+
 const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [tab, setTab] = useState('orders');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -172,6 +542,38 @@ const Dashboard = ({ token, onLogout }) => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-border">
+          <button
+            data-testid="admin-tab-orders"
+            onClick={() => setTab('orders')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === 'orders'
+                ? 'border-[#2A7AFE] text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="w-4 h-4 inline mr-2" />
+            Orders
+          </button>
+          <button
+            data-testid="admin-tab-templates"
+            onClick={() => setTab('templates')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === 'templates'
+                ? 'border-[#2A7AFE] text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Layout className="w-4 h-4 inline mr-2" />
+            Templates
+          </button>
+        </div>
+
+        {tab === 'templates' ? (
+          <TemplatesManager token={token} />
+        ) : (
+        <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-card border border-border rounded-2xl p-5">
@@ -310,6 +712,8 @@ const Dashboard = ({ token, onLogout }) => {
         <p className="text-xs text-muted-foreground text-center pt-4">
           {filteredItems.length} of {data.items.length} entries shown
         </p>
+        </div>
+        )}
       </main>
     </div>
   );

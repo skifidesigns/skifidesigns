@@ -1,0 +1,65 @@
+{
+  "summary": "Iteration 3 backend testing of SkiFi Designs Resources/Templates + Emergent Google Auth integration. 36/37 pytest cases pass. The single failure is a real bug in /api/payments/status/{session_id}: when the session is in 'pending' state and the backend polls Stripe via emergentintegrations.StripeCheckout.get_checkout_status(), a Pydantic validation error is raised because Stripe returns 'metadata' as a StripeObject, but CheckoutStatusResponse model expects dict. This affects ALL one-time payment polling (both template purchases AND per-slide project payments), but only when the tx is still in 'pending' state (already-paid txs short-circuit and never hit the Stripe poll). Verified: auth/me 401 without token, auth/session 400 missing header, auth/session 401 on invalid emergent session, full admin templates CRUD (free + paid create with file_url, reject paid w/price=0 with 400, PATCH updates fields, PATCH unknown→404, PATCH no valid fields→400, DELETE works + verifies removal, DELETE unknown→404, admin list shows file_url), public templates list/get hides file_url, filters by category/type/search all work, /templates/{id}/access correctly 401 without auth, 404 for unknown id even when authenticated (because Path is checked first - which is fine), free template access returns download_url, paid template access creates Stripe checkout successfully (real live stripe key), /me/library 401 without auth, returns empty {items:[]} for new authed user. Regression on /, /admin/login wrong pwd, /admin/submissions, /payments/status unknown 404, /onboarding/create-checkout invalid pkg 400, /webhook/stripe accepts invalid sig with 200 (intentional), /auth/logout — all green.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/payments/status/{session_id}",
+        "issue": "Returns HTTP 500 'Unexpected error retrieving session status: 1 validation error for CheckoutStatusResponse, metadata Input should be a valid dictionary [type=dict_type, input_value=<StripeObject...>, input_type=StripeObject]' whenever the underlying tx (template OR project) is in 'pending' state and needs to poll Stripe. Root cause: emergentintegrations.payments.stripe.checkout.CheckoutStatusResponse Pydantic model declares metadata: Dict[str,str], but Stripe SDK returns a StripeObject (dict-like but not a dict). This breaks the payment-success page polling flow for users returning from Stripe Checkout. Reproduces 100% in test_payments_status_for_template_session.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "/api/templates/{id}/access (paid path)",
+        "issue": "request.headers.get('content-length') comparison uses tuple ('0', None) but http clients send content-length as a string. The `await request.json() if request.headers.get('content-length') not in ('0', None) else {}` will crash if the client sends a non-JSON body with content-length>0 (e.g. plain text). Wrap in try/except. Already works in tests because we always send JSON."
+      },
+      {
+        "endpoint": "/api/auth/session",
+        "issue": "On Emergent Auth network failure returns 502 not 401, which is correct, but test had to accept both. Consider distinguishing 'invalid session id' (401) from 'auth provider unreachable' (502) — currently they're conflated when r.status_code != 200."
+      },
+      {
+        "endpoint": "/api/admin/templates (PATCH)",
+        "issue": "Does not exclude _id projection on the returned doc — uses find_one({'id': template_id}, {'_id': 0}) which IS correct, but the doc isn't wrapped in _public_template OR explicit type-coercion, so created_at remains a string in PATCH response but a datetime ISO in CREATE response. Mildly inconsistent."
+      },
+      {
+        "endpoint": "/api/admin/templates (POST)",
+        "issue": "Response merges _public_template(doc) | {'file_url': doc.get('file_url')} but does NOT include is_published. Admin probably wants to see that field on create echo too. Minor."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_templates_and_auth.py",
+    "/app/test_reports/pytest/pytest_iter3_templates.xml"
+  ],
+  "action_items": [
+    "HIGH: Fix /api/payments/status/{session_id} 500 error caused by emergentintegrations CheckoutStatusResponse metadata=StripeObject vs dict mismatch. Options: (a) catch the ValidationError and fall back to stripe_sdk.checkout.Session.retrieve() directly (already used for subscription mode); (b) coerce metadata to dict() before passing to the response model; (c) pin/upgrade emergentintegrations to a version that handles StripeObject; (d) wrap CheckoutStatusResponse in a try/except and manually build a response dict from the raw Stripe object. Quickest workaround: replace the get_checkout_status call in /payments/status with a direct stripe_sdk.checkout.Session.retrieve(session_id) and read payment_status/status/metadata from that object. NOTE: This bug is currently invisible because no real user has polled a pending tx yet — but the next time a customer returns from Stripe Checkout, the payment-success page will get 500.",
+    "MINOR: Wrap `await request.json()` in /templates/{id}/access in try/except to avoid crashes if body is missing or non-JSON.",
+    "MINOR: PATCH /admin/templates return should be consistent with POST response (include file_url, normalize created_at)."
+  ],
+  "critical_code_review_comments": [
+    "_public_template() correctly strips file_url and _id from public responses — verified.",
+    "require_user() supports both httpOnly cookie AND Authorization: Bearer header — good for SPA + API access.",
+    "session_token expiry check correctly handles tz-naive datetimes by upgrading to UTC.",
+    "/templates/{id}/access correctly does require_user BEFORE template lookup (verified: 401 even for unknown template id when no auth — confirmed by review_request note).",
+    "Paid template check: existing 'paid' purchase short-circuits to download_url — but does NOT log a re-download event in template_downloads. Consider logging.",
+    "Stripe checkout for template purchase: metadata.kind='template_purchase' is set, but server.py /webhook/stripe and /payments/status both detect 'template' kind by checking which collection has the session_id — works, but relying on metadata.kind would be more robust.",
+    "TemplateModel.created_at is datetime, but inserted into Mongo as ISO string via doc['created_at']=doc['created_at'].isoformat() — consistent with rest of codebase.",
+    "Admin auth uses Bearer Authorization; user auth uses both Cookie and Bearer — clean separation.",
+    "secrets.token_urlsafe(48) for session tokens (384 bits) — strong.",
+    "MongoDB _id properly excluded with {'_id': 0} projection in EVERY find/find_one in templates code — verified.",
+    "POTENTIAL BUG: emergentintegrations CheckoutStatusResponse metadata=Dict[str,str] vs Stripe SDK returning StripeObject — breaks /payments/status polling. See action items.",
+    "Race condition: when user creates a paid template purchase and then refreshes, /access creates a NEW pending purchase row each time (no idempotency check on pending). After 10 refreshes, 10 pending Stripe sessions + 10 db rows. Consider checking for an existing pending purchase < 1 hour old before creating a new one.",
+    "/me/library only returns 'paid' purchases — free template downloads are logged to template_downloads but NEVER returned from /me/library. The endpoint description says 'purchased + downloaded' but only purchased is implemented. Minor scope gap."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_templates_and_auth.py (NEW - 37 test cases covering templates + auth + regression)"
+  ],
+  "success_rate": {"backend": "97.3% (36/37 pytest cases passed; 1 real bug exposed in /api/payments/status)", "frontend": "not tested (skipped per request)"},
+  "test_credentials": "ADMIN_PASSWORD=skifi-admin-2026 (from /app/backend/.env). User auth uses manually-inserted db.users + db.user_sessions row (see /app/auth_testing.md). Fixture creates TEST_user_xxx + TEST_sess_xxx pair, cleans up on teardown.",
+  "seed_data_creation": "Created (and cleaned up) per test run: 2 TEST_ templates (free Pitch Deck + paid Sales Deck $49), 1 TEST_ user + user_session, 1 template_download row (free access), 1 template_purchases row (pending, paid template). All cleaned up: free + paid templates deleted via DELETE /admin/templates, TEST_ user/session deleted via mongo fixture teardown. The pending template_purchases row from the paid-access test is NOT cleaned up (no admin endpoint for it) — left in db.template_purchases as TEST_ user_id which the fixture removes via template_purchases.delete_many({user_id: uid}).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "After main agent fixes the /api/payments/status 500 bug, re-run: pytest /app/backend/tests/test_templates_and_auth.py::TestPaidTemplatePurchase -v. Also worth: manually create a paid template_purchase row in mongo with payment_status='pending', then hit /api/payments/status/{that_session_id} and verify it does NOT 500. The bug is in the emergentintegrations library's CheckoutStatusResponse Pydantic model — easiest fix is to replace stripe_checkout.get_checkout_status(session_id) with direct stripe_sdk.checkout.Session.retrieve(session_id) in server.py around line 364. Also consider: emergentintegrations may have a newer version that fixes this — pip show emergentintegrations to check version.",
+  "rca of the issue": "BUG: /api/payments/status returns 500 for pending sessions. REPRO: (1) POST /admin/templates create paid template, (2) POST /templates/{id}/access with auth → returns session_id, (3) GET /payments/status/{session_id} immediately (before payment) → HTTP 500 with Pydantic ValidationError. ROOT CAUSE: emergentintegrations.payments.stripe.checkout.CheckoutStatusResponse defines metadata: Dict[str,str], but Stripe Python SDK returns Session.metadata as a stripe.api_resources.abstract.api_resource.StripeObject (which is dict-like but fails isinstance(x,dict) check that Pydantic v2 uses). MITIGATION (server.py line ~363): replace the StripeCheckout polling with direct stripe_sdk usage, e.g.:\n\n    session = stripe_sdk.checkout.Session.retrieve(session_id)\n    new_payment_status = session.payment_status or 'pending'\n    new_status = session.status or 'open'\n\nThis is exactly what the subscription branch already does at line 359, so the fix is to unify both branches to use stripe_sdk directly and drop the StripeCheckout.get_checkout_status call. Alternatively, coerce: `result_data = dict(stripe_session); result_data['metadata'] = dict(result_data.get('metadata') or {}); CheckoutStatusResponse(**result_data)`."
+}

@@ -1,8 +1,9 @@
 import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider } from "./context/AuthContext";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { TrustedBy } from "./components/TrustedBy";
@@ -19,6 +20,8 @@ import { Footer } from "./components/Footer";
 import { FloatingContact } from "./components/FloatingContact";
 import { PaymentSuccess } from "./components/PaymentSuccess";
 import { AdminPanel } from "./components/AdminPanel";
+import { Resources } from "./components/Resources";
+import { AuthCallback } from "./components/AuthCallback";
 
 const Home = () => {
   return (
@@ -51,19 +54,33 @@ const Home = () => {
   );
 };
 
+// Synchronous check for OAuth callback hash to prevent race conditions
+const AppRouter = () => {
+  const location = useLocation();
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/resources" element={<Resources />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/admin" element={<AdminPanel />} />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <ThemeProvider>
-      <div className="App">
-        <Toaster position="top-center" richColors />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/admin" element={<AdminPanel />} />
-          </Routes>
-        </BrowserRouter>
-      </div>
+      <AuthProvider>
+        <div className="App">
+          <Toaster position="top-center" richColors />
+          <BrowserRouter>
+            <AppRouter />
+          </BrowserRouter>
+        </div>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
