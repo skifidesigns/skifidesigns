@@ -22,6 +22,8 @@ import { PaymentSuccess } from "./components/PaymentSuccess";
 import { AdminPanel } from "./components/AdminPanel";
 import { Resources } from "./components/Resources";
 import { AuthCallback } from "./components/AuthCallback";
+import { Blog } from "./components/Blog";
+import { BlogPost } from "./components/BlogPost";
 
 const Home = () => {
   return (
@@ -64,6 +66,8 @@ const AppRouter = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/admin" element={<AdminPanel />} />
     </Routes>

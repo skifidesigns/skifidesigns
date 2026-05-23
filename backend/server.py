@@ -861,6 +861,164 @@ async def admin_list_templates(_: str = Depends(require_admin)):
     return {"items": docs}
 
 
+# ===================== Blog =====================
+import re as _re
+
+def _slugify(text: str) -> str:
+    s = (text or "").lower().strip()
+    s = _re.sub(r"[^a-z0-9\s-]", "", s)
+    s = _re.sub(r"[\s_-]+", "-", s)
+    s = _re.sub(r"^-+|-+$", "", s)
+    return s[:80] or str(uuid.uuid4())[:8]
+
+
+class BlogPostModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    slug: str
+    title: str = Field(..., min_length=2, max_length=200)
+    excerpt: str = Field(..., min_length=2, max_length=400)
+    content: str = Field(..., min_length=10)  # Markdown
+    cover_image_url: Optional[str] = None
+    author: str = Field("SkiFi Designs", max_length=100)
+    tags: List[str] = Field(default_factory=list)
+    is_published: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class BlogPostCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=200)
+    excerpt: str = Field(..., min_length=2, max_length=400)
+    content: str = Field(..., min_length=10)
+    cover_image_url: Optional[str] = None
+    author: Optional[str] = Field(None, max_length=100)
+    tags: List[str] = Field(default_factory=list)
+    is_published: bool = True
+
+
+def _public_blog(doc: dict) -> dict:
+    return {
+        "id": doc["id"],
+        "slug": doc["slug"],
+        "title": doc["title"],
+        "excerpt": doc["excerpt"],
+        "content": doc["content"],
+        "cover_image_url": doc.get("cover_image_url"),
+        "author": doc.get("author", "SkiFi Designs"),
+        "tags": doc.get("tags", []),
+        "created_at": doc.get("created_at"),
+        "updated_at": doc.get("updated_at"),
+    }
+
+
+@api_router.get("/blog")
+async def list_blog_posts(limit: int = 50, tag: Optional[str] = None):
+    query = {"is_published": True}
+    if tag:
+        query["tags"] = tag
+    docs = await db.blog_posts.find(query, {"_id": 0}).sort("created_at", -1).limit(min(limit, 100)).to_list(100)
+    return {"items": [_public_blog(d) for d in docs]}
+
+
+@api_router.get("/blog/{slug}")
+async def get_blog_post(slug: str):
+    doc = await db.blog_posts.find_one({"slug": slug, "is_published": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return _public_blog(doc)
+
+
+# ===================== Admin Blog =====================
+async def _generate_unique_slug(title: str, exclude_id: Optional[str] = None) -> str:
+    base = _slugify(title)
+    candidate = base
+    n = 2
+    while True:
+        query = {"slug": candidate}
+        if exclude_id:
+            query["id"] = {"$ne": exclude_id}
+        existing = await db.blog_posts.find_one(query, {"_id": 0, "id": 1})
+        if not existing:
+            return candidate
+        candidate = f"{base}-{n}"
+        n += 1
+
+
+@api_router.post("/admin/blog")
+async def admin_create_blog(payload: BlogPostCreate, _: str = Depends(require_admin)):
+    slug = await _generate_unique_slug(payload.title)
+    post = BlogPostModel(
+        slug=slug,
+        **{k: v for k, v in payload.model_dump().items() if v is not None or k != "author"},
+    )
+    doc = post.model_dump()
+    doc["created_at"] = doc["created_at"].isoformat()
+    doc["updated_at"] = doc["updated_at"].isoformat()
+    await db.blog_posts.insert_one(doc)
+    return _public_blog(doc)
+
+
+@api_router.patch("/admin/blog/{post_id}")
+async def admin_update_blog(post_id: str, payload: dict, _: str = Depends(require_admin)):
+    allowed = {"title", "excerpt", "content", "cover_image_url",
+               "author", "tags", "is_published"}
+    update_data = {k: v for k, v in payload.items() if k in allowed}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    if "title" in update_data:
+        update_data["slug"] = await _generate_unique_slug(update_data["title"], exclude_id=post_id)
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.blog_posts.update_one({"id": post_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    doc = await db.blog_posts.find_one({"id": post_id}, {"_id": 0})
+    return _public_blog(doc)
+
+
+@api_router.delete("/admin/blog/{post_id}")
+async def admin_delete_blog(post_id: str, _: str = Depends(require_admin)):
+    result = await db.blog_posts.delete_one({"id": post_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"success": True}
+
+
+@api_router.get("/admin/blog")
+async def admin_list_blog(_: str = Depends(require_admin)):
+    docs = await db.blog_posts.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"items": [_public_blog(d) | {"is_published": d.get("is_published", True)} for d in docs]}
+
+
+# ===================== Dynamic Sitemap =====================
+@api_router.get("/sitemap.xml")
+async def dynamic_sitemap():
+    """Dynamic sitemap that includes all published blog posts."""
+    base = "https://skifidesigns.com"
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    urls = [
+        (f"{base}/", today, "1.0", "weekly"),
+        (f"{base}/resources", today, "0.8", "weekly"),
+        (f"{base}/blog", today, "0.9", "daily"),
+    ]
+    posts = await db.blog_posts.find(
+        {"is_published": True}, {"_id": 0, "slug": 1, "updated_at": 1, "created_at": 1}
+    ).sort("created_at", -1).to_list(1000)
+    for p in posts:
+        last = (p.get("updated_at") or p.get("created_at") or today)[:10]
+        urls.append((f"{base}/blog/{p['slug']}", last, "0.7", "monthly"))
+
+    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>',
+                 '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, lastmod, priority, changefreq in urls:
+        xml_parts.append(
+            f"<url><loc>{loc}</loc><lastmod>{lastmod}</lastmod>"
+            f"<changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>"
+        )
+    xml_parts.append("</urlset>")
+    return Response(content="\n".join(xml_parts), media_type="application/xml")
+
+
 # ===================== App wiring =====================
 app.include_router(api_router)
 

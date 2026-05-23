@@ -6,5 +6,5 @@ Disallow: /admin/
 Disallow: /payment-success
 Disallow: /auth/callback
 
-# Sitemap
-Sitemap: https://skifidesigns.com/sitemap.xml
+# Dynamic sitemap (auto-includes blog posts)
+Sitemap: https://skifidesigns.com/api/sitemap.xml

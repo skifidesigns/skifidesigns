@@ -99,3 +99,107 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== Blog post markdown styling ===== */
+.prose-skifi {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.prose-skifi h1,
+.prose-skifi h2,
+.prose-skifi h3,
+.prose-skifi h4 {
+  font-family: 'Nohemi', 'DM Sans', sans-serif;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+  line-height: 1.25;
+}
+.prose-skifi h1 { font-size: 2.25rem; }
+.prose-skifi h2 { font-size: 1.875rem; margin-top: 2.5rem; }
+.prose-skifi h3 { font-size: 1.5rem; }
+.prose-skifi h4 { font-size: 1.25rem; }
+.prose-skifi p {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1.25rem;
+}
+.prose-skifi strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+.prose-skifi a {
+  color: #2A7AFE;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: opacity 0.2s ease;
+}
+.prose-skifi a:hover { opacity: 0.75; }
+.prose-skifi ul,
+.prose-skifi ol {
+  margin: 1.25rem 0 1.5rem 1.5rem;
+  color: hsl(var(--muted-foreground));
+}
+.prose-skifi ul { list-style: disc; }
+.prose-skifi ol { list-style: decimal; }
+.prose-skifi li { margin-bottom: 0.5rem; padding-left: 0.25rem; }
+.prose-skifi li::marker { color: #2A7AFE; }
+.prose-skifi blockquote {
+  border-left: 3px solid #2A7AFE;
+  padding: 0.25rem 1rem 0.25rem 1.25rem;
+  margin: 1.5rem 0;
+  color: hsl(var(--foreground));
+  font-style: italic;
+  background: hsl(var(--card));
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+.prose-skifi code {
+  background: hsl(var(--muted));
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  color: hsl(var(--foreground));
+  font-family: source-code-pro, Menlo, monospace;
+}
+.prose-skifi pre {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.prose-skifi pre code {
+  background: transparent;
+  padding: 0;
+  color: hsl(var(--foreground));
+}
+.prose-skifi img {
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  border: 1px solid hsl(var(--border));
+}
+.prose-skifi hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 2.5rem 0;
+}
+.prose-skifi table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.prose-skifi th,
+.prose-skifi td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+}
+.prose-skifi th {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}

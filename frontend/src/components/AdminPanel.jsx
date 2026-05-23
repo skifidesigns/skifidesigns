@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
-  Layout, Plus, Trash2, Pencil, X
+  Layout, Plus, Trash2, Pencil, X, BookOpen, Eye
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
@@ -466,6 +468,368 @@ const TemplatesManager = ({ token }) => {
   );
 };
 
+// =================== BLOG MANAGER ===================
+const BlogFormModal = ({ open, onClose, onSave, initial, token }) => {
+  const [form, setForm] = useState({
+    title: '', excerpt: '', content: '', cover_image_url: '',
+    author: 'SkiFi Designs', tags: '', is_published: true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        title: initial.title || '',
+        excerpt: initial.excerpt || '',
+        content: initial.content || '',
+        cover_image_url: initial.cover_image_url || '',
+        author: initial.author || 'SkiFi Designs',
+        tags: (initial.tags || []).join(', '),
+        is_published: initial.is_published !== false,
+      });
+    } else {
+      setForm({
+        title: '', excerpt: '', content: '', cover_image_url: '',
+        author: 'SkiFi Designs', tags: '', is_published: true,
+      });
+    }
+    setShowPreview(false);
+  }, [initial, open]);
+
+  if (!open) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.title.trim().length < 2) return toast.error('Title is too short');
+    if (form.excerpt.trim().length < 2) return toast.error('Excerpt is required');
+    if (form.content.trim().length < 10) return toast.error('Content must be at least 10 characters');
+
+    setSaving(true);
+    try {
+      const payload = {
+        title: form.title.trim(),
+        excerpt: form.excerpt.trim(),
+        content: form.content,
+        cover_image_url: form.cover_image_url.trim() || null,
+        author: form.author.trim() || 'SkiFi Designs',
+        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        is_published: form.is_published,
+      };
+      if (initial) {
+        await axios.patch(`${API}/admin/blog/${initial.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Post updated');
+      } else {
+        await axios.post(`${API}/admin/blog`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Post created');
+      }
+      onSave();
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-4xl my-8 shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card rounded-t-2xl">
+          <h3 className="text-lg font-semibold text-foreground">
+            {initial ? 'Edit blog post' : 'New blog post'}
+          </h3>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-accent" data-testid="close-blog-modal">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div>
+            <Label htmlFor="blog-title">Title *</Label>
+            <Input
+              id="blog-title"
+              data-testid="blog-title-input"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="How to design an investor pitch deck that wins funding"
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">URL slug auto-generated from title.</p>
+          </div>
+
+          <div>
+            <Label htmlFor="blog-excerpt">Excerpt * (shows on cards & meta description)</Label>
+            <Textarea
+              id="blog-excerpt"
+              data-testid="blog-excerpt-input"
+              rows={2}
+              value={form.excerpt}
+              onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+              placeholder="A practical guide to building a pitch deck that actually closes investors."
+              maxLength={400}
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">{form.excerpt.length}/400 chars</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="blog-cover">Cover image URL</Label>
+              <Input
+                id="blog-cover"
+                data-testid="blog-cover-input"
+                value={form.cover_image_url}
+                onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="blog-author">Author</Label>
+              <Input
+                id="blog-author"
+                data-testid="blog-author-input"
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                placeholder="SkiFi Designs"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="blog-tags">Tags (comma-separated)</Label>
+            <Input
+              id="blog-tags"
+              data-testid="blog-tags-input"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              placeholder="pitch deck, investor, fundraising"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label htmlFor="blog-content">Content (Markdown) *</Label>
+              <button
+                type="button"
+                data-testid="blog-preview-toggle"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-xs font-medium text-[#2A7AFE] inline-flex items-center gap-1.5 hover:underline"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                {showPreview ? 'Edit' : 'Preview'}
+              </button>
+            </div>
+            {showPreview ? (
+              <div className="prose-skifi border border-border bg-background rounded-lg p-5 min-h-[300px] max-h-[500px] overflow-y-auto" data-testid="blog-preview-pane">
+                {form.content ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content}</ReactMarkdown>
+                ) : (
+                  <p className="text-muted-foreground italic">Nothing to preview yet.</p>
+                )}
+              </div>
+            ) : (
+              <Textarea
+                id="blog-content"
+                data-testid="blog-content-input"
+                rows={16}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                placeholder={`# Heading 1\n## Heading 2\n\nParagraph text. **Bold**, *italic*, [link](https://example.com).\n\n- Bullet 1\n- Bullet 2\n\n1. Numbered list\n2. Item two\n\n> Quote\n\n\`\`\`\ncode block\n\`\`\``}
+                className="font-mono text-sm"
+                required
+              />
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Supports Markdown: headings, **bold**, *italic*, lists, links, code, tables, quotes.
+            </p>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              data-testid="blog-published-toggle"
+              checked={form.is_published}
+              onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+              className="w-4 h-4 accent-[#2A7AFE]"
+            />
+            <span className="text-sm text-foreground">Published (visible on /blog)</span>
+          </label>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button
+              type="submit"
+              data-testid="blog-save-btn"
+              disabled={saving}
+              className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (initial ? 'Update post' : 'Publish post')}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const BlogManager = ({ token }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/admin/blog`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setItems(data.items || []);
+    } catch {
+      toast.error('Failed to load blog posts');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    try {
+      await axios.delete(`${API}/admin/blog/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Post deleted');
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Delete failed');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Blog</h2>
+          <p className="text-sm text-muted-foreground">Write SEO-optimised articles for /blog</p>
+        </div>
+        <Button
+          data-testid="add-blog-btn"
+          onClick={() => { setEditing(null); setModalOpen(true); }}
+          className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New post
+        </Button>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 className="w-6 h-6 animate-spin inline-block text-[#2A7AFE]" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground">
+            <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            No posts yet. Click "New post" to write your first article.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-background/50 border-b border-border">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Post</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tags</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((p) => (
+                  <tr key={p.id} className="border-b border-border last:border-b-0 hover:bg-accent/40">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {p.cover_image_url ? (
+                          <img src={p.cover_image_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                            <BookOpen className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="max-w-md">
+                          <p className="font-semibold text-foreground line-clamp-1">{p.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{p.excerpt}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      <div className="flex flex-wrap gap-1 max-w-[180px]">
+                        {(p.tags || []).slice(0, 3).map((t) => (
+                          <span key={t} className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{t}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(p.created_at)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-xs ${p.is_published ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {p.is_published ? 'Published' : 'Draft'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex gap-1">
+                        <a
+                          href={`/blog/${p.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+                          aria-label="View"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </a>
+                        <button
+                          data-testid={`edit-blog-${p.id}`}
+                          onClick={() => { setEditing(p); setModalOpen(true); }}
+                          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+                          aria-label="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          data-testid={`delete-blog-${p.id}`}
+                          onClick={() => handleDelete(p.id)}
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500"
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <BlogFormModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditing(null); }}
+        onSave={load}
+        initial={editing}
+        token={token}
+      />
+    </div>
+  );
+};
+
 const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
@@ -568,10 +932,24 @@ const Dashboard = ({ token, onLogout }) => {
             <Layout className="w-4 h-4 inline mr-2" />
             Templates
           </button>
+          <button
+            data-testid="admin-tab-blog"
+            onClick={() => setTab('blog')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === 'blog'
+                ? 'border-[#2A7AFE] text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 inline mr-2" />
+            Blog
+          </button>
         </div>
 
         {tab === 'templates' ? (
           <TemplatesManager token={token} />
+        ) : tab === 'blog' ? (
+          <BlogManager token={token} />
         ) : (
         <div className="space-y-6">
         {/* Stats */}

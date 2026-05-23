@@ -44,6 +44,7 @@ export const Header = () => {
     { label: 'Portfolio', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
     { label: 'Resources', path: '/resources', type: 'route' },
+    { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'FAQ', id: 'faq', type: 'scroll' }
   ];
 
