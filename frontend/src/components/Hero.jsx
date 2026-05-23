@@ -44,7 +44,7 @@ export const Hero = () => {
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-tight tracking-tight">
             Design Presentations That
-            <span className="block mt-2 bg-gradient-to-r from-[#2A7AFE] to-[#3B82F6] bg-clip-text text-transparent">
+            <span className="block mt-2 text-gradient-animated">
               Actually Win Business
             </span>
           </h1>

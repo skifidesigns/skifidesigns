@@ -211,22 +211,22 @@ export const Resources = () => {
       <Header />
 
       <main className="pt-32 pb-24">
-        {/* Hero */}
-        <section className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 mb-12">
-          <div className="bg-gradient-to-br from-[#2A7AFE]/5 to-purple-500/5 border border-border rounded-3xl p-10 md:p-16">
-            <p className="inline-block px-4 py-1.5 rounded-full bg-card border border-border text-xs uppercase tracking-widest font-semibold text-[#2A7AFE] mb-6">
-              Template Library
-            </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground mb-4 leading-tight tracking-tight">
-              Presentation templates
-              <br />
-              <span className="text-muted-foreground/50">designed to convert</span>{' '}
-              future clients.
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              The SkiFi gallery is a high-performance resource hub: searchable, category-driven, and meticulously crafted to save you hours of design work.
-            </p>
-          </div>
+        {/* Hero — minimal, matching rest of site */}
+        <section className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 mb-12 text-center">
+          <p className="text-sm uppercase tracking-widest text-[#2A7AFE] font-medium mb-4">
+            Template Library
+          </p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground mb-5 leading-tight tracking-tight">
+            Presentation templates
+            <br />
+            <span className="text-gradient-animated">
+              designed to convert
+            </span>{' '}
+            future clients.
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            A high-performance resource hub: searchable, category-driven, and meticulously crafted to save you hours of design work.
+          </p>
         </section>
 
         {/* Filters */}

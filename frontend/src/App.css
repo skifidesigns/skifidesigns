@@ -37,6 +37,59 @@ html {
     animation-play-state: paused;
 }
 
+/* Ambient orbs — slow drift for the glassmorphism glow */
+@keyframes orb-drift-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(80px, 60px) scale(1.1); }
+}
+@keyframes orb-drift-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-100px, -50px) scale(1.15); }
+}
+@keyframes orb-drift-3 {
+    0%, 100% { transform: translate(0, 0) scale(0.95); }
+    50% { transform: translate(-60px, 80px) scale(1.1); }
+}
+.animate-orb-1 { animation: orb-drift-1 18s ease-in-out infinite; }
+.animate-orb-2 { animation: orb-drift-2 22s ease-in-out infinite; }
+.animate-orb-3 { animation: orb-drift-3 26s ease-in-out infinite; }
+
+/* Slow gradient shift for brand-color highlight text */
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.text-gradient-animated {
+    background: linear-gradient(90deg, #2A7AFE 0%, #3B82F6 50%, #6BA4FF 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-shift 6s ease-in-out infinite;
+}
+
+/* Soft glow pulse on key CTAs / popular card */
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(42, 122, 254, 0.15), 0 0 60px rgba(42, 122, 254, 0.08); }
+    50% { box-shadow: 0 0 50px rgba(42, 122, 254, 0.3), 0 0 100px rgba(42, 122, 254, 0.15); }
+}
+.glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+
+/* Floating motion for hover-ready cards */
+@keyframes float-y {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+.animate-float-subtle { animation: float-y 5s ease-in-out infinite; }
+
+/* Glassmorphism utility — true frosted glass effect */
+.glass-card {
+    background: hsl(var(--card) / 0.55);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid hsl(var(--border) / 0.6);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 10px;

@@ -74,7 +74,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <div className="App">
+        <div className="App relative">
           <Toaster position="top-center" richColors />
           <BrowserRouter>
             <AppRouter />

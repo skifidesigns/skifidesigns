@@ -71,9 +71,9 @@ export const Pricing = () => {
                 data-testid={`pricing-card-${plan.id}`}
                 className={`relative rounded-3xl p-10 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl flex flex-col ${
                   isLight
-                    ? 'bg-white text-gray-900 border border-gray-200 hover:shadow-blue-300/30'
+                    ? 'bg-white text-gray-900 border border-gray-200 hover:shadow-blue-300/30 glow-pulse'
                     : theme === 'dark'
-                    ? 'bg-white/[0.03] text-white border border-white/10 hover:shadow-white/10'
+                    ? 'bg-white/[0.03] text-white border border-white/10 hover:shadow-white/10 backdrop-blur-xl'
                     : 'bg-[#0a0a0a] text-white border border-white/10 hover:shadow-gray-700/40'
                 }`}
               >
