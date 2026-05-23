@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 4 — re-test of HIGH bug from iteration 3: /api/payments/status returning 500 due to emergentintegrations CheckoutStatusResponse Pydantic ValidationError on Stripe metadata=StripeObject. Bug fix verified: server.py now uses stripe_sdk.checkout.Session.retrieve(session_id) directly for both project + template polling paths (lines 354-364). Re-ran all 3 prior test files (test_templates_and_auth.py, test_onboarding_payments.py, test_admin_and_subscription.py): 64/66 pass. The HIGH bug repro test (TestPaidTemplatePurchase::test_payments_status_for_template_session) now PASSES — no more 500. Also verified: 404 for unknown session_id still works, paid-tx short-circuit (cached status, no Stripe poll) still works, per-slide pending tx polling works (test_known_session_returns_status passes). The 2 remaining failures are UNRELATED to this bug fix — they are stale test assumptions invalidated by an env config change (STRIPE_MONTHLY_PRICE_ID is now set to price_1TaKmCA1ISLKGjNZDmwdQECM, so monthly_retainer correctly returns mode='subscription' instead of the previous fallback mode='payment').",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/onboarding/create-checkout (monthly_retainer)",
+        "issue": "Tests TestSubscriptionFallback::test_monthly_retainer_returns_payment_mode_when_price_id_empty and TestPaymentTxFields::test_new_fields_persisted_in_mongo assert mode='payment' but now mode='subscription' because STRIPE_MONTHLY_PRICE_ID is configured in .env. These are stale test assumptions, not real bugs. Either (a) update tests to expect 'subscription' since the price id is now set, or (b) temporarily unset the env var per-test using monkeypatch."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_templates_and_auth.py",
+    "/app/backend/tests/test_onboarding_payments.py",
+    "/app/backend/tests/test_admin_and_subscription.py",
+    "/app/test_reports/pytest/pytest_iter4.xml"
+  ],
+  "action_items": [
+    "Bug fix VERIFIED — no action needed for /api/payments/status. The fix in server.py lines 354-364 (replace emergentintegrations StripeCheckout.get_checkout_status with stripe_sdk.checkout.Session.retrieve for both project + template paths) correctly resolves the Pydantic ValidationError on metadata=StripeObject.",
+    "MINOR: Update test_admin_and_subscription.py::TestSubscriptionFallback and TestPaymentTxFields to either expect mode='subscription' (now that STRIPE_MONTHLY_PRICE_ID is set) or use monkeypatch to clear the env var per-test. Not blocking — these are test-data assumptions, not product bugs."
+  ],
+  "critical_code_review_comments": [
+    "Fix is correct and minimal: both one-time payment paths now use stripe_sdk directly (bypassing the buggy emergentintegrations CheckoutStatusResponse model). Error handling wraps the SDK call in try/except and raises 500 with the exception message — fine for debugging but consider sanitizing the message to avoid leaking Stripe API internals to clients in production.",
+    "The kind='template'|'project' detection still relies on which collection contains the session_id rather than session.metadata.kind — works but could be more robust if a stray template session_id ever appears in payment_transactions (unlikely but possible)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "97.0% (64/66 pytest cases passed; 0 failures related to the bug fix being retested; 2 unrelated failures due to env config update)", "frontend": "not tested (skipped per request)"},
+  "test_credentials": "ADMIN_PASSWORD=skifi-admin-2026 (from /app/backend/.env). User auth via manually-inserted db.users + db.user_sessions row (TEST_user_* + TEST_sess_*).",
+  "seed_data_creation": "Created (and cleaned up) per test run: 2 TEST_ templates (free + paid), 1 TEST_ user + user_session, 1 template_purchases row (pending paid template). All cleaned up via fixture teardown + admin DELETE.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The HIGH /api/payments/status 500 bug from iteration 3 is resolved. If further iterations modify the payments flow, re-run pytest /app/backend/tests/test_templates_and_auth.py::TestPaidTemplatePurchase -v --setup-show OR run the full module (state is shared across tests). The 2 stale failures in test_admin_and_subscription.py expect STRIPE_MONTHLY_PRICE_ID to be empty — main agent should update those assertions to match the new live config.",
+  "rca of the issue": "RESOLVED. Iteration 3 RCA: emergentintegrations.payments.stripe.checkout.CheckoutStatusResponse declared metadata: Dict[str,str] but Stripe SDK returns Session.metadata as a StripeObject (dict-like but fails Pydantic v2 isinstance check). Fix applied in server.py @ /api/payments/status: replaced StripeCheckout.get_checkout_status(session_id) with direct stripe_sdk.checkout.Session.retrieve(session_id), then read payment_status + status from the raw object. Confirmed via TestPaidTemplatePurchase::test_payments_status_for_template_session (creates real Stripe checkout session, polls /payments/status, expects 200 with kind='template') — PASSES."
+}

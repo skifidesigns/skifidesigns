@@ -351,19 +351,14 @@ async def get_payment_status(session_id: str):
             "kind": "template" if is_template else "project",
         }
 
-    # Poll Stripe — different path for subscription vs payment
+    # Poll Stripe — use direct SDK for both paths (avoids emergentintegrations
+    # Pydantic ValidationError on Stripe's StripeObject metadata field).
     new_payment_status = "pending"
     new_status = "open"
     try:
-        if (not is_template) and tx.get("mode") == "subscription":
-            session = stripe_sdk.checkout.Session.retrieve(session_id)
-            new_payment_status = session.payment_status or "pending"
-            new_status = session.status or "open"
-        else:
-            stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
-            result: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
-            new_payment_status = result.payment_status
-            new_status = result.status
+        session = stripe_sdk.checkout.Session.retrieve(session_id)
+        new_payment_status = session.payment_status or "pending"
+        new_status = session.status or "open"
     except Exception as e:
         logger.exception("Failed to fetch Stripe status")
         raise HTTPException(status_code=500, detail=str(e))
