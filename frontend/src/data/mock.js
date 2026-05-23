@@ -167,10 +167,12 @@ export const faqs = [
 export const trustedBrands = [
   "Coca-Cola",
   "Toyota",
+  "Lenovo",
+  "Adnoc",
   "Verizon",
   "Indigo",
-  "King Abdul Aziz University",
-  "Value360"
+  "Cambridge University Press",
+  "King Abdul Aziz University"
 ];
 
 export const whySkiFi = [

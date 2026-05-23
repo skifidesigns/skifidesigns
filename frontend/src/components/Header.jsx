@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Menu, X } from 'lucide-react';
+import { Calendar, Menu, X, Sun, Moon } from 'lucide-react';
 import { Button } from './ui/button';
+import { useTheme } from '../context/ThemeContext';
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,7 +40,7 @@ export const Header = () => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-black/90 backdrop-blur-lg border-b border-white/10 shadow-xl'
+          ? 'bg-background/90 backdrop-blur-lg border-b border-border shadow-xl'
           : 'bg-transparent'
       }`}
     >
@@ -47,9 +49,12 @@ export const Header = () => {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="https://customer-assets.emergentagent.com/job_4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/artifacts/hrib62cx_logo-b.svg"
+              src={theme === 'dark' 
+                ? "https://customer-assets.emergentagent.com/job_4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/artifacts/hrib62cx_logo-b.svg"
+                : "https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/nti6f834_logo.svg"
+              }
               alt="SkiFi Designs"
-              className="h-10 w-auto"
+              className="h-7 w-auto"
             />
           </div>
 
@@ -59,15 +64,29 @@ export const Header = () => {
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className="text-white/80 hover:text-white font-medium transition-colors duration-200"
+                className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-200"
               >
                 {link.label}
               </button>
             ))}
           </div>
 
-          {/* CTA Button */}
+          {/* Right Side Actions */}
           <div className="hidden lg:flex items-center gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-accent transition-colors duration-200"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-foreground" />
+              ) : (
+                <Moon className="w-5 h-5 text-foreground" />
+              )}
+            </button>
+            
+            {/* CTA Button */}
             <Button
               onClick={handleBookCall}
               className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 group"
@@ -78,23 +97,36 @@ export const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden text-white p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="lg:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-accent transition-colors duration-200"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-foreground" />
+              ) : (
+                <Moon className="w-5 h-5 text-foreground" />
+              )}
+            </button>
+            <button
+              className="text-foreground p-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden mt-4 py-4 border-t border-white/10">
+          <div className="lg:hidden mt-4 py-4 border-t border-border">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <button
                   key={link.id}
                   onClick={() => scrollToSection(link.id)}
-                  className="text-white/80 hover:text-white font-medium transition-colors duration-200 text-left"
+                  className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-200 text-left"
                 >
                   {link.label}
                 </button>

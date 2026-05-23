@@ -6,13 +6,13 @@ export const Portfolio = () => {
   const [hoveredId, setHoveredId] = useState(null);
 
   return (
-    <section id="portfolio" className="py-24 bg-gradient-to-b from-gray-950 to-black">
+    <section id="portfolio" className="py-24 bg-background">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
             Selected Work
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Browse through our portfolio of premium presentations designed for global brands and startups.
           </p>
         </div>
@@ -24,7 +24,7 @@ export const Portfolio = () => {
               href={project.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#2A7AFE]/50 transition-all duration-500 hover:scale-105"
+              className="group relative overflow-hidden rounded-2xl bg-card backdrop-blur-sm border border-border hover:border-[#2A7AFE]/50 transition-all duration-500 hover:scale-105"
               onMouseEnter={() => setHoveredId(project.id)}
               onMouseLeave={() => setHoveredId(null)}
             >
@@ -41,7 +41,7 @@ export const Portfolio = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="text-sm text-[#2A7AFE] font-medium mb-2">{project.category}</div>
-                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{project.title}</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2 line-clamp-2">{project.title}</h3>
                   </div>
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <ExternalLink className="w-5 h-5 text-white" />
@@ -57,7 +57,7 @@ export const Portfolio = () => {
             href="https://www.behance.net/skifidesigns"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10 hover:border-[#2A7AFE]/50 rounded-xl transition-all duration-300 hover:scale-105 font-medium"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-card backdrop-blur-sm border border-border text-foreground hover:bg-accent hover:border-[#2A7AFE]/50 rounded-xl transition-all duration-300 hover:scale-105 font-medium"
           >
             View Full Portfolio on Behance
             <ExternalLink className="w-5 h-5" />

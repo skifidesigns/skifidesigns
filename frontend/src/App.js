@@ -1,6 +1,7 @@
 import React from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { TrustedBy } from "./components/TrustedBy";
@@ -16,7 +17,7 @@ import { Footer } from "./components/Footer";
 
 const Home = () => {
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-background min-h-screen">
       <Header />
       <Hero />
       <TrustedBy />
@@ -45,13 +46,15 @@ const Home = () => {
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <ThemeProvider>
+      <div className="App">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
   );
 }
 
