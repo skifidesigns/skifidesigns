@@ -85,12 +85,12 @@ export const Hero = () => {
               <div className="text-sm text-muted-foreground">Presentations Designed</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-foreground mb-2">100+</div>
-              <div className="text-sm text-muted-foreground">Clients Worldwide</div>
-            </div>
-            <div className="text-center">
               <div className="text-4xl font-bold text-foreground mb-2">43+</div>
               <div className="text-sm text-muted-foreground">Countries</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-foreground mb-2">150+</div>
+              <div className="text-sm text-muted-foreground">Clients Worldwide</div>
             </div>
           </div>
         </div>

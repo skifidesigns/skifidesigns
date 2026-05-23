@@ -38,28 +38,6 @@ export const TrustedBy = () => {
         <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-background to-transparent"></div>
         <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-background to-transparent"></div>
       </div>
-
-      {/* Stats */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
-          <div className="text-center p-6 bg-gradient-to-br from-[#2A7AFE]/10 to-[#3B82F6]/10 backdrop-blur-sm border border-[#2A7AFE]/20 rounded-xl">
-            <div className="text-3xl font-semibold text-foreground mb-2">7+</div>
-            <div className="text-sm text-muted-foreground">Years Experience</div>
-          </div>
-          <div className="text-center p-6 bg-gradient-to-br from-[#2A7AFE]/10 to-[#3B82F6]/10 backdrop-blur-sm border border-[#2A7AFE]/20 rounded-xl">
-            <div className="text-3xl font-semibold text-foreground mb-2">2,700+</div>
-            <div className="text-sm text-muted-foreground">Presentations Designed</div>
-          </div>
-          <div className="text-center p-6 bg-gradient-to-br from-[#2A7AFE]/10 to-[#3B82F6]/10 backdrop-blur-sm border border-[#2A7AFE]/20 rounded-xl">
-            <div className="text-3xl font-semibold text-foreground mb-2">100+</div>
-            <div className="text-sm text-muted-foreground">Clients Worldwide</div>
-          </div>
-          <div className="text-center p-6 bg-gradient-to-br from-[#2A7AFE]/10 to-[#3B82F6]/10 backdrop-blur-sm border border-[#2A7AFE]/20 rounded-xl">
-            <div className="text-3xl font-semibold text-foreground mb-2">43+</div>
-            <div className="text-sm text-muted-foreground">Countries</div>
-          </div>
-        </div>
-      </div>
     </section>
   );
 };
