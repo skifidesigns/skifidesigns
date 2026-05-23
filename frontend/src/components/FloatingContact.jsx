@@ -9,7 +9,7 @@ export const FloatingContact = () => {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-stretch shadow-2xl rounded-full bg-white border border-gray-200 overflow-hidden"
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 flex items-stretch rounded-full overflow-hidden bg-white/20 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.2)] supports-[backdrop-filter]:bg-white/20"
       data-testid="floating-contact"
     >
       {/* WhatsApp side */}
@@ -18,7 +18,7 @@ export const FloatingContact = () => {
         target="_blank"
         rel="noopener noreferrer"
         data-testid="floating-whatsapp"
-        className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors group"
+        className="flex items-center gap-3 px-5 py-3 hover:bg-white/20 dark:hover:bg-white/10 transition-colors group"
       >
         {/* WhatsApp icon (inline SVG) */}
         <span className="relative flex items-center justify-center">
@@ -38,23 +38,23 @@ export const FloatingContact = () => {
             />
           </svg>
         </span>
-        <span className="text-sm font-semibold text-gray-900 group-hover:text-green-700 whitespace-nowrap hidden sm:block">
+        <span className="text-sm font-semibold text-foreground group-hover:text-green-600 dark:group-hover:text-green-400 whitespace-nowrap hidden sm:block transition-colors">
           Get a FREE Pitchdeck Review
         </span>
-        <span className="text-sm font-semibold text-gray-900 sm:hidden">WhatsApp</span>
+        <span className="text-sm font-semibold text-foreground sm:hidden">WhatsApp</span>
       </a>
 
       {/* Divider */}
-      <div className="w-px bg-gray-200"></div>
+      <div className="w-px bg-white/30 dark:bg-white/15"></div>
 
       {/* Call side */}
       <a
         href={`tel:${phoneNumber}`}
         data-testid="floating-call"
         aria-label="Call us"
-        className="flex items-center justify-center px-5 py-3 hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-center px-5 py-3 hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
       >
-        <Phone className="w-6 h-6 text-gray-900" strokeWidth={2.2} />
+        <Phone className="w-6 h-6 text-foreground" strokeWidth={2.2} />
       </a>
     </div>
   );
