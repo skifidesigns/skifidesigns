@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Mail, Phone } from 'lucide-react';
+import { ExternalLink, Phone } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 export const Footer = () => {
@@ -69,10 +69,6 @@ export const Footer = () => {
                 <Phone className="w-4 h-4" />
                 WhatsApp
               </a>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                Available for Freelance & Fulltime
-              </div>
               <p className="text-muted-foreground text-sm">
                 Kerala, India
               </p>
