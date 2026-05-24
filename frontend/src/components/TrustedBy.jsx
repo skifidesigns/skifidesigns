@@ -6,7 +6,7 @@ export const TrustedBy = () => {
   const marqueeBrands = [...trustedBrands, ...trustedBrands];
 
   return (
-    <section className="relative py-12 overflow-hidden">
+    <section className="relative py-12 overflow-hidden" data-testid="trusted-by-section">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Trusted by</p>
@@ -21,16 +21,19 @@ export const TrustedBy = () => {
 
       {/* Animated Marquee */}
       <div className="relative w-full overflow-hidden py-6">
-        <div className="flex animate-marquee whitespace-nowrap">
+        <div className="flex animate-marquee whitespace-nowrap items-center">
           {marqueeBrands.map((brand, index) => (
             <div
-              key={`${brand}-${index}`}
-              className="mx-8 flex-shrink-0 flex items-center justify-center"
+              key={`${brand.name}-${index}`}
+              className="mx-10 flex-shrink-0 flex items-center justify-center"
+              data-testid={`trusted-logo-${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              <span className="text-2xl md:text-3xl font-semibold text-muted-foreground/60 hover:text-foreground transition-colors duration-300 tracking-tight">
-                {brand}
-              </span>
-              <span className="text-muted-foreground/30 mx-8">•</span>
+              <img
+                src={brand.src}
+                alt={`${brand.name} logo`}
+                loading="lazy"
+                className="h-12 md:h-14 w-auto object-contain trusted-logo"
+              />
             </div>
           ))}
         </div>

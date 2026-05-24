@@ -161,6 +161,28 @@ code {
   .animate-marquee { animation: none !important; }
 }
 
+/* Trusted-by marquee logos - source PNGs have black bg with light gray marks.
+   Light mode: invert so bg becomes white + mark becomes dark, then multiply removes white bg.
+   Dark mode: source bg is already black, screen blend removes it on dark page. */
+.trusted-logo {
+  filter: invert(1) grayscale(1) contrast(1.1);
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+.trusted-logo:hover {
+  opacity: 1;
+}
+.dark .trusted-logo {
+  filter: grayscale(1) brightness(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+.dark .trusted-logo:hover {
+  opacity: 1;
+}
+
+
 /* Subtle grain texture - only one section uses it (hero) */
 .skifi-grain::after {
   content: '';

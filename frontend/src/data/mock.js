@@ -165,14 +165,11 @@ export const faqs = [
 ];
 
 export const trustedBrands = [
-  "Coca-Cola",
-  "Toyota",
-  "Lenovo",
-  "Adnoc",
-  "Verizon",
-  "Indigo",
-  "Cambridge University Press",
-  "King Abdul Aziz University"
+  { name: "IndiGo", src: "/logos/indigo.png" },
+  { name: "Toyota", src: "/logos/toyota.png" },
+  { name: "Salesforce", src: "/logos/salesforce.png" },
+  { name: "Saudi Vision 2030", src: "/logos/saudi-vision-2030.png" },
+  { name: "LinkedIn", src: "/logos/linkedin.png" }
 ];
 
 export const whySkiFi = [
