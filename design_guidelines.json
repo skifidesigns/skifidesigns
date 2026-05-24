@@ -1,0 +1,206 @@
+{
+  "theme_and_archetype": {
+    "domain": "Creative Agency / Design Portfolio",
+    "theme": "LIGHT (Default), DARK (Opt-in)",
+    "archetype": "Warm Editorial Brutalism (Archetype 4 + 1 blend)",
+    "rationale": "The website acts as a high-end portfolio. To signal craft and premium quality, we shift from a generic 'SaaS' dark mode to a warm, editorial, paper-like light theme. Dark mode remains but is refined to feel like an expensive cinematic experience.",
+    "color_palette": {
+      "light": {
+        "--background": "40 20% 97%",
+        "--foreground": "0 0% 9%",
+        "--card": "40 20% 99%",
+        "--card-foreground": "0 0% 9%",
+        "--popover": "40 20% 99%",
+        "--popover-foreground": "0 0% 9%",
+        "--primary": "217 99% 58%",
+        "--primary-foreground": "0 0% 100%",
+        "--secondary": "0 0% 9%",
+        "--secondary-foreground": "40 20% 97%",
+        "--muted": "40 10% 92%",
+        "--muted-foreground": "0 0% 45%",
+        "--accent": "40 15% 92%",
+        "--accent-foreground": "0 0% 9%",
+        "--border": "40 10% 88%",
+        "--input": "40 10% 88%",
+        "--ring": "217 99% 58%",
+        "--radius": "0rem"
+      },
+      "dark": {
+        "--background": "240 5% 6%",
+        "--foreground": "40 20% 95%",
+        "--card": "240 5% 8%",
+        "--card-foreground": "40 20% 95%",
+        "--popover": "240 5% 8%",
+        "--popover-foreground": "40 20% 95%",
+        "--primary": "217 99% 58%",
+        "--primary-foreground": "0 0% 100%",
+        "--secondary": "40 20% 95%",
+        "--secondary-foreground": "240 5% 6%",
+        "--muted": "240 5% 12%",
+        "--muted-foreground": "240 5% 65%",
+        "--accent": "240 5% 12%",
+        "--accent-foreground": "40 20% 95%",
+        "--border": "240 5% 15%",
+        "--input": "240 5% 15%",
+        "--ring": "217 99% 58%",
+        "--radius": "0rem"
+      },
+      "usage_rules": "Brand blue (#2A7AFE) is strictly reserved for primary CTAs (e.g. 'Start a Project', 'Book a Call') and active states. It should NOT be used as background gradients or decorative blobs. Rely on stark contrast between background and foreground for hierarchy."
+    }
+  },
+  "typography": {
+    "system": {
+      "display": "Nohemi-SemiBold (already loaded)",
+      "body": "DM Sans",
+      "ui": "Inter"
+    },
+    "scales": {
+      "h1": "font-nohemi text-5xl md:text-7xl lg:text-[7vw] leading-[0.9] tracking-tighter uppercase",
+      "h2": "font-nohemi text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight",
+      "h3": "font-nohemi text-2xl md:text-3xl leading-snug tracking-tight",
+      "overline": "font-inter text-xs md:text-sm tracking-[0.2em] uppercase font-semibold text-muted-foreground",
+      "body": "font-dm-sans text-base md:text-lg leading-relaxed",
+      "ui_small": "font-inter text-sm font-medium"
+    },
+    "rules": "Never center-align large text by default. Use left-alignment with generous right-side negative space to create tension. Keep line heights incredibly tight on headings (leading-none or leading-[0.9])."
+  },
+  "spacing_and_layout": {
+    "general": "Scale up all padding. Instead of p-4 or p-6, use p-12 or p-24 for section paddings (py-24 md:py-32).",
+    "grid": "Use 12-column bento grids. Do not fill all columns perfectly; leave empty cells to create negative space.",
+    "borders": "Expose the skeleton. Use pure CSS 1px borders (border-border) to divide sections and create a 'Technical / Swiss' vibe. Eliminate soft drop shadows entirely; replace them with hard 1px borders or solid color offsets."
+  },
+  "motion_and_interactions": {
+    "library": "Framer Motion",
+    "rules": {
+      "hover": "Subtle scale-down (scale: 0.98) on image hover, or image zoom effect within overflow-hidden containers.",
+      "scroll": "Staggered fade-up (y: 30, opacity: 0) on viewport entry for sections.",
+      "buttons": "Magnetic effect or simple sweeping background color transition. Primary CTAs should feel substantial.",
+      "custom_cursor": "Optional: On portfolio sections, hide the default cursor and use a custom 'View' or 'Explore' dot that follows the mouse."
+    }
+  },
+  "section_by_section": {
+    "Header": {
+      "layout": "Fixed, full width, border-b border-border, backdrop-blur-md bg-background/80.",
+      "content": "Left: Logo (switches automatically based on light/dark mode). Center: Navigation links (font-inter text-sm). Right: Theme toggle + 'Book a Call' CTA button.",
+      "design_notes": "Links should have an animated underline on hover. Keep padding generous (h-20)."
+    },
+    "Hero": {
+      "layout": "Asymmetric 12-column grid. pt-32 pb-24 md:pt-48 md:pb-32.",
+      "content": "Left (col-span-12 md:col-span-7): Massive H1 heading (e.g., 'We Craft Presentations That Deliver Impact'). Below it, a subtle body text describing the agency, followed by the two primary CTAs (Book a Call, Start a Project). Right (col-span-12 md:col-span-5): An abstract 3D visual or floating aesthetic shape that signals creativity without looking like a literal SaaS dashboard.",
+      "design_notes": "Include the 4 stat columns here, but place them discreetly at the bottom of the hero section in a thin, border-top flex strip rather than giant blocky cards."
+    },
+    "TrustedBy": {
+      "layout": "Full width marquee strip (react-fast-marquee). py-8 border-y border-border.",
+      "content": "Monochrome client logos. opacity-40 hover:opacity-100 transition-opacity.",
+      "design_notes": "Small overline text above the marquee: 'TRUSTED BY INNOVATIVE BRANDS'."
+    },
+    "Services": {
+      "layout": "List-based accordion or sticky scroll layout.",
+      "content": "Left side sticky: 'Our Capabilities' (H2). Right side scrolling list: Each service has a massive number (01, 02) in Nohemi, the service title, and a small paragraph or bullet points.",
+      "design_notes": "Use border-b to separate each service item. When hovering over a service item, a subtle arrow (->) can animate in, or text color changes."
+    },
+    "WhySkiFi": {
+      "layout": "Bento grid (Tetris style).",
+      "content": "3-4 value props. 1 large spanning card, 2 smaller squares. Use icons from lucide-react (stroke-width 1.5).",
+      "design_notes": "Keep the background of the cards slightly offset (bg-card) with a crisp 1px border. No shadows."
+    },
+    "Portfolio": {
+      "layout": "The Centerpiece. Full-bleed or large masonry grid.",
+      "content": "Large, high-resolution imagery of previous work. Minimal text on the cards. On hover, reveal the project name and category via a smooth Framer Motion overlay.",
+      "design_notes": "Use custom cursor here if possible. Ensure image height is max-h-[80vh] for mobile. Use the generated portfolio_mockup images to populate this."
+    },
+    "Process": {
+      "layout": "Horizontal step sequence or vertical timeline.",
+      "content": "4 steps: Onboarding -> Concept -> Refine -> Deliver.",
+      "design_notes": "Use typography to guide the eye. Oversized numbers and bold lines connecting them."
+    },
+    "Pricing": {
+      "layout": "2-column or side-by-side high-contrast typographic breakdown.",
+      "content": "Per Slide ($15/slide) vs Monthly Retainer ($999/month).",
+      "design_notes": "Make the Monthly Retainer visually dominant (perhaps a dark card in light mode, or a primary-bordered card). Clear bullet points with check icons."
+    },
+    "Testimonials": {
+      "layout": "Editorial review cards.",
+      "content": "Quote text in serif-style (or just large DM Sans italic), small avatar, name, and position.",
+      "design_notes": "Can be a simple grid of 2-3 cards or a horizontal scroll."
+    },
+    "Founder": {
+      "layout": "2-column split.",
+      "content": "Left: Founder portrait. Right: A bold statement/manifesto about why SkiFi was started.",
+      "design_notes": "Feels like a magazine spread. Use the generated avatar image."
+    },
+    "FAQ": {
+      "layout": "Narrow centered column (max-w-3xl).",
+      "content": "Shadcn Accordion component.",
+      "design_notes": "Override Shadcn default padding to be larger (py-6 per item). Text size text-lg or text-xl for the trigger."
+    },
+    "FinalCTA": {
+      "layout": "Massive block, usually inverted background (Dark if in Light mode, Light if in Dark mode).",
+      "content": "Huge heading 'Ready to start?', primary CTA button.",
+      "design_notes": "py-32. Center aligned text for this specific section to create a final anchor."
+    },
+    "Footer": {
+      "layout": "Grid structure for links, massive text at the bottom.",
+      "content": "Links to /resources, /blog, /dashboard, legal pages. Bottom: Huge 'SKIFI DESIGNS' text spanning full width.",
+      "design_notes": "Use text-[15vw] leading-none text-foreground/5 for the massive brand name."
+    },
+    "FloatingContact": {
+      "layout": "Fixed bottom-right.",
+      "content": "WhatsApp pill.",
+      "design_notes": "Redesign from generic green circle to a pill shape: 'Get a FREE Pitchdeck Review' + WhatsApp icon. Minimalist, monochrome or brand-blue, crisp borders."
+    }
+  },
+  "media": {
+    "images": [
+      {
+        "category": "portfolio",
+        "description": "High-end luxury brand website design mockup",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/c27856bfdb3155d3a1fd2f4d5dc034e224580fb747d815095e2dbe9110577314.png"
+      },
+      {
+        "category": "portfolio",
+        "description": "Minimalistic mobile app interface for fintech brand",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/16c8950ee033e618776eb39140ffd0aeb612a37d4491601651143d9b53731fd2.png"
+      },
+      {
+        "category": "portfolio",
+        "description": "Sleek dashboard UI floating in void mockup",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/cbc8ea8495bfbf9a301a5778eddbcdb7ee3e79dfcf1d14520c3e1e1cc0713e8f.png"
+      },
+      {
+        "category": "hero",
+        "description": "Abstract 3D geometric frosted glass shape",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/4e9e3f75ddfcb8bd369b76357692c6c65f1a9b16bade43defc23fdb4ec58bd48.png"
+      },
+      {
+        "category": "avatar",
+        "description": "Professional headshot creative director",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/d7f44beddf39062db7bf507ef804f3255e2a736222a241a5e31c407218b79b3c.png"
+      },
+      {
+        "category": "avatar",
+        "description": "Professional headshot tech founder",
+        "url": "https://static.prod-images.emergentagent.com/jobs/4d8ff9b3-24bd-4129-8ede-3c7cee7e66af/images/774b04676d4341d9052a8d2c02adf9f5e4838097d9b7545cbdd5ad9f98a6453a.png"
+      }
+    ],
+    "client_logos": [
+      {
+        "name": "Acme Corp",
+        "url": "https://images.unsplash.com/photo-1758626104169-6835c0bd03e3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBtaW5pbWFsaXN0JTIwc3RhcnR1cCUyMHRlY2glMjBjb21wYW55JTIwbG9nb3xlbnwwfHx8fDE3Nzk2MjM3MTJ8MA&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "name": "Global",
+        "url": "https://images.unsplash.com/photo-1746047420047-03fc7a9b9226?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBtaW5pbWFsaXN0JTIwc3RhcnR1cCUyMHRlY2glMjBjb21wYW55JTIwbG9nb3xlbnwwfHx8fDE3Nzk2MjM3MTJ8MA&ixlib=rb-4.1.0&q=85"
+      }
+    ]
+  },
+  "implementation_instructions": {
+    "step_1": "Update /app/frontend/src/index.css to implement the new light (default) and dark (opt-in) HSL color tokens. Ensure ThemeContext defaults to 'light'.",
+    "step_2": "Update tailwind.config.js to extend the font families (Nohemi, DM Sans, Inter) and ensure container paddings are set appropriately.",
+    "step_3": "Refactor Header and Hero components to use the new asymmetric, typographic approach. Implement Framer Motion for entrance animations.",
+    "step_4": "Implement TrustedBy marquee (using react-fast-marquee) and the new Services accordion.",
+    "step_5": "Refactor Portfolio gallery. Replace static thumbnails with the generated high-end mockups or existing DB images, apply hover reveal effects.",
+    "step_6": "Refactor Pricing, Process, Testimonials, and Founder sections using the editorial brutalism guidelines.",
+    "step_7": "Update Footer and Floating WhatsApp CTA. Verify all existing flows (Book Call, OnboardingWizard, Auth) function perfectly."
+  }
+}
