@@ -2,13 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useSpotlight } from '../hooks/useSpotlight';
 
-const STATS = [
-  { value: '10+', label: 'In-house designers' },
-  { value: '2,700+', label: 'Decks delivered' },
-  { value: '43+', label: 'Countries served' },
-  { value: '7+', label: 'Years in business' },
-];
-
 export const Founder = () => {
   const handleMove = useSpotlight();
   return (
@@ -50,20 +43,6 @@ export const Founder = () => {
               visually impactful designs. Our focus: clean aesthetics, strategic layouts, premium
               visuals — presentations that leave a lasting impression.
             </p>
-          </div>
-
-          {/* Stats strip */}
-          <div className="mt-10 pt-10 border-t border-border/60 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {STATS.map((s) => (
-              <div key={s.label} className="text-center md:text-left">
-                <div className="text-2xl sm:text-3xl font-semibold skifi-gradient-text tracking-tight">
-                  {s.value}
-                </div>
-                <div className="mt-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {s.label}
-                </div>
-              </div>
-            ))}
           </div>
         </motion.div>
       </div>
