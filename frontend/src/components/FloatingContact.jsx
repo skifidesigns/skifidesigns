@@ -9,7 +9,7 @@ export const FloatingContact = () => {
 
   return (
     <div
-      className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-stretch rounded-full overflow-hidden bg-white/20 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.2)] supports-[backdrop-filter]:bg-white/20"
+      className="skifi-glass fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-stretch rounded-full overflow-hidden hover:scale-[1.02] transition-transform duration-300"
       data-testid="floating-contact"
     >
       {/* WhatsApp side */}
@@ -18,7 +18,7 @@ export const FloatingContact = () => {
         target="_blank"
         rel="noopener noreferrer"
         data-testid="floating-whatsapp"
-        className="flex items-center gap-3 px-5 py-3 hover:bg-white/20 dark:hover:bg-white/10 transition-colors group"
+        className="flex items-center gap-3 px-5 py-3 hover:bg-foreground/5 transition-colors group"
       >
         {/* WhatsApp icon (inline SVG) */}
         <span className="relative flex items-center justify-center">
@@ -45,14 +45,14 @@ export const FloatingContact = () => {
       </a>
 
       {/* Divider */}
-      <div className="w-px bg-white/30 dark:bg-white/15"></div>
+      <div className="w-px bg-border/60"></div>
 
       {/* Call side */}
       <a
         href={`tel:${phoneNumber}`}
         data-testid="floating-call"
         aria-label="Call us"
-        className="flex items-center justify-center px-5 py-3 hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
+        className="flex items-center justify-center px-5 py-3 hover:bg-foreground/5 transition-colors"
       >
         <Phone className="w-6 h-6 text-foreground" strokeWidth={2.2} />
       </a>

@@ -51,9 +51,9 @@ export const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? 'bg-background/90 backdrop-blur-lg border-b border-border shadow-xl'
+            ? 'skifi-glass border-b border-border/60 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)]'
             : 'bg-transparent'
         }`}
       >
@@ -86,10 +86,10 @@ export const Header = () => {
                 <Link
                   key={link.label}
                   to={link.path}
-                  className={`font-medium transition-colors duration-200 ${
+                  className={`skifi-link text-sm font-medium transition-colors duration-200 ${
                     location.pathname === link.path
                       ? 'text-[#2A7AFE]'
-                      : 'text-foreground/80 hover:text-foreground'
+                      : 'text-foreground/75 hover:text-foreground'
                   }`}
                 >
                   {link.label}
@@ -98,7 +98,7 @@ export const Header = () => {
                 <button
                   key={link.id}
                   onClick={() => scrollToSection(link.id)}
-                  className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-200"
+                  className="skifi-link text-sm font-medium text-foreground/75 hover:text-foreground transition-colors duration-200"
                 >
                   {link.label}
                 </button>
