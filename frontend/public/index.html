@@ -168,41 +168,16 @@
 
         <!-- Smooth initial loader (sits behind React; hidden as soon as the app mounts) -->
         <style>
-          :root { color-scheme: light dark; }
           #skifi-initial-loader {
             position: fixed; inset: 0; z-index: 9999;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 28px;
-            background: #FAFAF7; /* matches site light bg */
+            display: flex; align-items: center; justify-content: center;
+            background: #FAFAF7; /* always light, matches site light bg */
             transition: opacity 600ms cubic-bezier(0.4, 0, 0.2, 1), visibility 600ms;
-            font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
           }
-          @media (prefers-color-scheme: dark) {
-            #skifi-initial-loader { background: #0A0A0A; }
-          }
-          html.dark #skifi-initial-loader { background: #0A0A0A; }
           #skifi-initial-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-          .skifi-loader-logo {
-            display: inline-flex; align-items: center;
-            font-weight: 700; font-size: 28px; letter-spacing: -0.02em;
-            animation: skifi-loader-breathe 1.6s ease-in-out infinite;
-          }
-          .skifi-loader-logo .ski {
-            background: #0A0A0A; color: #FFFFFF;
-            padding: 4px 8px; border-radius: 6px;
-          }
-          .skifi-loader-logo .fi {
-            background: linear-gradient(135deg, #60A5FA 0%, #2A7AFE 100%);
-            color: #FFFFFF;
-            padding: 4px 8px; border-radius: 6px;
-            margin-left: 2px;
-          }
-          html.dark .skifi-loader-logo .ski { background: #FFFFFF; color: #0A0A0A; }
-
           .skifi-loader-bar {
-            width: 140px; height: 3px;
+            width: 160px; height: 3px;
             background: rgba(42, 122, 254, 0.12);
             border-radius: 999px;
             overflow: hidden;
@@ -218,30 +193,18 @@
             animation: skifi-loader-slide 1.2s ease-in-out infinite;
           }
 
-          @keyframes skifi-loader-breathe {
-            0%, 100% { transform: scale(1); opacity: 0.95; }
-            50% { transform: scale(1.04); opacity: 1; }
-          }
           @keyframes skifi-loader-slide {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(350%); }
           }
           @media (prefers-reduced-motion: reduce) {
-            .skifi-loader-logo, .skifi-loader-bar::after { animation: none; }
+            .skifi-loader-bar::after { animation: none; }
           }
         </style>
         <div id="skifi-initial-loader" aria-hidden="true" role="status" aria-label="Loading SkiFi Designs">
-          <div class="skifi-loader-logo"><span class="ski">Ski</span><span class="fi">Fi</span></div>
           <div class="skifi-loader-bar"></div>
         </div>
         <script>
-          // Restore theme class as early as possible so the loader background matches the user's choice
-          (function(){
-            try {
-              var t = localStorage.getItem('skifi-theme');
-              if (t === 'dark') document.documentElement.classList.add('dark');
-            } catch (e) {}
-          })();
           // Fade out loader once React paints (or after a safety timeout)
           function skifiHideLoader() {
             var el = document.getElementById('skifi-initial-loader');
@@ -250,7 +213,6 @@
             setTimeout(function(){ el && el.parentNode && el.parentNode.removeChild(el); }, 700);
           }
           window.addEventListener('load', function(){
-            // wait one paint after React mounts so the hero hero/header is visible behind the fade
             requestAnimationFrame(function(){ setTimeout(skifiHideLoader, 250); });
           });
           // Hard safety net so the loader never sticks around
