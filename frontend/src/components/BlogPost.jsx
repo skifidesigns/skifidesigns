@@ -9,6 +9,8 @@ import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const assetUrl = (p) => (!p ? '' : (/^https?:/i.test(p) ? p : `${BACKEND}${p.startsWith('/') ? '' : '/'}${p}`));
 
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -47,7 +49,7 @@ export const BlogPost = () => {
           '@type': 'BlogPosting',
           headline: res.data.title,
           description: res.data.excerpt,
-          image: res.data.cover_image_url || 'https://skifidesigns.com/og-image.jpg',
+          image: assetUrl(res.data.cover_image_url) || 'https://skifidesigns.com/og-image.jpg',
           datePublished: res.data.created_at,
           dateModified: res.data.updated_at || res.data.created_at,
           author: { '@type': 'Organization', name: res.data.author || 'SkiFi Designs' },
@@ -143,7 +145,7 @@ export const BlogPost = () => {
 
           {post.cover_image_url && (
             <img
-              src={post.cover_image_url}
+              src={assetUrl(post.cover_image_url)}
               alt={post.title}
               className="w-full aspect-[16/9] object-cover rounded-2xl mb-12 border border-border"
             />

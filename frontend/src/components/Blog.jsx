@@ -7,6 +7,8 @@ import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const assetUrl = (p) => (!p ? '' : (/^https?:/i.test(p) ? p : `${BACKEND}${p.startsWith('/') ? '' : '/'}${p}`));
 
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -26,7 +28,7 @@ const PostCard = ({ post }) => (
     {post.cover_image_url && (
       <div className="relative aspect-[16/9] overflow-hidden bg-muted">
         <img
-          src={post.cover_image_url}
+          src={assetUrl(post.cover_image_url)}
           alt={post.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"

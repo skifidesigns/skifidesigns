@@ -172,3 +172,70 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
     client_id = results[0] if not isinstance(results[0], Exception) else None
     admin_id = results[1] if len(results) > 1 and not isinstance(results[1], Exception) else None
     return {"client": client_id, "admin": admin_id, "skipped": False}
+
+
+
+def _delivery_html(client_name: str, project_type: str, message: str,
+                   files: list, dashboard_url: str) -> str:
+    file_rows = "".join([
+        f'<tr><td style="padding:6px 0;color:#444;font-size:14px;">📄 {f.get("filename","file")}</td>'
+        f'<td style="padding:6px 0;text-align:right;color:#888;font-size:12px;">{f.get("size",0)/1024/1024:.2f} MB</td></tr>'
+        for f in (files or [])
+    ])
+    message_block = f"""
+    <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px;
+                font-size:14px;color:#444;line-height:1.6;white-space:pre-wrap;margin:0 0 24px;">
+      {message}
+    </div>
+    """ if message else ""
+    return f"""
+<!doctype html>
+<html><body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="padding:32px 40px;background:#0a0a0a;color:#ffffff;">
+          <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">SkiFi Designs</h1>
+          <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.7);">Your project is ready 🎉</p>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h2 style="margin:0 0 12px;font-size:22px;color:#111;">Hi {client_name},</h2>
+          <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6;">
+            We've just uploaded your <strong>{project_type}</strong> deliverables. You can download everything from your client dashboard below.
+          </p>
+          {message_block}
+          {('<p style="margin:0 0 8px;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:' + BRAND_COLOR + ';font-weight:700;">Delivered Files</p><table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin:0 0 24px;">' + file_rows + '</table>') if file_rows else ""}
+          <p style="text-align:center;margin:30px 0 6px;">
+            <a href="{dashboard_url}" style="display:inline-block;background:{BRAND_COLOR};color:#ffffff;font-weight:600;
+                padding:14px 28px;border-radius:10px;text-decoration:none;font-size:15px;">
+              Open my dashboard →
+            </a>
+          </p>
+          <p style="text-align:center;margin:0 0 24px;font-size:12px;color:#888;">
+            Sign in with Google using the same email you used to order.
+          </p>
+          <p style="margin:0;font-size:13px;color:#666;line-height:1.6;">
+            Need a revision? Just reply to this email or leave a note in the dashboard. We're here to make it perfect.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>
+""".strip()
+
+
+async def send_delivery_email(*, client_email: str, client_name: str,
+                              project_type: str, message: str,
+                              files: list, dashboard_url: str) -> Optional[str]:
+    """Notify a client that their project has been delivered."""
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set — skipping delivery email")
+        return None
+    params = {
+        "from": f"SkiFi Designs <{SENDER_EMAIL}>",
+        "to": [client_email],
+        "subject": f"Your {project_type} is ready 🎉 — SkiFi Designs",
+        "html": _delivery_html(client_name, project_type, message, files, dashboard_url),
+    }
+    return await asyncio.to_thread(_send_sync, params)

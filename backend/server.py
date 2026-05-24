@@ -681,7 +681,8 @@ class TemplateModel(BaseModel):
     type: str = Field(..., pattern="^(free|paid)$")
     price: float = Field(0.0, ge=0)
     thumbnail_url: str
-    file_url: Optional[str] = None             # download URL (hidden from public)
+    file_url: Optional[str] = None             # external URL (legacy / preview)
+    template_file_id: Optional[str] = None     # GridFS file id (preferred)
     preview_url: Optional[str] = None          # optional online preview link
     tags: List[str] = Field(default_factory=list)
     is_published: bool = True
@@ -696,6 +697,7 @@ class TemplateCreate(BaseModel):
     price: float = Field(0.0, ge=0)
     thumbnail_url: str
     file_url: Optional[str] = None
+    template_file_id: Optional[str] = None
     preview_url: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
     is_published: bool = True
@@ -765,9 +767,12 @@ async def access_template(
             "email": user["email"],
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
         })
+        download_url = (
+            f"/api/templates/{template_id}/file" if doc.get("template_file_id") else doc.get("file_url")
+        )
         return {
             "type": "free",
-            "download_url": doc.get("file_url"),
+            "download_url": download_url,
         }
 
     # Paid: check if user already purchased
@@ -776,10 +781,13 @@ async def access_template(
         {"_id": 0},
     )
     if existing_purchase:
+        download_url = (
+            f"/api/templates/{template_id}/file" if doc.get("template_file_id") else doc.get("file_url")
+        )
         return {
             "type": "paid",
             "already_purchased": True,
-            "download_url": doc.get("file_url"),
+            "download_url": download_url,
         }
 
     # Create Stripe checkout for paid template
@@ -972,6 +980,350 @@ async def admin_list_order_files(session_id: str, _: str = Depends(require_admin
             }
             for d in docs
         ]
+    }
+
+
+# Helper: stream any GridFS file (used by multiple endpoints)
+async def _stream_gridfs(file_id: str, force_download: bool = True) -> StreamingResponse:
+    try:
+        oid = ObjectId(file_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid file id")
+    file_doc = await db["onboarding_uploads.files"].find_one({"_id": oid})
+    if not file_doc:
+        raise HTTPException(status_code=404, detail="File not found")
+    stream = await fs_bucket.open_download_stream(oid)
+    content_type = (file_doc.get("metadata") or {}).get("content_type") or "application/octet-stream"
+    filename = file_doc.get("filename", "download.bin")
+
+    async def iterator():
+        while True:
+            chunk = await stream.readchunk()
+            if not chunk:
+                break
+            yield chunk
+
+    disposition = "attachment" if force_download else "inline"
+    headers = {"Content-Disposition": f'{disposition}; filename="{filename}"'}
+    return StreamingResponse(iterator(), media_type=content_type, headers=headers)
+
+
+# Public file (images) — used for template thumbnails and blog covers
+@api_router.get("/files/{file_id}")
+async def public_get_file(file_id: str):
+    """Public, inline-served file (designed for images: thumbnails, blog covers, etc.).
+    The file id is a non-guessable ObjectId, so files are unlisted but not authenticated."""
+    return await _stream_gridfs(file_id, force_download=False)
+
+
+# Generic admin upload — returns file_id AND a stable public URL
+@api_router.post("/admin/upload")
+async def admin_upload(
+    file: UploadFile = File(...),
+    _: str = Depends(require_admin),
+):
+    filename = _safe_filename(file.filename)
+    ext = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+    if ext not in ALLOWED_UPLOAD_EXT:
+        raise HTTPException(status_code=400, detail=f"File type {ext or 'unknown'} not allowed.")
+    buffer = io.BytesIO()
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 256)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="File exceeds 50 MB.")
+        buffer.write(chunk)
+    buffer.seek(0)
+    if total == 0:
+        raise HTTPException(status_code=400, detail="Empty file.")
+    metadata = {
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "content_type": file.content_type or "application/octet-stream",
+        "original_name": filename,
+        "uploader": "admin",
+    }
+    file_id = await fs_bucket.upload_from_stream(filename, buffer, metadata=metadata)
+    return {
+        "file_id": str(file_id),
+        "filename": filename,
+        "size": total,
+        "url": f"/api/files/{file_id}",
+        "content_type": metadata["content_type"],
+    }
+
+
+# Gated template file download (free → any logged-in user; paid → must have purchased)
+@api_router.get("/templates/{template_id}/file")
+async def download_template_file(template_id: str, user: dict = Depends(require_user)):
+    doc = await db.templates.find_one({"id": template_id, "is_published": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if not doc.get("template_file_id"):
+        raise HTTPException(status_code=404, detail="No file uploaded for this template")
+    if doc["type"] == "paid":
+        purchase = await db.template_purchases.find_one(
+            {"template_id": template_id, "user_id": user["user_id"], "payment_status": "paid"},
+            {"_id": 0},
+        )
+        if not purchase:
+            raise HTTPException(status_code=403, detail="Payment required to download this template")
+    # Log
+    await db.template_downloads.insert_one({
+        "id": str(uuid.uuid4()),
+        "template_id": template_id,
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "downloaded_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return await _stream_gridfs(doc["template_file_id"], force_download=True)
+
+
+# ===================== Project Deliveries =====================
+class DeliveryCreate(BaseModel):
+    message: Optional[str] = Field(None, max_length=2000)
+    file_ids: List[str] = Field(default_factory=list, min_length=1)
+
+
+@api_router.post("/admin/orders/{session_id}/deliveries")
+async def admin_create_delivery(
+    session_id: str,
+    payload: DeliveryCreate,
+    _: str = Depends(require_admin),
+):
+    tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    delivery = {
+        "id": str(uuid.uuid4()),
+        "session_id": session_id,
+        "message": (payload.message or "").strip(),
+        "file_ids": payload.file_ids,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.deliveries.insert_one(delivery)
+
+    # Tag files
+    for fid in payload.file_ids:
+        try:
+            await db["onboarding_uploads.files"].update_one(
+                {"_id": ObjectId(fid)},
+                {"$set": {"metadata.kind": "delivery",
+                          "metadata.session_id": session_id,
+                          "metadata.email": tx.get("email")}},
+            )
+        except Exception:
+            pass
+
+    # Email the client
+    try:
+        from email_service import send_delivery_email
+        files_info = []
+        for fid in payload.file_ids:
+            try:
+                fdoc = await db["onboarding_uploads.files"].find_one(
+                    {"_id": ObjectId(fid)}, {"filename": 1, "length": 1}
+                )
+                if fdoc:
+                    files_info.append({
+                        "filename": fdoc.get("filename"),
+                        "size": fdoc.get("length", 0),
+                    })
+            except Exception:
+                pass
+        # Resolve dashboard URL from any field we trust
+        dashboard_url = "https://skifidesigns.com/dashboard"
+        await send_delivery_email(
+            client_email=tx["email"],
+            client_name=tx.get("full_name") or "there",
+            project_type=tx.get("project_type", "Project"),
+            message=delivery["message"],
+            files=files_info,
+            dashboard_url=dashboard_url,
+        )
+    except Exception as e:
+        logger.warning(f"Delivery email failed (non-fatal): {e}")
+
+    # Mark order as in_delivery
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$set": {"status": "delivered", "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+
+    return {"success": True, "delivery_id": delivery["id"]}
+
+
+@api_router.get("/admin/orders/{session_id}/deliveries")
+async def admin_list_deliveries(session_id: str, _: str = Depends(require_admin)):
+    docs = await db.deliveries.find({"session_id": session_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"items": docs}
+
+
+# ===================== Client Dashboard =====================
+@api_router.get("/me/orders")
+async def my_orders(user: dict = Depends(require_user)):
+    """Return all paid project orders for the logged-in user (by email)."""
+    cursor = db.payment_transactions.find(
+        {"email": user["email"]},
+        {"_id": 0},
+    ).sort("created_at", -1)
+    items = await cursor.to_list(100)
+
+    # Attach file metadata (brief + delivered)
+    enriched = []
+    for it in items:
+        # Brief files (client-uploaded)
+        brief_files = []
+        for fid in (it.get("file_ids") or []):
+            try:
+                fdoc = await db["onboarding_uploads.files"].find_one(
+                    {"_id": ObjectId(fid)}, {"filename": 1, "length": 1}
+                )
+                if fdoc:
+                    brief_files.append({
+                        "file_id": fid,
+                        "filename": fdoc.get("filename"),
+                        "size": fdoc.get("length", 0),
+                    })
+            except Exception:
+                pass
+        # Deliveries (admin-uploaded)
+        deliveries = await db.deliveries.find(
+            {"session_id": it.get("session_id")}, {"_id": 0}
+        ).sort("created_at", -1).to_list(20)
+        deliveries_enriched = []
+        for d in deliveries:
+            d_files = []
+            for fid in d.get("file_ids", []):
+                try:
+                    fdoc = await db["onboarding_uploads.files"].find_one(
+                        {"_id": ObjectId(fid)}, {"filename": 1, "length": 1}
+                    )
+                    if fdoc:
+                        d_files.append({
+                            "file_id": fid,
+                            "filename": fdoc.get("filename"),
+                            "size": fdoc.get("length", 0),
+                        })
+                except Exception:
+                    pass
+            deliveries_enriched.append({**d, "files": d_files})
+
+        enriched.append({
+            "session_id": it.get("session_id"),
+            "created_at": it.get("created_at"),
+            "project_type": it.get("project_type"),
+            "timeline": it.get("timeline"),
+            "description": it.get("description"),
+            "slide_count": it.get("slide_count"),
+            "amount": it.get("amount"),
+            "currency": it.get("currency"),
+            "payment_status": it.get("payment_status"),
+            "status": it.get("status"),
+            "package_id": it.get("package_id"),
+            "brief_files": brief_files,
+            "deliveries": deliveries_enriched,
+        })
+    return {"items": enriched}
+
+
+@api_router.get("/me/files/{file_id}")
+async def my_download_file(file_id: str, user: dict = Depends(require_user)):
+    """Authenticated client download — checks that the file belongs to one of this user's orders."""
+    try:
+        oid = ObjectId(file_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid file id")
+    fdoc = await db["onboarding_uploads.files"].find_one({"_id": oid})
+    if not fdoc:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Verify ownership: file_id must appear in this user's order brief_files or deliveries
+    fid_str = str(oid)
+    own_tx = await db.payment_transactions.find_one(
+        {"email": user["email"], "file_ids": fid_str}, {"_id": 0, "session_id": 1}
+    )
+    if not own_tx:
+        # Check deliveries
+        own_session = await db.payment_transactions.find_one(
+            {"email": user["email"]}, {"_id": 0, "session_id": 1}
+        )
+        if own_session:
+            delivery = await db.deliveries.find_one(
+                {"session_id": own_session["session_id"], "file_ids": fid_str},
+                {"_id": 0},
+            )
+            if not delivery:
+                # Also check across all of the user's sessions
+                tx_ids = await db.payment_transactions.find(
+                    {"email": user["email"]}, {"_id": 0, "session_id": 1}
+                ).to_list(100)
+                session_ids = [t["session_id"] for t in tx_ids]
+                delivery_any = await db.deliveries.find_one(
+                    {"session_id": {"$in": session_ids}, "file_ids": fid_str},
+                    {"_id": 0},
+                )
+                if not delivery_any:
+                    raise HTTPException(status_code=403, detail="You do not have access to this file")
+        else:
+            raise HTTPException(status_code=403, detail="You do not have access to this file")
+
+    return await _stream_gridfs(str(oid), force_download=True)
+
+
+@api_router.post("/me/orders/{session_id}/upload")
+async def my_upload_brief_file(
+    session_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_user),
+):
+    """Client uploads an additional brief file to an existing order they own."""
+    tx = await db.payment_transactions.find_one({"session_id": session_id, "email": user["email"]}, {"_id": 0})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    filename = _safe_filename(file.filename)
+    ext = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+    if ext not in ALLOWED_UPLOAD_EXT:
+        raise HTTPException(status_code=400, detail=f"File type {ext or 'unknown'} not allowed.")
+
+    buffer = io.BytesIO()
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 256)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="File exceeds 50 MB.")
+        buffer.write(chunk)
+    buffer.seek(0)
+    if total == 0:
+        raise HTTPException(status_code=400, detail="Empty file.")
+
+    metadata = {
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "content_type": file.content_type or "application/octet-stream",
+        "original_name": filename,
+        "session_id": session_id,
+        "email": user["email"],
+        "kind": "brief_addon",
+    }
+    file_id = await fs_bucket.upload_from_stream(filename, buffer, metadata=metadata)
+
+    # Append to order's file_ids
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$push": {"file_ids": str(file_id)},
+         "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {
+        "file_id": str(file_id),
+        "filename": filename,
+        "size": total,
     }
 
 

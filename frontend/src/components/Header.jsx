@@ -124,7 +124,12 @@ export const Header = () => {
             {/* User / Login */}
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-accent/50">
+                <Link
+                  to="/dashboard"
+                  data-testid="header-dashboard"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-accent/50 hover:bg-accent transition-colors"
+                  title="My Dashboard"
+                >
                   {user.picture ? (
                     <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full" />
                   ) : (
@@ -133,9 +138,9 @@ export const Header = () => {
                     </div>
                   )}
                   <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
-                    {user.name || user.email}
+                    {user.name?.split(' ')[0] || user.email}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={logout}
                   className="p-2 rounded-lg hover:bg-accent transition-colors"

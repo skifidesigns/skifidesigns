@@ -9,6 +9,8 @@ import { FloatingContact } from './FloatingContact';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const assetUrl = (p) => (!p ? '' : (/^https?:/i.test(p) ? p : `${BACKEND}${p.startsWith('/') ? '' : '/'}${p}`));
 
 const CATEGORIES = [
   'All',
@@ -31,7 +33,7 @@ const TemplateCard = ({ template, onAction, busyId }) => {
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img
-          src={template.thumbnail_url}
+          src={assetUrl(template.thumbnail_url)}
           alt={template.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"

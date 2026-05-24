@@ -25,6 +25,7 @@ import { AuthCallback } from "./components/AuthCallback";
 import { Blog } from "./components/Blog";
 import { BlogPost } from "./components/BlogPost";
 import { PrivacyPolicy, TermsOfService, RefundPolicy, CookiePolicy } from "./components/Legal";
+import { ClientDashboard } from "./components/ClientDashboard";
 
 const Home = () => {
   return (
@@ -73,6 +74,7 @@ const AppRouter = () => {
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />
       <Route path="/cookies" element={<CookiePolicy />} />
+      <Route path="/dashboard" element={<ClientDashboard />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/admin" element={<AdminPanel />} />
     </Routes>

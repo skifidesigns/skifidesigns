@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
-  Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download
+  Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download,
+  Upload, Send
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -114,10 +115,147 @@ const emptyTemplateForm = {
   type: 'free',
   price: 0,
   thumbnail_url: '',
+  thumbnail_file_id: '',
   file_url: '',
+  template_file_id: '',
   preview_url: '',
   tags: '',
   is_published: true,
+};
+
+// Build an absolute URL from a /api/... path (or pass-through external URLs).
+const absoluteUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:/i.test(path)) return path;
+  return `${process.env.REACT_APP_BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
+const AdminImageUploader = ({ value, onChange, token, testId }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef(null);
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) return toast.error('Image must be ≤ 50 MB');
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const { data } = await axios.post(`${API}/admin/upload`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      });
+      onChange(data.url, data.file_id);
+      toast.success('Image uploaded');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex-grow">
+        <Input
+          data-testid={testId}
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value, '')}
+          placeholder="Paste an image URL or upload below"
+          className="bg-background border-border"
+        />
+        {value && (
+          <img
+            src={absoluteUrl(value)}
+            alt="Preview"
+            className="mt-2 h-20 w-32 object-cover rounded-md border border-border"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="shrink-0 mt-0"
+        data-testid={`${testId}-upload`}
+      >
+        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 mr-1.5" />}
+        {uploading ? 'Uploading' : 'Upload'}
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+    </div>
+  );
+};
+
+const AdminFileUploader = ({ value, fileId, onChange, token, testId, accept }) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadedName, setUploadedName] = useState('');
+  const inputRef = useRef(null);
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) return toast.error('File must be ≤ 50 MB');
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const { data } = await axios.post(`${API}/admin/upload`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      });
+      setUploadedName(data.filename);
+      onChange('', data.file_id);
+      toast.success(`${data.filename} uploaded`);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          data-testid={testId}
+        >
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+          {uploading ? 'Uploading…' : (fileId ? 'Replace file' : 'Upload file')}
+        </Button>
+        {fileId && (
+          <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+            <FileText className="w-3.5 h-3.5 text-[#2A7AFE]" />
+            {uploadedName || 'File ready'}
+          </span>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+      <div>
+        <Label className="text-xs text-muted-foreground">…or paste an external URL</Label>
+        <Input
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value, '')}
+          placeholder="Drive / Dropbox / S3 direct link"
+          className="bg-background border-border mt-1 text-xs"
+        />
+      </div>
+    </div>
+  );
 };
 
 const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
@@ -257,26 +395,41 @@ const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
             </div>
           )}
           <div>
-            <Label className="text-sm text-foreground">Thumbnail URL *</Label>
-            <Input
-              data-testid="tpl-form-thumbnail"
-              value={form.thumbnail_url}
-              onChange={(e) => update('thumbnail_url', e.target.value)}
-              placeholder="https://..."
-              className="bg-background border-border mt-1"
-            />
+            <Label className="text-sm text-foreground">Thumbnail image *</Label>
+            <div className="mt-1">
+              <AdminImageUploader
+                value={form.thumbnail_url}
+                token={token}
+                testId="tpl-form-thumbnail"
+                onChange={(url, fileId) => {
+                  if (fileId) {
+                    update('thumbnail_file_id', fileId);
+                    update('thumbnail_url', `/api/files/${fileId}`);
+                  } else {
+                    update('thumbnail_url', url);
+                    update('thumbnail_file_id', '');
+                  }
+                }}
+              />
+            </div>
           </div>
           <div>
-            <Label className="text-sm text-foreground">Download File URL</Label>
-            <Input
-              data-testid="tpl-form-file"
-              value={form.file_url}
-              onChange={(e) => update('file_url', e.target.value)}
-              placeholder="Direct link to PPTX, PDF, or zip"
-              className="bg-background border-border mt-1"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Host your file on Drive / Dropbox / S3 and paste the direct link here. Only revealed to authenticated (free) or paid users.
+            <Label className="text-sm text-foreground">Template file</Label>
+            <div className="mt-1">
+              <AdminFileUploader
+                value={form.file_url}
+                fileId={form.template_file_id}
+                token={token}
+                testId="tpl-form-file"
+                accept=".pdf,.pptx,.ppt,.key,.zip,.rar,.fig,.sketch,.ai,.psd"
+                onChange={(url, fileId) => {
+                  update('template_file_id', fileId || '');
+                  update('file_url', url || '');
+                }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Recommended: upload the file directly here — clients download in one click after sign-in (free) or payment (paid). External links also work but are less secure.
             </p>
           </div>
           <div>
@@ -579,14 +732,21 @@ const BlogFormModal = ({ open, onClose, onSave, initial, token }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="blog-cover">Cover image URL</Label>
-              <Input
-                id="blog-cover"
-                data-testid="blog-cover-input"
-                value={form.cover_image_url}
-                onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
-                placeholder="https://..."
-              />
+              <Label htmlFor="blog-cover">Cover image</Label>
+              <div className="mt-1">
+                <AdminImageUploader
+                  value={form.cover_image_url}
+                  token={token}
+                  testId="blog-cover-input"
+                  onChange={(url, fileId) => {
+                    if (fileId) {
+                      setForm({ ...form, cover_image_url: `/api/files/${fileId}` });
+                    } else {
+                      setForm({ ...form, cover_image_url: url });
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="blog-author">Author</Label>
@@ -922,12 +1082,164 @@ const OrderFiles = ({ sessionId, fileCount, token }) => {
   );
 };
 
+const DeliveryModal = ({ open, order, token, onClose, onSuccess }) => {
+  const [files, setFiles] = useState([]);
+  const [message, setMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (open) {
+      setFiles([]);
+      setMessage('');
+    }
+  }, [open, order?.session_id]);
+
+  if (!open || !order) return null;
+
+  const handleFiles = async (fileList) => {
+    if (!fileList?.length) return;
+    setUploading(true);
+    for (const file of Array.from(fileList)) {
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds 50 MB`);
+        continue;
+      }
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const { data } = await axios.post(`${API}/admin/upload`, fd, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        });
+        setFiles((prev) => [...prev, data]);
+        toast.success(`${data.filename} uploaded`);
+      } catch (err) {
+        toast.error(err?.response?.data?.detail || `Upload of ${file.name} failed`);
+      }
+    }
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const removeFile = (file_id) => setFiles((prev) => prev.filter((f) => f.file_id !== file_id));
+
+  const handleDeliver = async () => {
+    if (files.length === 0) return toast.error('Upload at least one file');
+    setSubmitting(true);
+    try {
+      await axios.post(
+        `${API}/admin/orders/${order.session_id}/deliveries`,
+        { message: message.trim() || null, file_ids: files.map((f) => f.file_id) },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      toast.success(`Delivery sent to ${order.email}`);
+      onSuccess?.();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not send delivery');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-2xl my-8 shadow-2xl" data-testid="delivery-modal">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card rounded-t-2xl">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Deliver project</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{order.full_name} · {order.email}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-accent" data-testid="close-delivery-modal">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div>
+            <Label htmlFor="delivery-message">Message to client (optional)</Label>
+            <Textarea
+              id="delivery-message"
+              rows={4}
+              data-testid="delivery-message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Hi! Your deck is ready. We've included a PDF preview and the source PPTX. Let us know if you'd like any tweaks."
+              maxLength={2000}
+              className="mt-1 bg-background border-border"
+            />
+          </div>
+
+          <div>
+            <Label>Final files to deliver *</Label>
+            <div
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFiles(e.dataTransfer.files); }}
+              className="mt-1 border-2 border-dashed border-border hover:border-[#2A7AFE]/60 hover:bg-[#2A7AFE]/5 rounded-xl px-4 py-6 text-center cursor-pointer transition-colors"
+              data-testid="delivery-dropzone"
+            >
+              <Upload className="w-7 h-7 mx-auto text-[#2A7AFE] mb-2" />
+              <p className="text-sm text-foreground font-medium">
+                {uploading ? 'Uploading…' : 'Drop files here or click to browse'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">PDF, PPTX, ZIP, images · up to 50 MB each</p>
+            </div>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            {files.length > 0 && (
+              <ul className="mt-3 space-y-2" data-testid="delivery-file-list">
+                {files.map((f) => (
+                  <li key={f.file_id} className="flex items-center gap-3 bg-background border border-border rounded-lg px-3 py-2">
+                    <FileText className="w-4 h-4 text-[#2A7AFE]" />
+                    <div className="flex-grow min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{f.filename}</p>
+                      <p className="text-xs text-muted-foreground">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                    <button onClick={() => removeFile(f.file_id)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-3 sticky bottom-0 bg-card rounded-b-2xl">
+          <p className="text-xs text-muted-foreground">
+            Client will get an email and see this in their dashboard.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button
+              onClick={handleDeliver}
+              disabled={submitting || files.length === 0}
+              className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+              data-testid="delivery-send-btn"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+              Send delivery
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('orders');
+  const [deliveryFor, setDeliveryFor] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1118,16 +1430,17 @@ const Dashboard = ({ token, onLogout }) => {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Plan</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
                   <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody data-testid="admin-table-body">
                 {loading && (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">
                     <Loader2 className="w-5 h-5 animate-spin inline-block mr-2" /> Loading…
                   </td></tr>
                 )}
                 {!loading && filteredItems.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">
                     No submissions yet.
                   </td></tr>
                 )}
@@ -1179,12 +1492,32 @@ const Dashboard = ({ token, onLogout }) => {
                     <td className="px-4 py-4 text-center">
                       <StatusBadge status={item.payment_status} />
                     </td>
+                    <td className="px-4 py-4 text-center">
+                      {item.payment_status === 'paid' && (
+                        <button
+                          onClick={() => setDeliveryFor(item)}
+                          data-testid={`deliver-${item.session_id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#2A7AFE]/10 text-[#2A7AFE] hover:bg-[#2A7AFE] hover:text-white transition-colors"
+                        >
+                          <Send className="w-3 h-3" />
+                          Deliver
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        <DeliveryModal
+          open={!!deliveryFor}
+          order={deliveryFor}
+          token={token}
+          onClose={() => setDeliveryFor(null)}
+          onSuccess={() => { setDeliveryFor(null); load(); }}
+        />
 
         <p className="text-xs text-muted-foreground text-center pt-4">
           {filteredItems.length} of {data.items.length} entries shown
