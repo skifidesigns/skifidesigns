@@ -164,7 +164,32 @@
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <noscript>
+          <div style="max-width:780px;margin:80px auto;padding:0 24px;font-family:'Outfit','Inter',system-ui,sans-serif;color:#0A0A0A;line-height:1.6;">
+            <h1 style="font-size:42px;font-weight:700;letter-spacing:-0.02em;margin:0 0 16px;">SkiFi Designs - Investor Pitch Deck &amp; Presentation Design Agency</h1>
+            <p style="font-size:18px;color:#525252;margin:0 0 32px;">Premium presentation design agency creating investor pitch decks, sales decks, PowerPoint presentations and corporate decks that close deals. Trusted by founders, agencies and global brands across 43+ countries.</p>
+            <p style="background:#FFF8E1;border-left:3px solid #2A7AFE;padding:14px 18px;border-radius:6px;font-size:14px;color:#525252;margin:0 0 32px;">This site uses JavaScript for an interactive experience. Please enable JavaScript or contact us directly using the details below.</p>
+            <h2 style="font-size:22px;font-weight:600;margin:32px 0 12px;">Services</h2>
+            <ul style="padding-left:20px;margin:0 0 24px;color:#0A0A0A;">
+              <li>Investor pitch deck design (seed to Series C)</li>
+              <li>Sales deck and corporate presentation design</li>
+              <li>PowerPoint and Google Slides template design</li>
+              <li>Annual reports and investor relations decks</li>
+              <li>Slide redesign and brand-system rollouts</li>
+            </ul>
+            <h2 style="font-size:22px;font-weight:600;margin:32px 0 12px;">Explore</h2>
+            <ul style="padding-left:20px;margin:0 0 24px;">
+              <li><a href="/blog" style="color:#2A7AFE;">Blog - pitch deck &amp; presentation design insights</a></li>
+              <li><a href="/resources" style="color:#2A7AFE;">Free &amp; premium presentation templates</a></li>
+              <li><a href="/privacy" style="color:#2A7AFE;">Privacy policy</a></li>
+              <li><a href="/terms" style="color:#2A7AFE;">Terms of service</a></li>
+            </ul>
+            <h2 style="font-size:22px;font-weight:600;margin:32px 0 12px;">Get in touch</h2>
+            <p style="margin:0 0 8px;"><a href="https://cal.com/skifi/30min" style="color:#2A7AFE;font-weight:600;">Book a free 30-minute discovery call</a></p>
+            <p style="margin:0 0 8px;">Email: <a href="mailto:hello@skifidesigns.com" style="color:#2A7AFE;">hello@skifidesigns.com</a></p>
+            <p style="font-size:13px;color:#737373;margin:32px 0 0;">SKIFI GROUP LLC, Sheridan, Wyoming, USA &middot; SKIFI CREATIVE HUB LLP, Kozhikode, Kerala, India</p>
+          </div>
+        </noscript>
 
         <!-- Smooth initial loader (sits behind React; hidden as soon as the app mounts) -->
         <style>
@@ -219,7 +244,73 @@
           setTimeout(skifiHideLoader, 6000);
         </script>
 
-        <div id="root"></div>
+        <!--
+          Static SEO fallback inside #root: crawlers that DON'T execute JavaScript
+          (older Bing, GPTBot fast pass, LinkedIn scraper, link-preview bots) see
+          this fully rendered HTML. React 18's createRoot() replaces all children
+          on mount so users never see this content. The loader above covers it
+          visually during the first paint.
+        -->
+        <div id="root">
+          <main style="max-width:1100px;margin:0 auto;padding:48px 24px;font-family:'Outfit','Inter',system-ui,sans-serif;color:#0A0A0A;line-height:1.6;">
+            <header>
+              <h1 style="font-size:48px;font-weight:700;letter-spacing:-0.02em;margin:0 0 16px;line-height:1.1;">
+                Design Presentations That Actually Win Business
+              </h1>
+              <p style="font-size:20px;color:#525252;max-width:780px;margin:0 0 24px;">
+                SkiFi Designs is a premium presentation design agency specialising in
+                investor pitch decks, sales decks and PowerPoint design for founders,
+                agencies, and global brands.
+              </p>
+              <p style="font-size:14px;color:#737373;margin:0 0 40px;">
+                <a href="https://cal.com/skifi/30min" style="color:#2A7AFE;font-weight:600;">Book a free call</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:hello@skifidesigns.com" style="color:#2A7AFE;">hello@skifidesigns.com</a>
+              </p>
+            </header>
+
+            <section>
+              <h2 style="font-size:28px;font-weight:600;margin:48px 0 16px;">Our Services</h2>
+              <ul style="padding-left:20px;margin:0 0 32px;">
+                <li><strong>Investor pitch deck design</strong> - seed, Series A through Series C decks built to raise capital</li>
+                <li><strong>Sales deck design</strong> - high-converting sales presentations and product overview decks</li>
+                <li><strong>PowerPoint &amp; Google Slides design</strong> - polished, brand-consistent slide systems</li>
+                <li><strong>Corporate &amp; investor relations decks</strong> - annual reports, board updates, IR decks</li>
+                <li><strong>Slide redesign</strong> - take an existing deck from rough to investor-ready</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 style="font-size:28px;font-weight:600;margin:48px 0 16px;">Why SkiFi Designs</h2>
+              <ul style="padding-left:20px;margin:0 0 32px;">
+                <li>7+ years of presentation design experience</li>
+                <li>2,700+ presentations delivered worldwide</li>
+                <li>150+ clients across 43+ countries</li>
+                <li>Storytelling-first approach: structure, narrative, design</li>
+                <li>Fast turnaround without compromising quality</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 style="font-size:28px;font-weight:600;margin:48px 0 16px;">Explore</h2>
+              <ul style="padding-left:20px;margin:0 0 32px;">
+                <li><a href="/blog" style="color:#2A7AFE;">Blog - pitch deck and presentation design insights</a></li>
+                <li><a href="/resources" style="color:#2A7AFE;">Free and premium presentation templates</a></li>
+                <li><a href="/dashboard" style="color:#2A7AFE;">Client dashboard</a></li>
+                <li><a href="/privacy" style="color:#2A7AFE;">Privacy policy</a></li>
+                <li><a href="/terms" style="color:#2A7AFE;">Terms of service</a></li>
+                <li><a href="/refund-policy" style="color:#2A7AFE;">Refund policy</a></li>
+                <li><a href="/cookies" style="color:#2A7AFE;">Cookie policy</a></li>
+              </ul>
+            </section>
+
+            <footer style="margin-top:64px;padding-top:24px;border-top:1px solid #E5E5E5;font-size:13px;color:#737373;">
+              <p style="margin:0 0 8px;"><strong>SKIFI GROUP LLC</strong> &middot; Sheridan, Wyoming, United States</p>
+              <p style="margin:0 0 8px;"><strong>SKIFI CREATIVE HUB LLP</strong> &middot; Kozhikode, Kerala, India</p>
+              <p style="margin:16px 0 0;">&copy; SkiFi Designs. All rights reserved.</p>
+            </footer>
+          </main>
+        </div>
         <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
