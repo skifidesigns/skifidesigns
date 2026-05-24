@@ -28,7 +28,7 @@ export const Hero = () => {
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative flex items-center justify-center overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20"
     >
       {/* Animated gradient mesh background */}
       <div className="skifi-mesh skifi-mesh-soft" />
@@ -36,7 +36,7 @@ export const Hero = () => {
       <div className="absolute inset-0 skifi-grain pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-32 text-center">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -106,7 +106,7 @@ export const Hero = () => {
           {/* Stats — glass card with interactive spotlight */}
           <motion.div
             variants={{ hidden: { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0 } }}
-            className="pt-12 max-w-4xl mx-auto"
+            className="pt-8 max-w-4xl mx-auto"
           >
             <div
               onMouseMove={handleMouseMove}
@@ -132,21 +132,21 @@ export const Hero = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4, duration: 0.6 }}
+            className="pt-10 flex justify-center"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Scroll</span>
+              <ArrowDown className="w-3.5 h-3.5 text-muted-foreground animate-bounce" />
+            </div>
+          </motion.div>
         </motion.div>
       </div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4, duration: 0.6 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10"
-      >
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Scroll</span>
-          <ArrowDown className="w-3.5 h-3.5 text-muted-foreground animate-bounce" />
-        </div>
-      </motion.div>
 
       <OnboardingWizard
         open={wizardOpen}
