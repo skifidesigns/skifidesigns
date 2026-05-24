@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { GoogleIcon } from './icons/GoogleIcon';
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -154,8 +155,9 @@ export const Header = () => {
               <button
                 data-testid="header-login"
                 onClick={login}
-                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors px-3 py-2"
+                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors px-3 py-2 inline-flex items-center gap-2 rounded-lg hover:bg-accent"
               >
+                <GoogleIcon className="w-4 h-4" />
                 Sign in
               </button>
             )}
@@ -221,7 +223,8 @@ export const Header = () => {
                   Sign out ({user.name || user.email})
                 </button>
               ) : (
-                <button onClick={login} className="text-left text-sm font-medium text-foreground/80">
+                <button onClick={login} className="text-left text-sm font-medium text-foreground/80 inline-flex items-center gap-2">
+                  <GoogleIcon className="w-4 h-4" />
                   Sign in with Google
                 </button>
               )}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import {
-  Loader2, FileText, Calendar, Download, Upload, Mail, Building2,
+  Loader2, FileText, Calendar, Download, Upload, Building2,
   Package, CheckCircle2, Clock, AlertCircle, Sparkles, Send,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
+import { GoogleIcon } from './icons/GoogleIcon';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -244,14 +245,14 @@ export const ClientDashboard = () => {
             <p className="text-muted-foreground mb-6">
               Sign in with the Google account you used to order - instantly see your projects and download deliveries.
             </p>
-            <Button
+            <button
               onClick={login}
               data-testid="dashboard-google-login"
-              className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white w-full"
+              className="w-full py-3 rounded-xl bg-white text-gray-900 font-semibold flex items-center justify-center gap-3 border border-gray-200 hover:bg-gray-50 transition-all hover:scale-[1.02] shadow-sm"
             >
-              <Mail className="w-4 h-4 mr-2" />
+              <GoogleIcon className="w-5 h-5" />
               Continue with Google
-            </Button>
+            </button>
             <p className="text-xs text-muted-foreground mt-5">
               Don't have an order yet?{' '}
               <a href="/" className="text-[#2A7AFE] underline">Start a project →</a>
