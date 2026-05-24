@@ -168,6 +168,7 @@ export const trustedBrands = [
   { name: "IndiGo", src: "/logos/indigo.png" },
   { name: "Toyota", src: "/logos/toyota.png" },
   { name: "Salesforce", src: "/logos/salesforce.png" },
+  { name: "Lenovo", src: "/logos/lenovo.png" },
   { name: "Saudi Vision 2030", src: "/logos/saudi-vision-2030.png" },
   { name: "LinkedIn", src: "/logos/linkedin.png" }
 ];

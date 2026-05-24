@@ -23,18 +23,20 @@ export const TrustedBy = () => {
       <div className="relative w-full overflow-hidden py-6">
         <div className="flex animate-marquee whitespace-nowrap items-center">
           {marqueeBrands.map((brand, index) => (
-            <div
-              key={`${brand.name}-${index}`}
-              className="mx-10 flex-shrink-0 flex items-center justify-center"
-              data-testid={`trusted-logo-${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              <img
-                src={brand.src}
-                alt={`${brand.name} logo`}
-                loading="lazy"
-                className="h-12 md:h-14 w-auto object-contain trusted-logo"
-              />
-            </div>
+            <React.Fragment key={`${brand.name}-${index}`}>
+              <div
+                className="mx-4 md:mx-5 flex-shrink-0 flex items-center justify-center"
+                data-testid={`trusted-logo-${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <img
+                  src={brand.src}
+                  alt={`${brand.name} logo`}
+                  loading="lazy"
+                  className="h-12 md:h-14 w-auto object-contain trusted-logo"
+                />
+              </div>
+              <span className="trusted-dot text-muted-foreground/40 select-none" aria-hidden="true">•</span>
+            </React.Fragment>
           ))}
         </div>
 

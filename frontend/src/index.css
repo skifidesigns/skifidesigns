@@ -182,6 +182,13 @@ code {
   opacity: 1;
 }
 
+/* Dot separator between marquee logos */
+.trusted-dot {
+  font-size: 0.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 
 /* Subtle grain texture - only one section uses it (hero) */
 .skifi-grain::after {
