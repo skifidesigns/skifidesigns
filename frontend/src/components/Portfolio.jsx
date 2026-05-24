@@ -40,8 +40,10 @@ export const Portfolio = () => {
               <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-sm text-[#2A7AFE] font-medium mb-2">{project.category}</div>
-                    <h3 className="text-xl font-semibold text-white mb-2 line-clamp-2">{project.title}</h3>
+                    <span className="inline-block uppercase tracking-[0.14em] text-[10px] font-semibold text-foreground bg-white/95 dark:bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full mb-3 shadow-sm">
+                      {project.category}
+                    </span>
+                    <h3 className="text-xl font-semibold text-white mb-2 line-clamp-2 drop-shadow-md">{project.title}</h3>
                   </div>
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <ExternalLink className="w-5 h-5 text-white" />
