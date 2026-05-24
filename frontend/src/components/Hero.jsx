@@ -30,8 +30,8 @@ export const Hero = () => {
       ref={heroRef}
       className="relative flex items-center justify-center overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20"
     >
-      {/* Animated gradient mesh background */}
-      <div className="skifi-mesh skifi-mesh-soft" />
+      {/* Animated gradient mesh background (hero only — animation opt-in) */}
+      <div className="skifi-mesh skifi-mesh-soft skifi-mesh-animate" />
       {/* Subtle grain texture for premium paper feel */}
       <div className="absolute inset-0 skifi-grain pointer-events-none" />
 

@@ -2,10 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useSpotlight } from '../hooks/useSpotlight';
 
+const STATS = [
+  { value: '10+', label: 'In-house designers' },
+  { value: '2,700+', label: 'Decks delivered' },
+  { value: '43+', label: 'Countries served' },
+  { value: '7+', label: 'Years in business' },
+];
+
 export const Founder = () => {
   const handleMove = useSpotlight();
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="about" className="relative py-24 overflow-hidden">
       <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -14,9 +21,10 @@ export const Founder = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Founder</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">About us</p>
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
-            Meet the team behind <span className="skifi-gradient-text">SkiFi</span>
+            Get to know{' '}
+            <span className="skifi-gradient-text">SkiFi Designs</span>
           </h2>
         </motion.div>
 
@@ -26,33 +34,55 @@ export const Founder = () => {
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5 }}
           onMouseMove={handleMove}
-          className="skifi-glass skifi-spotlight rounded-3xl p-8 md:p-12 group"
+          className="skifi-glass skifi-spotlight rounded-3xl p-8 sm:p-12"
         >
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-            <div className="flex-shrink-0 relative">
-              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] opacity-50 blur-md group-hover:opacity-70 transition-opacity duration-500"></div>
+          {/* Story */}
+          <div className="space-y-5 text-foreground text-lg leading-relaxed">
+            <p>
+              <span className="font-semibold">SkiFi Designs</span> is a creative studio crafting{' '}
+              <span className="text-[#2A7AFE] font-medium">premium presentations</span>{' '}
+              that turn ideas into outcomes — pitch decks that raise capital, sales decks that close
+              deals, and corporate decks that elevate brands.
+            </p>
+            <p className="text-muted-foreground text-[16.5px]">
+              With an in-house team of <strong className="text-foreground">10 experienced designers</strong>,
+              we partner with startups, agencies and global brands to craft modern, persuasive and
+              visually impactful designs. Our focus: clean aesthetics, strategic layouts, premium
+              visuals — presentations that leave a lasting impression.
+            </p>
+          </div>
+
+          {/* Stats strip */}
+          <div className="mt-10 pt-10 border-t border-border/60 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {STATS.map((s) => (
+              <div key={s.label} className="text-center md:text-left">
+                <div className="text-2xl sm:text-3xl font-semibold skifi-gradient-text tracking-tight">
+                  {s.value}
+                </div>
+                <div className="mt-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sign-off — founder at the bottom like a magazine columnist */}
+          <div className="mt-10 pt-8 border-t border-border/60 flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] opacity-40 blur-sm" />
               <img
                 src="https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/xkunifl8_Profile%20Pic.jpg"
-                alt="Ishaque — Founder of SkiFi Designs"
-                className="relative w-32 h-32 rounded-full object-cover ring-4 ring-background"
+                alt="Ishaque — Founder, SkiFi Designs"
+                loading="lazy"
+                decoding="async"
+                className="relative w-14 h-14 rounded-full object-cover ring-2 ring-background"
               />
             </div>
-
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-3xl font-bold text-foreground mb-1">Hi, I'm Ishaque</h3>
-              <p className="text-[#2A7AFE] font-medium text-sm uppercase tracking-[0.16em] mb-6">Founder · SkiFi Designs</p>
-
-              <div className="space-y-4 text-muted-foreground text-[15px] leading-relaxed">
-                <p>
-                  We're SkiFi Designs, a creative studio specialising in presentation design, pitch decks, branding, business reports and visual storytelling.
-                </p>
-                <p>
-                  With an in-house team of 10 experienced designers, we help startups, agencies and businesses craft modern, persuasive and visually impactful designs that communicate ideas clearly and professionally.
-                </p>
-                <p>
-                  Our focus: clean aesthetics, strategic layouts, premium visuals and presentation designs that leave a lasting impression.
-                </p>
-              </div>
+            <div>
+              <p className="text-sm italic text-muted-foreground">
+                — Written by <span className="text-foreground font-medium not-italic">Ishaque</span>,{' '}
+                <span className="text-[#2A7AFE] not-italic">Founder, SkiFi Designs</span>
+              </p>
             </div>
           </div>
         </motion.div>

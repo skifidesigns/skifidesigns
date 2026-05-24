@@ -18,9 +18,7 @@ export const Footer = () => {
   const { theme } = useTheme();
 
   return (
-    <footer className="relative bg-background border-t border-border overflow-hidden">
-      <div className="skifi-mesh skifi-mesh-soft" style={{ opacity: 0.4 }} />
-      <div className="absolute inset-0 skifi-grain pointer-events-none" />
+    <footer className="relative bg-background border-t border-border">
       <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-10">
           <div>
