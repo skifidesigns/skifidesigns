@@ -25,7 +25,7 @@ export const FinalCTA = () => {
             />
             <div
               className="absolute -bottom-32 -right-24 w-[640px] h-[640px] rounded-full opacity-40"
-              style={{ background: 'radial-gradient(circle, #8B5CF6 0%, transparent 70%)', filter: 'blur(90px)' }}
+              style={{ background: 'radial-gradient(circle, #60A5FA 0%, transparent 70%)', filter: 'blur(90px)' }}
             />
           </div>
 

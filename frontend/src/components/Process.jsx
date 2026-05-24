@@ -35,7 +35,7 @@ export const Process = () => {
               className="relative group h-full"
             >
               {index < processSteps.length - 1 && (
-                <div className="hidden lg:block absolute top-14 left-full w-full h-px bg-gradient-to-r from-[#2A7AFE]/50 via-[#8B5CF6]/30 to-transparent transform translate-x-6 z-0"></div>
+                <div className="hidden lg:block absolute top-14 left-full w-full h-px bg-gradient-to-r from-[#2A7AFE]/50 via-[#60A5FA]/30 to-transparent transform translate-x-6 z-0"></div>
               )}
 
               <div

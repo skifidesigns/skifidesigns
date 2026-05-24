@@ -37,7 +37,7 @@ export const WhySkiFi = () => {
               onMouseMove={handleMove}
               className="skifi-card skifi-spotlight rounded-xl p-6 flex items-start gap-4 group hover:-translate-y-0.5 transition-transform"
             >
-              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-[#2A7AFE]/30">
+              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#2A7AFE] to-[#60A5FA] flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-[#2A7AFE]/30">
                 <Check className="w-4 h-4 text-white" strokeWidth={3} />
               </div>
               <p className="text-foreground text-[15px] leading-relaxed">{reason}</p>

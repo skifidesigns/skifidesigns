@@ -130,7 +130,7 @@ code {
 .skifi-mesh::after {
   width: 520px;
   height: 520px;
-  background: radial-gradient(circle, #8B5CF6 0%, transparent 70%);
+  background: radial-gradient(circle, #60A5FA 0%, transparent 70%);
   bottom: -160px;
   right: -100px;
 }
@@ -257,7 +257,7 @@ code {
 
 /* Gradient text - premium accent (static gradient, no infinite repaint) */
 .skifi-gradient-text {
-  background: linear-gradient(120deg, #2A7AFE 0%, #8B5CF6 55%, #2A7AFE 100%);
+  background: linear-gradient(120deg, #2A7AFE 0%, #60A5FA 55%, #2A7AFE 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -268,7 +268,7 @@ code {
 .skifi-btn-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #2A7AFE 0%, #3B82F6 50%, #6366F1 100%);
+  background: linear-gradient(135deg, #2A7AFE 0%, #3B82F6 50%, #1E40AF 100%);
   color: white;
   isolation: isolate;
   transition: transform 0.25s ease, box-shadow 0.3s ease;
