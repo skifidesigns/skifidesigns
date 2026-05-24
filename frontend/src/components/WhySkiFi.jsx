@@ -20,7 +20,8 @@ export const WhySkiFi = () => {
         >
           <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Why SkiFi</p>
           <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
-            Teams choose us for one reason — <span className="skifi-gradient-text">it works.</span>
+            Teams choose us because{' '}
+            <span className="skifi-gradient-text">it works.</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Design excellence + storytelling expertise to create presentations that drive results.

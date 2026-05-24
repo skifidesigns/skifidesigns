@@ -37,7 +37,7 @@ export const Portfolio = () => {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: i * 0.07 }}
               onMouseMove={handleMove}
-              className="skifi-spotlight group relative overflow-hidden rounded-2xl border border-border bg-card hover:border-[#2A7AFE]/50 hover:-translate-y-1 transition-all duration-500"
+              className="skifi-spotlight group flex flex-col relative overflow-hidden rounded-2xl border border-border bg-card hover:border-[#2A7AFE]/50 hover:-translate-y-1 transition-all duration-500"
             >
               <div className="aspect-[4/3] overflow-hidden relative">
                 <img
@@ -45,21 +45,19 @@ export const Portfolio = () => {
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300"></div>
+                {/* Hover external icon */}
+                <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:rotate-45 transition-all duration-300 border border-white/20">
+                  <ExternalLink className="w-4 h-4 text-white" />
+                </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-400">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="inline-block uppercase tracking-[0.14em] text-[10px] font-semibold bg-white/95 text-neutral-900 dark:bg-neutral-900/95 dark:text-white backdrop-blur-sm px-2.5 py-1 rounded-full mb-3 shadow-sm">
-                      {project.category}
-                    </span>
-                    <h3 className="text-xl font-semibold text-white line-clamp-2 drop-shadow-md">{project.title}</h3>
-                  </div>
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:rotate-45 transition-all duration-300 border border-white/20">
-                    <ExternalLink className="w-4 h-4 text-white" />
-                  </div>
-                </div>
+              <div className="p-5">
+                <p className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#2A7AFE] mb-2">
+                  {project.category}
+                </p>
+                <h3 className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-[#2A7AFE] transition-colors">
+                  {project.title}
+                </h3>
               </div>
             </motion.a>
           ))}
