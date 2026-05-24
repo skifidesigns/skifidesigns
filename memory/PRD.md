@@ -76,7 +76,7 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 - [ ] **P1** Redeploy to push blog + SEO changes to production
 - [ ] **P1** Submit dynamic sitemap to GSC + Bing
 - [ ] **P1** Upload initial templates via `/admin` → Templates
-- [ ] **P1** Run $15 live test purchase → refund via Stripe Dashboard
+- [x] **P1** Live Stripe end-to-end verified ($150 package, 2026-02) - payment + Resend email + GridFS uploads all working
 - [ ] **P2** Email support@emergent.sh to remove "Made with Emergent" badge
 
 ## Roadmap
