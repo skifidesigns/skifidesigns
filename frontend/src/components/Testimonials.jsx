@@ -1,42 +1,56 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Quote, Star } from 'lucide-react';
 import { testimonials } from '../data/mock';
-import { Card, CardContent } from './ui/card';
+import { useSpotlight } from '../hooks/useSpotlight';
 
 export const Testimonials = () => {
+  const handleMove = useSpotlight();
   return (
-    <section className="py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="text-center mb-16">
+    <section className="relative py-24 overflow-hidden">
+      <div className="absolute inset-0 skifi-mesh skifi-mesh-soft" style={{ opacity: 0.45 }} />
+      <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Testimonials</p>
           <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
-            What Clients Say
+            What clients <span className="skifi-gradient-text">actually say</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Don't just take our word for it. Here's what our clients have to say about working with us.
+            Don't take our word for it — here's what teams say after working with us.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial) => (
-            <Card
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((testimonial, i) => (
+            <motion.div
               key={testimonial.id}
-              className="bg-card backdrop-blur-sm border-border hover:bg-accent hover:border-[#2A7AFE]/50 transition-all duration-300 hover:scale-105 group"
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.45, delay: i * 0.08 }}
+              onMouseMove={handleMove}
+              className="skifi-glass skifi-spotlight rounded-2xl p-8 group relative hover:-translate-y-1 transition-transform duration-300"
             >
-              <CardContent className="p-8">
-                <div className="flex gap-1 mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-[#2A7AFE] text-[#2A7AFE]" />
-                  ))}
-                </div>
-                <p className="text-foreground/90 text-lg leading-relaxed mb-6 italic">
-                  "{testimonial.text}"
-                </p>
-                <div className="border-t border-border pt-6">
-                  <div className="font-semibold text-foreground text-lg">{testimonial.name}</div>
-                  <div className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.company}</div>
-                </div>
-              </CardContent>
-            </Card>
+              <Quote className="absolute top-6 right-6 w-8 h-8 text-[#2A7AFE]/15" strokeWidth={1} />
+              <div className="flex gap-0.5 mb-5">
+                {[...Array(testimonial.rating)].map((_, idx) => (
+                  <Star key={idx} className="w-4 h-4 fill-[#2A7AFE] text-[#2A7AFE]" />
+                ))}
+              </div>
+              <p className="text-foreground text-[15px] leading-relaxed mb-6">
+                "{testimonial.text}"
+              </p>
+              <div className="border-t border-border/60 pt-5">
+                <div className="font-semibold text-foreground">{testimonial.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{testimonial.role}, {testimonial.company}</div>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

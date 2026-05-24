@@ -1,50 +1,68 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Calendar, ArrowRight } from 'lucide-react';
-import { Button } from './ui/button';
 
 export const FinalCTA = () => {
-  const handleBookCall = () => {
-    window.open('https://cal.com/skifi/30min', '_blank');
-  };
-
-  const handleStartProject = () => {
-    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const handleBookCall = () => window.open('https://cal.com/skifi/30min', '_blank');
+  const handleStartProject = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#2A7AFE]/20 rounded-full blur-[120px]"></div>
-      </div>
+    <section className="relative py-24 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
+        {/* Inverted dark block — agency aesthetic */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6 }}
+          className="relative rounded-3xl overflow-hidden bg-neutral-950 px-8 py-20 sm:py-24 sm:px-12 text-center"
+        >
+          {/* Internal mesh */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div
+              className="absolute -top-24 -left-24 w-[560px] h-[560px] rounded-full opacity-50"
+              style={{ background: 'radial-gradient(circle, #2A7AFE 0%, transparent 70%)', filter: 'blur(80px)' }}
+            />
+            <div
+              className="absolute -bottom-32 -right-24 w-[640px] h-[640px] rounded-full opacity-40"
+              style={{ background: 'radial-gradient(circle, #8B5CF6 0%, transparent 70%)', filter: 'blur(90px)' }}
+            />
+          </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground mb-6">
-          Ready to Upgrade Your Presentation?
-        </h2>
-        <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
-          Let's turn your ideas into presentations people remember.
-        </p>
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/60 font-semibold mb-4">
+              Ready when you are
+            </p>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white mb-5 leading-tight">
+              Let's turn your ideas into{' '}
+              <span className="skifi-gradient-text">presentations</span>
+              <br className="hidden sm:block" /> people remember.
+            </h2>
+            <p className="text-lg sm:text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+              Book a free 30-minute call or kick off your project right now.
+            </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button
-            onClick={handleBookCall}
-            size="lg"
-            className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white px-10 py-7 text-lg font-medium rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50 group"
-          >
-            <Calendar className="w-6 h-6 mr-2 group-hover:rotate-12 transition-transform" />
-            Book a Discovery Call
-          </Button>
-          
-          <Button
-            onClick={handleStartProject}
-            size="lg"
-            variant="outline"
-            className="border-2 border-border bg-card backdrop-blur-sm text-foreground hover:bg-accent hover:border-[#2A7AFE]/40 px-10 py-7 text-lg font-medium rounded-xl transition-all duration-300 group"
-          >
-            Start Your Project
-            <ArrowRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                onClick={handleBookCall}
+                data-testid="final-cta-book"
+                className="skifi-btn-primary group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-semibold"
+              >
+                <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                Book a Discovery Call
+              </button>
+
+              <button
+                onClick={handleStartProject}
+                data-testid="final-cta-start"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-semibold text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 hover:border-white/30 transition-all duration-300"
+              >
+                Start Your Project
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

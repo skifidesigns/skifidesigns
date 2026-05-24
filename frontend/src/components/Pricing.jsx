@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Check, ArrowUpRight } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { useTheme } from '../context/ThemeContext';
@@ -45,36 +46,45 @@ export const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="text-center mb-16">
-          <p className="text-sm uppercase tracking-widest text-[#2A7AFE] font-medium mb-3">
+    <section id="pricing" className="relative py-24 overflow-hidden">
+      <div className="absolute inset-0 skifi-mesh skifi-mesh-soft" style={{ opacity: 0.35 }} />
+      <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">
             Investment
           </p>
           <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
-            Clean paths to partnership.
+            Clean paths to <span className="skifi-gradient-text">partnership</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             High-value production without the agency bloat. Transparent pricing for high-stakes presentations.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {pricingPlans.map((plan) => {
-            // Highlighted card = always white (pops on any background)
-            // Non-highlighted = dark in light theme, transparent dark in dark theme
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          {pricingPlans.map((plan, idx) => {
             const isHighlighted = plan.popular;
-            const isLight = isHighlighted;   // popular is always the light/white card
+            const isLight = isHighlighted;
             return (
-              <div
+              <motion.div
                 key={plan.id}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
                 data-testid={`pricing-card-${plan.id}`}
-                className={`relative rounded-3xl p-10 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl flex flex-col ${
+                className={`relative rounded-3xl p-10 transition-all duration-500 hover:-translate-y-1 flex flex-col ${
                   isLight
-                    ? 'bg-white text-gray-900 border border-gray-200 hover:shadow-blue-300/30 glow-pulse'
+                    ? 'bg-white text-gray-900 border border-gray-200 shadow-2xl shadow-[#2A7AFE]/15'
                     : theme === 'dark'
-                    ? 'bg-white/[0.03] text-white border border-white/10 hover:shadow-white/10 backdrop-blur-xl'
-                    : 'bg-[#0a0a0a] text-white border border-white/10 hover:shadow-gray-700/40'
+                    ? 'bg-white/[0.03] text-white border border-white/10 backdrop-blur-xl'
+                    : 'bg-neutral-950 text-white border border-neutral-900'
                 }`}
               >
                 {plan.popular && (
@@ -136,7 +146,7 @@ export const Pricing = () => {
                   {plan.cta}
                   <ArrowUpRight className="w-5 h-5" />
                 </button>
-              </div>
+              </motion.div>
             );
           })}
         </div>

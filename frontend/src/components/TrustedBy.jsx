@@ -6,20 +6,21 @@ export const TrustedBy = () => {
   const marqueeBrands = [...trustedBrands, ...trustedBrands];
 
   return (
-    <section className="py-20 bg-background overflow-hidden">
+    <section className="relative py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold text-foreground mb-4">
-            Trusted by Startups, Agencies & Global Brands
+        <div className="text-center mb-10">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Trusted by</p>
+          <h2 className="text-3xl sm:text-4xl font-semibold text-foreground mb-3">
+            Startups, agencies & <span className="skifi-gradient-text">global brands</span>
           </h2>
-          <p className="text-muted-foreground text-base">
+          <p className="text-muted-foreground text-sm">
             Strategic collaborations across the globe
           </p>
         </div>
       </div>
 
       {/* Animated Marquee */}
-      <div className="relative w-full overflow-hidden py-8">
+      <div className="relative w-full overflow-hidden py-6">
         <div className="flex animate-marquee whitespace-nowrap">
           {marqueeBrands.map((brand, index) => (
             <div

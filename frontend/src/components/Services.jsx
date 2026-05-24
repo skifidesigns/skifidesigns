@@ -1,7 +1,8 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Presentation, Briefcase, TrendingUp, Video, BarChart, Layers } from 'lucide-react';
 import { services } from '../data/mock';
-import { Card, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { useSpotlight } from '../hooks/useSpotlight';
 
 const iconMap = {
   presentation: Presentation,
@@ -9,40 +10,49 @@ const iconMap = {
   'trending-up': TrendingUp,
   video: Video,
   'bar-chart': BarChart,
-  layers: Layers
+  layers: Layers,
 };
 
 export const Services = () => {
+  const handleMove = useSpotlight();
   return (
-    <section className="py-24 bg-background">
+    <section id="services" className="relative py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="text-center mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Services</p>
           <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
-            What We Design
+            What We <span className="skifi-gradient-text">Design</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             From pitch decks to corporate presentations, we create visuals that make your message memorable.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service, i) => {
             const Icon = iconMap[service.icon];
             return (
-              <Card
+              <motion.div
                 key={service.id}
-                className="bg-card backdrop-blur-sm border-border hover:bg-accent hover:border-[#2A7AFE]/50 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#2A7AFE]/20 group cursor-pointer"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.45, delay: i * 0.06 }}
+                onMouseMove={handleMove}
+                className="skifi-glass skifi-spotlight rounded-2xl p-8 group cursor-pointer hover:-translate-y-1 transition-transform duration-300"
               >
-                <CardHeader>
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2A7AFE] to-[#3B82F6] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl text-foreground mb-2 font-semibold">{service.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground text-base leading-relaxed">
-                    {service.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg shadow-[#2A7AFE]/30">
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{service.title}</h3>
+                <p className="text-muted-foreground text-[15px] leading-relaxed">{service.description}</p>
+              </motion.div>
             );
           })}
         </div>
