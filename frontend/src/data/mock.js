@@ -160,7 +160,7 @@ export const faqs = [
   {
     id: 5,
     question: "Do you work with startups?",
-    answer: "Yes — startups and founders are one of our core focuses."
+    answer: "Yes - startups and founders are one of our core focuses."
   }
 ];
 

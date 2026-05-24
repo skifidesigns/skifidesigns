@@ -21,7 +21,7 @@ export const Testimonials = () => {
             What clients <span className="skifi-gradient-text">actually say</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Don't take our word for it — here's what teams say after working with us.
+            Don't take our word for it - here's what teams say after working with us.
           </p>
         </motion.div>
 

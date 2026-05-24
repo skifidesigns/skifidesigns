@@ -88,12 +88,12 @@ export const PrivacyPolicy = () => (
     <h2>2. Information we collect</h2>
     <p>We collect the following categories of information:</p>
     <ul>
-      <li><strong>Contact details</strong> you provide — name, email, company name, phone (optional).</li>
+      <li><strong>Contact details</strong> you provide - name, email, company name, phone (optional).</li>
       <li><strong>Project details</strong> you submit through our onboarding form (project type, timeline, description, slide count).</li>
-      <li><strong>Payment information</strong> processed by Stripe, our payment provider. We do <em>not</em> store full card numbers on our servers — Stripe handles tokenisation and PCI compliance.</li>
+      <li><strong>Payment information</strong> processed by Stripe, our payment provider. We do <em>not</em> store full card numbers on our servers - Stripe handles tokenisation and PCI compliance.</li>
       <li><strong>Authentication data</strong> when you sign in with Google to access our Resources area (name, email address, profile picture, Google account ID).</li>
-      <li><strong>Usage analytics</strong> — pages visited, device/browser type, approximate location (country/region only), referrer URL. Collected via PostHog.</li>
-      <li><strong>Communications</strong> — emails, WhatsApp messages and meeting notes you send us.</li>
+      <li><strong>Usage analytics</strong> - pages visited, device/browser type, approximate location (country/region only), referrer URL. Collected via PostHog.</li>
+      <li><strong>Communications</strong> - emails, WhatsApp messages and meeting notes you send us.</li>
     </ul>
 
     <h2>3. How we use your information</h2>
@@ -102,7 +102,7 @@ export const PrivacyPolicy = () => (
       <li>To process payments and issue invoices/receipts.</li>
       <li>To send transactional emails (order confirmations, project updates, delivery files) via Resend.</li>
       <li>To respond to enquiries and provide customer support.</li>
-      <li>To improve our website, services and marketing — based on aggregated analytics.</li>
+      <li>To improve our website, services and marketing - based on aggregated analytics.</li>
       <li>To comply with legal obligations (tax, accounting, fraud prevention).</li>
     </ul>
     <p>We do <strong>not</strong> sell your personal information to third parties. Ever.</p>
@@ -110,22 +110,22 @@ export const PrivacyPolicy = () => (
     <h2>4. Legal bases (GDPR / UK-GDPR)</h2>
     <p>If you are located in the EEA, UK, or Switzerland, we rely on the following legal bases under Article 6 GDPR:</p>
     <ul>
-      <li><strong>Contractual necessity</strong> — to deliver paid services you've ordered.</li>
-      <li><strong>Legitimate interests</strong> — to operate the website, improve our offerings, and contact past clients about related services.</li>
-      <li><strong>Consent</strong> — for non-essential cookies and marketing communications (you can withdraw consent at any time).</li>
-      <li><strong>Legal obligation</strong> — for tax, accounting, and fraud-prevention records.</li>
+      <li><strong>Contractual necessity</strong> - to deliver paid services you've ordered.</li>
+      <li><strong>Legitimate interests</strong> - to operate the website, improve our offerings, and contact past clients about related services.</li>
+      <li><strong>Consent</strong> - for non-essential cookies and marketing communications (you can withdraw consent at any time).</li>
+      <li><strong>Legal obligation</strong> - for tax, accounting, and fraud-prevention records.</li>
     </ul>
 
     <h2>5. Third-party processors</h2>
     <p>We share data with the following carefully-vetted service providers solely to deliver our services:</p>
     <ul>
-      <li><strong>Stripe</strong> — payment processing (USA / EU).</li>
-      <li><strong>Resend</strong> — transactional email delivery (USA).</li>
-      <li><strong>Google LLC</strong> — single sign-on for the Resources area (USA).</li>
-      <li><strong>MongoDB Atlas</strong> — database hosting (region depends on deployment).</li>
-      <li><strong>Cal.com</strong> — meeting scheduling.</li>
-      <li><strong>PostHog</strong> — product analytics.</li>
-      <li><strong>Cloudflare</strong> — content delivery and DDoS protection.</li>
+      <li><strong>Stripe</strong> - payment processing (USA / EU).</li>
+      <li><strong>Resend</strong> - transactional email delivery (USA).</li>
+      <li><strong>Google LLC</strong> - single sign-on for the Resources area (USA).</li>
+      <li><strong>MongoDB Atlas</strong> - database hosting (region depends on deployment).</li>
+      <li><strong>Cal.com</strong> - meeting scheduling.</li>
+      <li><strong>PostHog</strong> - product analytics.</li>
+      <li><strong>Cloudflare</strong> - content delivery and DDoS protection.</li>
     </ul>
 
     <h2>6. International data transfers</h2>
@@ -150,7 +150,7 @@ export const PrivacyPolicy = () => (
       <li><strong>Correct</strong> inaccurate data.</li>
       <li><strong>Delete</strong> your data (subject to legal retention requirements).</li>
       <li><strong>Object</strong> to processing or restrict it.</li>
-      <li><strong>Data portability</strong> — receive your data in a portable format.</li>
+      <li><strong>Data portability</strong> - receive your data in a portable format.</li>
       <li><strong>Withdraw consent</strong> at any time, without affecting the lawfulness of past processing.</li>
       <li><strong>Lodge a complaint</strong> with your local data protection authority.</li>
     </ul>
@@ -169,7 +169,7 @@ export const PrivacyPolicy = () => (
     <h2>11. Security</h2>
     <p>
       We protect your data with industry-standard safeguards including HTTPS/TLS encryption in transit,
-      access controls, and least-privilege principles. No system is 100% secure — if you believe your
+      access controls, and least-privilege principles. No system is 100% secure - if you believe your
       account or data has been compromised, please contact us immediately.
     </p>
 
@@ -230,7 +230,7 @@ export const TermsOfService = () => (
     <ul>
       <li>Accurate brief, content, brand assets and any required logos/images.</li>
       <li>Timely feedback within the agreed review windows.</li>
-      <li>That you own — or have legitimate rights to — all materials you provide to us.</li>
+      <li>That you own - or have legitimate rights to - all materials you provide to us.</li>
     </ul>
 
     <h2>6. Intellectual property</h2>
@@ -246,9 +246,9 @@ export const TermsOfService = () => (
     <h2>7. Refund Policy</h2>
     <p>Full details are in our <Link to="/refund-policy" className="text-[#2A7AFE] underline">Refund Policy</Link>. In summary:</p>
     <ul>
-      <li><strong>100% refund</strong> — if requested before any design work has begun.</li>
-      <li><strong>50% refund</strong> — after the first draft has been delivered (covers our design time).</li>
-      <li><strong>No refund</strong> — once final files have been delivered and approved.</li>
+      <li><strong>100% refund</strong> - if requested before any design work has begun.</li>
+      <li><strong>50% refund</strong> - after the first draft has been delivered (covers our design time).</li>
+      <li><strong>No refund</strong> - once final files have been delivered and approved.</li>
       <li>Refund requests must be submitted within 7 days of the relevant milestone.</li>
     </ul>
 
@@ -299,7 +299,7 @@ export const TermsOfService = () => (
       These Terms are governed by the laws of the State of {COMPANY.jurisdiction}, without regard to
       conflict-of-laws principles. Any dispute will first be addressed by good-faith negotiation. If
       unresolved within 30 days, disputes will be resolved by binding arbitration in {COMPANY.jurisdiction},
-      or — at our option — in the courts located in Sheridan County, Wyoming. You waive any right to
+      or - at our option - in the courts located in Sheridan County, Wyoming. You waive any right to
       participate in class-action proceedings against us.
     </p>
 
@@ -365,7 +365,7 @@ export const RefundPolicy = () => (
     <h2>4. How to request</h2>
     <p>Email <a href={`mailto:${COMPANY.contactEmail}`}>{COMPANY.contactEmail}</a> with:</p>
     <ul>
-      <li>Subject line: "Refund Request — [Your name / Order ID]"</li>
+      <li>Subject line: "Refund Request - [Your name / Order ID]"</li>
       <li>Stripe receipt / order ID</li>
       <li>Reason for the refund</li>
       <li>The milestone the request relates to</li>
@@ -412,7 +412,7 @@ export const RefundPolicy = () => (
     <h2>10. Contact</h2>
     <p>
       Questions about your refund? Email{' '}
-      <a href={`mailto:${COMPANY.contactEmail}`}>{COMPANY.contactEmail}</a> — we typically reply within
+      <a href={`mailto:${COMPANY.contactEmail}`}>{COMPANY.contactEmail}</a> - we typically reply within
       one business day.
     </p>
   </LegalLayout>
@@ -435,28 +435,28 @@ export const CookiePolicy = () => (
     <p>We use the following categories:</p>
     <ul>
       <li>
-        <strong>Strictly necessary cookies</strong> — required for the website to function. Used for
+        <strong>Strictly necessary cookies</strong> - required for the website to function. Used for
         secure login, remembering your dark/light theme preference, and shopping/onboarding flow.
         These cannot be disabled.
       </li>
       <li>
-        <strong>Analytics cookies</strong> — set by PostHog to help us understand how visitors use the
+        <strong>Analytics cookies</strong> - set by PostHog to help us understand how visitors use the
         site (pages viewed, time on page, traffic source). Data is aggregated and does not identify you
         personally.
       </li>
       <li>
-        <strong>Authentication cookies</strong> — set when you sign in with Google to access the
+        <strong>Authentication cookies</strong> - set when you sign in with Google to access the
         Resources area.
       </li>
       <li>
-        <strong>Third-party cookies</strong> — set by services we embed (Stripe checkout, Cal.com
+        <strong>Third-party cookies</strong> - set by services we embed (Stripe checkout, Cal.com
         booking widget, Cloudflare). These are governed by the respective providers' own policies.
       </li>
     </ul>
 
     <h2>3. Local storage</h2>
     <p>
-      We use browser <code>localStorage</code> for non-tracking purposes — for example, to remember your
+      We use browser <code>localStorage</code> for non-tracking purposes - for example, to remember your
       theme preference, admin session token, and to cache user preferences.
     </p>
 

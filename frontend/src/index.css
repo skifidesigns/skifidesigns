@@ -37,7 +37,7 @@ code {
 
 @layer base {
   :root {
-    /* Light theme — warm, premium, agency feel */
+    /* Light theme - warm, premium, agency feel */
     --background: 40 20% 97%;
     --foreground: 0 0% 9%;
     --card: 40 20% 99%;
@@ -103,7 +103,7 @@ code {
 
 /* ===== SkiFi premium design utilities ===== */
 
-/* Animated gradient mesh background — animation only when explicitly opted in
+/* Animated gradient mesh background - animation only when explicitly opted in
    (Hero only). Non-animated variants are MUCH cheaper. */
 .skifi-mesh {
   position: absolute;
@@ -161,7 +161,7 @@ code {
   .animate-marquee { animation: none !important; }
 }
 
-/* Subtle grain texture — only one section uses it (hero) */
+/* Subtle grain texture - only one section uses it (hero) */
 .skifi-grain::after {
   content: '';
   position: absolute;
@@ -173,7 +173,7 @@ code {
 }
 .dark .skifi-grain::after { opacity: 0.06; }
 
-/* Glassmorphism card — used sparingly; backdrop blur is expensive */
+/* Glassmorphism card - used sparingly; backdrop blur is expensive */
 .skifi-glass {
   background-color: hsl(var(--card) / 0.7);
   backdrop-filter: blur(10px) saturate(140%);
@@ -186,7 +186,7 @@ code {
   box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 12px 40px -12px hsl(0 0% 0% / 0.5);
 }
 
-/* Cheap solid card — visually similar but no backdrop blur (cheap to paint at scale) */
+/* Cheap solid card - visually similar but no backdrop blur (cheap to paint at scale) */
 .skifi-card {
   background-color: hsl(var(--card));
   border: 1px solid hsl(var(--border) / 0.65);
@@ -204,7 +204,7 @@ code {
   border: 1px solid hsl(var(--border) / 0.7);
 }
 
-/* Interactive cursor follower — magnetic spotlight on cards */
+/* Interactive cursor follower - magnetic spotlight on cards */
 .skifi-spotlight {
   position: relative;
   overflow: hidden;
@@ -226,7 +226,7 @@ code {
 .skifi-spotlight:hover::before { opacity: 1; }
 .skifi-spotlight > * { position: relative; z-index: 1; }
 
-/* Gradient text — premium accent (static gradient, no infinite repaint) */
+/* Gradient text - premium accent (static gradient, no infinite repaint) */
 .skifi-gradient-text {
   background: linear-gradient(120deg, #2A7AFE 0%, #8B5CF6 55%, #2A7AFE 100%);
   -webkit-background-clip: text;
@@ -235,7 +235,7 @@ code {
   color: transparent;
 }
 
-/* Primary CTA — gradient with sweeping shine */
+/* Primary CTA - gradient with sweeping shine */
 .skifi-btn-primary {
   position: relative;
   overflow: hidden;

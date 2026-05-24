@@ -30,7 +30,7 @@ export const Hero = () => {
       ref={heroRef}
       className="relative flex items-center justify-center overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20"
     >
-      {/* Animated gradient mesh background (hero only — animation opt-in) */}
+      {/* Animated gradient mesh background (hero only - animation opt-in) */}
       <div className="skifi-mesh skifi-mesh-soft skifi-mesh-animate" />
       {/* Subtle grain texture for premium paper feel */}
       <div className="absolute inset-0 skifi-grain pointer-events-none" />
@@ -103,7 +103,7 @@ export const Hero = () => {
             </button>
           </motion.div>
 
-          {/* Stats — glass card with interactive spotlight */}
+          {/* Stats - glass card with interactive spotlight */}
           <motion.div
             variants={{ hidden: { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0 } }}
             className="pt-8 max-w-4xl mx-auto"

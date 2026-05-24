@@ -264,14 +264,14 @@ class TestPaymentTxFields:
         await srv.db.payment_transactions.insert_one(dict(fake_tx))
 
         try:
-            # First invocation — should attempt to send and flip emails_sent
+            # First invocation - should attempt to send and flip emails_sent
             await srv._maybe_send_emails(fake_tx)
             doc = await srv.db.payment_transactions.find_one({"session_id": sid})
             assert doc is not None
             assert doc["emails_sent"] is True, \
                 f"emails_sent did not flip to True; doc={doc}"
 
-            # Second invocation — should be a no-op (early-return); emails_sent stays True
+            # Second invocation - should be a no-op (early-return); emails_sent stays True
             await srv._maybe_send_emails(doc)
             doc2 = await srv.db.payment_transactions.find_one({"session_id": sid})
             assert doc2["emails_sent"] is True

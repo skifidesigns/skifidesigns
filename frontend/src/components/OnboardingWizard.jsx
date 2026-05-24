@@ -202,7 +202,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
 
         {/* Body */}
         <div className="px-8 py-6 min-h-[320px]">
-          {/* Step 1 — Plan */}
+          {/* Step 1 - Plan */}
           {step === 1 && (
             <div className="space-y-6">
               <div>
@@ -257,14 +257,14 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                 <div className="p-4 bg-card border border-border rounded-xl">
                   <p className="text-sm text-foreground font-medium">Monthly Retainer</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    $999 / month — up to 100 slide credits. Priority queue and consistent design system.
+                    $999 / month - up to 100 slide credits. Priority queue and consistent design system.
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 2 — Contact */}
+          {/* Step 2 - Contact */}
           {step === 2 && (
             <div className="space-y-4">
               <div>
@@ -304,7 +304,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
             </div>
           )}
 
-          {/* Step 3 — Project details */}
+          {/* Step 3 - Project details */}
           {step === 3 && (
             <div className="space-y-4">
               <div>
@@ -410,7 +410,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
             </div>
           )}
 
-          {/* Step 4 — Review */}
+          {/* Step 4 - Review */}
           {step === 4 && (
             <div className="space-y-4">
               <div className="p-5 bg-card border border-border rounded-xl">

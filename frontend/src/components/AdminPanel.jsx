@@ -19,7 +19,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const TOKEN_KEY = 'skifi-admin-token';
 
 const formatDate = (iso) => {
-  if (!iso) return '—';
+  if (!iso) return '-';
   try {
     return new Date(iso).toLocaleString();
   } catch {
@@ -429,7 +429,7 @@ const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Recommended: upload the file directly here — clients download in one click after sign-in (free) or payment (paid). External links also work but are less secure.
+              Recommended: upload the file directly here - clients download in one click after sign-in (free) or payment (paid). External links also work but are less secure.
             </p>
           </div>
           <div>

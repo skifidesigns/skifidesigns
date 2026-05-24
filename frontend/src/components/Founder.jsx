@@ -34,14 +34,14 @@ export const Founder = () => {
             <p>
               <span className="font-semibold">SkiFi Designs</span> is a creative studio crafting{' '}
               <span className="text-[#2A7AFE] font-medium">premium presentations</span>{' '}
-              that turn ideas into outcomes — pitch decks that raise capital, sales decks that close
+              that turn ideas into outcomes - pitch decks that raise capital, sales decks that close
               deals, and corporate decks that elevate brands.
             </p>
             <p className="text-muted-foreground text-[16.5px]">
               With an in-house team of <strong className="text-foreground">10 experienced designers</strong>,
               we partner with startups, agencies and global brands to craft modern, persuasive and
               visually impactful designs. Our focus: clean aesthetics, strategic layouts, premium
-              visuals — presentations that leave a lasting impression.
+              visuals - presentations that leave a lasting impression.
             </p>
           </div>
         </motion.div>

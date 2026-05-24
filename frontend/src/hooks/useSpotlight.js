@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 /**
- * useSpotlight — wires mousemove to update CSS variables --mx and --my
+ * useSpotlight - wires mousemove to update CSS variables --mx and --my
  * on the hovered element. Pair with the `.skifi-spotlight` utility class.
  */
 export const useSpotlight = () => {

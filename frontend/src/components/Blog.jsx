@@ -73,7 +73,7 @@ export const Blog = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'Blog — Pitch Deck & Presentation Design Insights | SkiFi Designs';
+    document.title = 'Blog - Pitch Deck & Presentation Design Insights | SkiFi Designs';
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', 'Expert guides on pitch deck design, investor presentations, sales decks and PowerPoint design from the SkiFi Designs team.');
 
@@ -109,7 +109,7 @@ export const Blog = () => {
           ) : posts.length === 0 ? (
             <div className="text-center py-24 bg-card border border-border rounded-2xl">
               <Tag className="w-10 h-10 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg text-muted-foreground">No blog posts yet — check back soon.</p>
+              <p className="text-lg text-muted-foreground">No blog posts yet - check back soon.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" data-testid="blog-grid">

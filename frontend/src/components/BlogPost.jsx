@@ -164,7 +164,7 @@ export const BlogPost = () => {
                 Get a presentation that closes deals.
               </h3>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                Book a free 30-minute call with our design team — we'll review your current deck and share quick wins.
+                Book a free 30-minute call with our design team - we'll review your current deck and share quick wins.
               </p>
               <Link
                 to="/"

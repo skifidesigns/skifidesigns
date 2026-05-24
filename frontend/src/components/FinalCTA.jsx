@@ -9,7 +9,7 @@ export const FinalCTA = () => {
   return (
     <section className="relative py-16 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
-        {/* Inverted dark block — agency aesthetic */}
+        {/* Inverted dark block - agency aesthetic */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}

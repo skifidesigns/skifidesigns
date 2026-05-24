@@ -101,7 +101,7 @@ def _admin_html(full_name: str, email: str, company: str, package_label: str,
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin-bottom:24px;">
             <tr><td style="padding:6px 0;color:#666;width:40%;">Name</td><td style="padding:6px 0;color:#111;font-weight:600;">{full_name}</td></tr>
             <tr><td style="padding:6px 0;color:#666;">Email</td><td style="padding:6px 0;color:#111;font-weight:600;"><a href="mailto:{email}" style="color:{BRAND_COLOR};text-decoration:none;">{email}</a></td></tr>
-            <tr><td style="padding:6px 0;color:#666;">Company</td><td style="padding:6px 0;color:#111;font-weight:600;">{company or '—'}</td></tr>
+            <tr><td style="padding:6px 0;color:#666;">Company</td><td style="padding:6px 0;color:#111;font-weight:600;">{company or '-'}</td></tr>
           </table>
 
           <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:{BRAND_COLOR};font-weight:700;">Project</p>
@@ -137,7 +137,7 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
                               files: Optional[list] = None) -> dict:
     """Sends client receipt + admin notification. Non-blocking."""
     if not RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set — skipping emails")
+        logger.warning("RESEND_API_KEY not set - skipping emails")
         return {"client": None, "admin": None, "skipped": True}
 
     package_label = "Per Slide" if package_id == "per_slide" else "Monthly Retainer"
@@ -150,7 +150,7 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
     client_params = {
         "from": f"SkiFi Designs <{SENDER_EMAIL}>",
         "to": [email],
-        "subject": f"Your SkiFi Designs order — {package_label}",
+        "subject": f"Your SkiFi Designs order - {package_label}",
         "html": _client_html(full_name, package_label, amount, currency,
                              project_type, timeline, slide_count),
     }
@@ -160,7 +160,7 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
         admin_params = {
             "from": f"SkiFi Orders <{SENDER_EMAIL}>",
             "to": [ADMIN_EMAIL],
-            "subject": f"[New Order] ${amount:.2f} {currency.upper()} — {full_name} · {package_label}",
+            "subject": f"[New Order] ${amount:.2f} {currency.upper()} - {full_name} · {package_label}",
             "html": _admin_html(full_name, email, company or "", package_label,
                                 amount, currency, project_type, timeline,
                                 slide_count, description),
@@ -230,12 +230,12 @@ async def send_delivery_email(*, client_email: str, client_name: str,
                               files: list, dashboard_url: str) -> Optional[str]:
     """Notify a client that their project has been delivered."""
     if not RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set — skipping delivery email")
+        logger.warning("RESEND_API_KEY not set - skipping delivery email")
         return None
     params = {
         "from": f"SkiFi Designs <{SENDER_EMAIL}>",
         "to": [client_email],
-        "subject": f"Your {project_type} is ready 🎉 — SkiFi Designs",
+        "subject": f"Your {project_type} is ready 🎉 - SkiFi Designs",
         "html": _delivery_html(client_name, project_type, message, files, dashboard_url),
     }
     return await asyncio.to_thread(_send_sync, params)

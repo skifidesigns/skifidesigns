@@ -37,7 +37,7 @@ html {
     animation-play-state: paused;
 }
 
-/* Ambient orbs — slow drift for the glassmorphism glow */
+/* Ambient orbs - slow drift for the glassmorphism glow */
 @keyframes orb-drift-1 {
     0%, 100% { transform: translate(0, 0) scale(1); }
     50% { transform: translate(80px, 60px) scale(1.1); }
@@ -82,7 +82,7 @@ html {
 }
 .animate-float-subtle { animation: float-y 5s ease-in-out infinite; }
 
-/* Glassmorphism utility — true frosted glass effect */
+/* Glassmorphism utility - true frosted glass effect */
 .glass-card {
     background: hsl(var(--card) / 0.55);
     backdrop-filter: blur(20px) saturate(160%);

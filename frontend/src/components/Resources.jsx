@@ -191,7 +191,7 @@ export const Resources = () => {
         toast.success('Download started');
       } else if (data.already_purchased && data.download_url) {
         window.open(data.download_url, '_blank');
-        toast.success('Welcome back — download started');
+        toast.success('Welcome back - download started');
       } else if (data.checkout_url) {
         window.location.href = data.checkout_url;
       } else {
@@ -213,7 +213,7 @@ export const Resources = () => {
       <Header />
 
       <main className="pt-32 pb-24">
-        {/* Hero — minimal, matching rest of site */}
+        {/* Hero - minimal, matching rest of site */}
         <section className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 mb-12 text-center">
           <p className="text-sm uppercase tracking-widest text-[#2A7AFE] font-medium mb-4">
             Template Library

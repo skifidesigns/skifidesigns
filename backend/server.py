@@ -207,7 +207,7 @@ async def create_onboarding_checkout(payload: OnboardingRequest, http_request: R
     cancel_url = f"{origin}/?payment=cancelled"
 
     if pkg["type"] == "subscription" and STRIPE_MONTHLY_PRICE_ID:
-        # True Stripe subscription — requires a real Stripe key + recurring Price ID
+        # True Stripe subscription - requires a real Stripe key + recurring Price ID
         try:
             session_info = _create_subscription_session(payload, success_url, cancel_url, metadata)
         except Exception as e:
@@ -385,7 +385,7 @@ async def get_payment_status(session_id: str):
             "kind": "template" if is_template else "project",
         }
 
-    # Poll Stripe — use direct SDK for both paths (avoids emergentintegrations
+    # Poll Stripe - use direct SDK for both paths (avoids emergentintegrations
     # Pydantic ValidationError on Stripe's StripeObject metadata field).
     new_payment_status = "pending"
     new_status = "open"
@@ -1008,7 +1008,7 @@ async def _stream_gridfs(file_id: str, force_download: bool = True) -> Streaming
     return StreamingResponse(iterator(), media_type=content_type, headers=headers)
 
 
-# Public file (images) — used for template thumbnails and blog covers
+# Public file (images) - used for template thumbnails and blog covers
 @api_router.get("/files/{file_id}")
 async def public_get_file(file_id: str):
     """Public, inline-served file (designed for images: thumbnails, blog covers, etc.).
@@ -1016,7 +1016,7 @@ async def public_get_file(file_id: str):
     return await _stream_gridfs(file_id, force_download=False)
 
 
-# Generic admin upload — returns file_id AND a stable public URL
+# Generic admin upload - returns file_id AND a stable public URL
 @api_router.post("/admin/upload")
 async def admin_upload(
     file: UploadFile = File(...),
@@ -1232,7 +1232,7 @@ async def my_orders(user: dict = Depends(require_user)):
 
 @api_router.get("/me/files/{file_id}")
 async def my_download_file(file_id: str, user: dict = Depends(require_user)):
-    """Authenticated client download — checks that the file belongs to one of this user's orders."""
+    """Authenticated client download - checks that the file belongs to one of this user's orders."""
     try:
         oid = ObjectId(file_id)
     except Exception:

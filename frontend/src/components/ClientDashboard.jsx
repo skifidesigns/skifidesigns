@@ -242,7 +242,7 @@ export const ClientDashboard = () => {
             <Package className="w-12 h-12 mx-auto text-[#2A7AFE] mb-4" />
             <h1 className="text-3xl font-bold text-foreground mb-2">Client Dashboard</h1>
             <p className="text-muted-foreground mb-6">
-              Sign in with the Google account you used to order — instantly see your projects and download deliveries.
+              Sign in with the Google account you used to order - instantly see your projects and download deliveries.
             </p>
             <Button
               onClick={login}
