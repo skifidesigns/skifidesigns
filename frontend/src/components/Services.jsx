@@ -16,14 +16,14 @@ const iconMap = {
 export const Services = () => {
   const handleMove = useSpotlight();
   return (
-    <section id="services" className="relative py-24 overflow-hidden">
+    <section id="services" className="relative py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Services</p>
           <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">

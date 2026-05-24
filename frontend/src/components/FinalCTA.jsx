@@ -7,7 +7,7 @@ export const FinalCTA = () => {
   const handleStartProject = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section className="relative py-16 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Inverted dark block — agency aesthetic */}
         <motion.div
@@ -15,7 +15,7 @@ export const FinalCTA = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="relative rounded-3xl overflow-hidden bg-neutral-950 px-8 py-20 sm:py-24 sm:px-12 text-center"
+          className="relative rounded-3xl overflow-hidden bg-neutral-950 px-8 py-20 sm:py-16 sm:px-12 text-center"
         >
           {/* Internal mesh */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

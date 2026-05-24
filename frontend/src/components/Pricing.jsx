@@ -46,14 +46,14 @@ export const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="relative py-24 overflow-hidden">
+    <section id="pricing" className="relative py-16 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">
             Investment

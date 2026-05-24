@@ -10,7 +10,7 @@ import {
 
 export const FAQ = () => {
   return (
-    <section id="faq" className="relative py-24 overflow-hidden">
+    <section id="faq" className="relative py-16 overflow-hidden">
       <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

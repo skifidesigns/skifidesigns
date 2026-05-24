@@ -6,7 +6,7 @@ export const TrustedBy = () => {
   const marqueeBrands = [...trustedBrands, ...trustedBrands];
 
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section className="relative py-12 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-[#2A7AFE] font-semibold mb-3">Trusted by</p>

@@ -5,7 +5,7 @@ import { useSpotlight } from '../hooks/useSpotlight';
 export const Founder = () => {
   const handleMove = useSpotlight();
   return (
-    <section id="about" className="relative py-24 overflow-hidden">
+    <section id="about" className="relative py-16 overflow-hidden">
       <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
