@@ -45,7 +45,7 @@ export const Services = () => {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.45, delay: i * 0.06 }}
                 onMouseMove={handleMove}
-                className="skifi-glass skifi-spotlight rounded-2xl p-8 group cursor-pointer hover:-translate-y-1 transition-transform duration-300"
+                className="skifi-card skifi-spotlight rounded-2xl p-8 group cursor-pointer hover:-translate-y-1 transition-transform duration-300"
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg shadow-[#2A7AFE]/30">
                   <Icon className="w-6 h-6 text-white" />

@@ -38,7 +38,7 @@ export const FAQ = () => {
               transition={{ duration: 0.4, delay: idx * 0.04 }}
             >              <AccordionItem
                 value={`item-${faq.id}`}
-                className="skifi-glass rounded-xl px-6 border border-border/60 hover:border-[#2A7AFE]/40 transition-colors"
+                className="skifi-card rounded-xl px-6 border border-border/60 hover:border-[#2A7AFE]/40 transition-colors"
               >
                 <AccordionTrigger className="text-base font-medium text-foreground hover:text-[#2A7AFE] py-5 text-left">
                   {faq.question}

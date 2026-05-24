@@ -8,7 +8,6 @@ export const Testimonials = () => {
   const handleMove = useSpotlight();
   return (
     <section className="relative py-24 overflow-hidden">
-      <div className="absolute inset-0 skifi-mesh skifi-mesh-soft" style={{ opacity: 0.45 }} />
       <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -35,7 +34,7 @@ export const Testimonials = () => {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45, delay: i * 0.08 }}
               onMouseMove={handleMove}
-              className="skifi-glass skifi-spotlight rounded-2xl p-8 group relative hover:-translate-y-1 transition-transform duration-300"
+              className="skifi-card skifi-spotlight rounded-2xl p-8 group relative hover:-translate-y-1 transition-transform duration-300"
             >
               <Quote className="absolute top-6 right-6 w-8 h-8 text-[#2A7AFE]/15" strokeWidth={1} />
               <div className="flex gap-0.5 mb-5">

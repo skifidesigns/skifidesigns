@@ -47,7 +47,6 @@ export const Pricing = () => {
 
   return (
     <section id="pricing" className="relative py-24 overflow-hidden">
-      <div className="absolute inset-0 skifi-mesh skifi-mesh-soft" style={{ opacity: 0.35 }} />
       <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

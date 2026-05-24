@@ -173,24 +173,34 @@ code {
 }
 .dark .skifi-grain::after { opacity: 0.06; }
 
-/* Glassmorphism card */
+/* Glassmorphism card — used sparingly; backdrop blur is expensive */
 .skifi-glass {
-  background-color: hsl(var(--card) / 0.55);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background-color: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   border: 1px solid hsl(var(--border) / 0.6);
   box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.5) inset, 0 10px 40px -10px hsl(0 0% 0% / 0.08);
 }
 .dark .skifi-glass {
-  background-color: hsl(var(--card) / 0.5);
+  background-color: hsl(var(--card) / 0.55);
   box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 12px 40px -12px hsl(0 0% 0% / 0.5);
+}
+
+/* Cheap solid card — visually similar but no backdrop blur (cheap to paint at scale) */
+.skifi-card {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.65);
+  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.5) inset, 0 6px 24px -8px hsl(0 0% 0% / 0.06);
+}
+.dark .skifi-card {
+  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 8px 28px -10px hsl(0 0% 0% / 0.4);
 }
 
 /* Glass pill (small chips, badges) */
 .skifi-glass-pill {
   background-color: hsl(var(--card) / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid hsl(var(--border) / 0.7);
 }
 

@@ -65,26 +65,6 @@ export const Founder = () => {
               </div>
             ))}
           </div>
-
-          {/* Sign-off — founder at the bottom like a magazine columnist */}
-          <div className="mt-10 pt-8 border-t border-border/60 flex items-center gap-4">
-            <div className="relative flex-shrink-0">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-[#2A7AFE] to-[#8B5CF6] opacity-40 blur-sm" />
-              <img
-                src="https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/xkunifl8_Profile%20Pic.jpg"
-                alt="Ishaque — Founder, SkiFi Designs"
-                loading="lazy"
-                decoding="async"
-                className="relative w-14 h-14 rounded-full object-cover ring-2 ring-background"
-              />
-            </div>
-            <div>
-              <p className="text-sm italic text-muted-foreground">
-                — Written by <span className="text-foreground font-medium not-italic">Ishaque</span>,{' '}
-                <span className="text-[#2A7AFE] not-italic">Founder, SkiFi Designs</span>
-              </p>
-            </div>
-          </div>
         </motion.div>
       </div>
     </section>

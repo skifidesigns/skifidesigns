@@ -40,7 +40,7 @@ export const Process = () => {
 
               <div
                 onMouseMove={handleMove}
-                className="skifi-glass skifi-spotlight relative p-7 rounded-2xl h-full flex flex-col hover:-translate-y-1 transition-transform duration-300 z-10"
+                className="skifi-card skifi-spotlight relative p-7 rounded-2xl h-full flex flex-col hover:-translate-y-1 transition-transform duration-300 z-10"
               >
                 <div className="text-5xl font-semibold skifi-gradient-text mb-5 tracking-tight">
                   {step.step}
