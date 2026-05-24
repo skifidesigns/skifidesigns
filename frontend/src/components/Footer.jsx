@@ -115,14 +115,25 @@ export const Footer = () => {
                 ))}
               </div>
 
-              <div className="pt-2">
-                <p className="text-foreground font-semibold text-sm mb-1">
-                  SKIFI GROUP LLC
-                </p>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  30 N Gould St Ste R, Sheridan, WY 82801<br />
-                  United States
-                </p>
+              <div className="pt-2 space-y-4">
+                <div>
+                  <p className="text-foreground font-semibold text-sm mb-1">
+                    SKIFI GROUP LLC
+                  </p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    30 N Gould St Ste R, Sheridan, WY 82801<br />
+                    United States
+                  </p>
+                </div>
+                <div>
+                  <p className="text-foreground font-semibold text-sm mb-1">
+                    SKIFI CREATIVE HUB LLP
+                  </p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Kozhikode, Kerala<br />
+                    India
+                  </p>
+                </div>
               </div>
             </div>
           </div>
