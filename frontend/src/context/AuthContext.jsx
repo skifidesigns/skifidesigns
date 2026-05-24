@@ -44,8 +44,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
-    } catch (e) {
-      console.error('logout error', e);
+    } catch {
+      // logout endpoint best-effort; cookie clear is what matters
     }
     setUser(null);
   };

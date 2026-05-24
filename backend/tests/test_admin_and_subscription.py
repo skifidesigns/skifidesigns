@@ -29,7 +29,8 @@ assert BASE_URL, "REACT_APP_BACKEND_URL must be set"
 BASE_URL = BASE_URL.rstrip("/")
 API = f"{BASE_URL}/api"
 
-ADMIN_PASSWORD = "skifi-admin-2026"  # from /app/backend/.env
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+assert ADMIN_PASSWORD, "ADMIN_PASSWORD env var required for admin tests"
 
 # MongoDB direct connection for state assertions
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")

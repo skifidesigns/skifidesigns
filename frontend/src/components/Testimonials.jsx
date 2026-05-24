@@ -40,7 +40,7 @@ export const Testimonials = () => {
               <Quote className="absolute top-6 right-6 w-8 h-8 text-[#2A7AFE]/15" strokeWidth={1} />
               <div className="flex gap-0.5 mb-5">
                 {[...Array(testimonial.rating)].map((_, idx) => (
-                  <Star key={idx} className="w-4 h-4 fill-[#2A7AFE] text-[#2A7AFE]" />
+                  <Star key={`star-${idx}`} className="w-4 h-4 fill-[#2A7AFE] text-[#2A7AFE]" />
                 ))}
               </div>
               <p className="text-foreground text-[15px] leading-relaxed mb-6">

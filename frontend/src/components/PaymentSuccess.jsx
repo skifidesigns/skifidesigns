@@ -44,8 +44,7 @@ export const PaymentSuccess = () => {
           return;
         }
         setTimeout(() => poll(n + 1), pollInterval);
-      } catch (err) {
-        console.error(err);
+      } catch {
         if (n >= maxAttempts) {
           setStatus('error');
         } else {

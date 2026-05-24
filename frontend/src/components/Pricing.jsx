@@ -112,8 +112,8 @@ export const Pricing = () => {
                 </div>
 
                 <ul className="space-y-5 mb-10 flex-grow">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
                       <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${
                         isLight ? 'bg-gray-100' : 'bg-white/10'
                       }`}>

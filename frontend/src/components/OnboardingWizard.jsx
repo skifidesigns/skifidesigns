@@ -159,7 +159,6 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
         setSubmitting(false);
       }
     } catch (err) {
-      console.error(err);
       const msg = err?.response?.data?.detail || 'Something went wrong. Please try again.';
       toast.error(typeof msg === 'string' ? msg : 'Request failed');
       setSubmitting(false);

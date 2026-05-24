@@ -36,8 +36,7 @@ export const FAQ = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: idx * 0.04 }}
-            >
-              <AccordionItem
+            >              <AccordionItem
                 value={`item-${faq.id}`}
                 className="skifi-glass rounded-xl px-6 border border-border/60 hover:border-[#2A7AFE]/40 transition-colors"
               >

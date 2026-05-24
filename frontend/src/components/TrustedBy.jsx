@@ -24,7 +24,7 @@ export const TrustedBy = () => {
         <div className="flex animate-marquee whitespace-nowrap">
           {marqueeBrands.map((brand, index) => (
             <div
-              key={index}
+              key={`${brand}-${index}`}
               className="mx-8 flex-shrink-0 flex items-center justify-center"
             >
               <span className="text-2xl md:text-3xl font-semibold text-muted-foreground/60 hover:text-foreground transition-colors duration-300 tracking-tight">

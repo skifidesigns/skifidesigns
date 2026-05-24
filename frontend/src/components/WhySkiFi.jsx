@@ -31,7 +31,7 @@ export const WhySkiFi = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl mx-auto">
           {whySkiFi.map((reason, index) => (
             <motion.div
-              key={index}
+              key={reason}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
