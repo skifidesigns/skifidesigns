@@ -1,4 +1,4 @@
-# SkiFi Designs — robots.txt
+# SkiFi Designs - robots.txt
 User-agent: *
 Allow: /
 Disallow: /admin
