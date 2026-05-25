@@ -239,3 +239,41 @@ async def send_delivery_email(*, client_email: str, client_name: str,
         "html": _delivery_html(client_name, project_type, message, files, dashboard_url),
     }
     return await asyncio.to_thread(_send_sync, params)
+
+
+def _revision_html(client_email: str, project_type: str, message: str, session_id: str) -> str:
+    msg_block = (
+        f'<blockquote style="border-left:3px solid {BRAND_COLOR};margin:16px 0;'
+        f'padding:10px 14px;background:#F4F8FF;border-radius:4px;color:#333;'
+        f'white-space:pre-wrap;">{message}</blockquote>'
+        if (message or "").strip()
+        else "<p><em>The client did not include specific notes.</em></p>"
+    )
+    return f"""
+    <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0A0A0A;">
+      <h2 style="margin:0 0 8px;">Revision requested</h2>
+      <p style="color:#555;margin:0 0 18px;">
+        <strong>{client_email}</strong> has requested a revision on
+        <strong>{project_type}</strong>.
+      </p>
+      {msg_block}
+      <p style="margin:20px 0 0;">Open the Admin panel to upload the revised delivery.</p>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Order session: {session_id}</p>
+    </div>
+    """
+
+
+async def send_revision_request_email(*, client_email: str, project_type: str,
+                                       message: str, session_id: str) -> Optional[str]:
+    """Notify the admin that a client has requested a revision."""
+    if not RESEND_API_KEY or not ADMIN_EMAIL:
+        logger.warning("RESEND_API_KEY or ADMIN_EMAIL not set - skipping revision email")
+        return None
+    params = {
+        "from": f"SkiFi Designs <{SENDER_EMAIL}>",
+        "to": [ADMIN_EMAIL],
+        "reply_to": client_email,
+        "subject": f"🔁 Revision requested - {project_type}",
+        "html": _revision_html(client_email, project_type, message, session_id),
+    }
+    return await asyncio.to_thread(_send_sync, params)

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import {
   Loader2, FileText, Calendar, Download, Upload, Building2,
-  Package, CheckCircle2, Clock, AlertCircle, Sparkles, Send,
+  Package, CheckCircle2, Clock, AlertCircle, Sparkles, Send, MessageCircle, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from './Header';
@@ -30,6 +30,8 @@ const StatusPill = ({ payment_status, status }) => {
   let label = 'Pending', cls = 'bg-yellow-500/15 text-yellow-600', Icon = Clock;
   if (payment_status === 'paid' && status === 'delivered') {
     label = 'Delivered'; cls = 'bg-green-500/15 text-green-600'; Icon = CheckCircle2;
+  } else if (payment_status === 'paid' && status === 'revision_requested') {
+    label = 'Revision Requested'; cls = 'bg-amber-500/15 text-amber-600'; Icon = AlertCircle;
   } else if (payment_status === 'paid') {
     label = 'In Progress'; cls = 'bg-[#2A7AFE]/15 text-[#2A7AFE]'; Icon = Sparkles;
   } else if (payment_status === 'failed' || payment_status === 'expired') {
@@ -82,6 +84,9 @@ const FileItem = ({ file, accent = '#2A7AFE' }) => (
 
 const OrderCard = ({ order, onReload }) => {
   const [uploading, setUploading] = useState(false);
+  const [revisionOpen, setRevisionOpen] = useState(false);
+  const [revisionMsg, setRevisionMsg] = useState('');
+  const [revisionSubmitting, setRevisionSubmitting] = useState(false);
   const fileRef = useRef(null);
 
   const handleAdditionalUpload = async (fileList) => {
@@ -107,6 +112,25 @@ const OrderCard = ({ order, onReload }) => {
     setUploading(false);
     if (fileRef.current) fileRef.current.value = '';
     onReload?.();
+  };
+
+  const submitRevision = async () => {
+    setRevisionSubmitting(true);
+    try {
+      await axios.post(
+        `${API}/me/orders/${order.session_id}/revision-request`,
+        { message: revisionMsg.trim() },
+        { withCredentials: true },
+      );
+      toast.success('Revision request sent. Our team will follow up shortly.');
+      setRevisionOpen(false);
+      setRevisionMsg('');
+      onReload?.();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not submit revision request');
+    } finally {
+      setRevisionSubmitting(false);
+    }
   };
 
   return (
@@ -142,10 +166,28 @@ const OrderCard = ({ order, onReload }) => {
       {/* Deliveries from us */}
       {order.deliveries?.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-green-600 font-semibold mb-3 flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Delivered by SkiFi
-          </p>
+          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+            <p className="text-xs uppercase tracking-[0.16em] text-green-600 font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Delivered by SkiFi
+            </p>
+            {order.status === 'delivered' && (
+              <button
+                onClick={() => setRevisionOpen(true)}
+                data-testid={`request-revision-${order.session_id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Request a revision
+              </button>
+            )}
+            {order.status === 'revision_requested' && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <Clock className="w-3.5 h-3.5" />
+                Revision in progress
+              </span>
+            )}
+          </div>
           <div className="space-y-4">
             {order.deliveries.map((d) => (
               <div key={d.id} className="bg-green-500/5 border border-green-500/30 rounded-xl p-4">
@@ -197,6 +239,73 @@ const OrderCard = ({ order, onReload }) => {
           onChange={(e) => handleAdditionalUpload(e.target.files)}
         />
       </div>
+
+      {/* Revision request modal */}
+      {revisionOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          onClick={() => !revisionSubmitting && setRevisionOpen(false)}
+          data-testid={`revision-modal-${order.session_id}`}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-amber-500" />
+                  Request a revision
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tell us what to adjust - our team will get back to you.
+                </p>
+              </div>
+              <button
+                onClick={() => setRevisionOpen(false)}
+                disabled={revisionSubmitting}
+                className="p-1.5 rounded-md hover:bg-accent"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <textarea
+              value={revisionMsg}
+              onChange={(e) => setRevisionMsg(e.target.value)}
+              placeholder="e.g. Please make the cover slide darker, swap the founder photo on slide 4, and shorten the intro section."
+              maxLength={2000}
+              rows={5}
+              className="w-full bg-background border border-border rounded-lg p-3 text-sm focus:outline-none focus:border-[#2A7AFE]"
+              data-testid="revision-message"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">{revisionMsg.length}/2000</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRevisionOpen(false)}
+                disabled={revisionSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={submitRevision}
+                disabled={revisionSubmitting}
+                data-testid="revision-submit"
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                {revisionSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Send request
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

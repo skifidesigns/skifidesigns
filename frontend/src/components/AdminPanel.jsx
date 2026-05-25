@@ -1494,14 +1494,37 @@ const Dashboard = ({ token, onLogout }) => {
                     </td>
                     <td className="px-4 py-4 text-center">
                       {item.payment_status === 'paid' && (
-                        <button
-                          onClick={() => setDeliveryFor(item)}
-                          data-testid={`deliver-${item.session_id}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#2A7AFE]/10 text-[#2A7AFE] hover:bg-[#2A7AFE] hover:text-white transition-colors"
-                        >
-                          <Send className="w-3 h-3" />
-                          Deliver
-                        </button>
+                        (() => {
+                          // Status-aware action: nothing to do once delivered until client asks for revision.
+                          const orderStatus = item.status || 'paid';
+                          if (orderStatus === 'delivered') {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-green-500/10 text-green-600"
+                                data-testid={`status-delivered-${item.session_id}`}
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                Delivered
+                              </span>
+                            );
+                          }
+                          const isRevision = orderStatus === 'revision_requested';
+                          return (
+                            <button
+                              onClick={() => setDeliveryFor(item)}
+                              data-testid={`deliver-${item.session_id}`}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                                isRevision
+                                  ? 'bg-amber-500/15 text-amber-600 hover:bg-amber-500 hover:text-white animate-pulse'
+                                  : 'bg-[#2A7AFE]/10 text-[#2A7AFE] hover:bg-[#2A7AFE] hover:text-white'
+                              }`}
+                              title={isRevision ? 'Client requested a revision' : 'Send delivery'}
+                            >
+                              <Send className="w-3 h-3" />
+                              {isRevision ? 'Re-deliver' : 'Deliver'}
+                            </button>
+                          );
+                        })()
                       )}
                     </td>
                   </tr>

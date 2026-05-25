@@ -1162,6 +1162,60 @@ async def admin_list_deliveries(session_id: str, _: str = Depends(require_admin)
     return {"items": docs}
 
 
+# ===== Revision request (client-side) =====
+class RevisionRequest(BaseModel):
+    message: Optional[str] = Field(None, max_length=2000)
+
+
+@api_router.post("/me/orders/{session_id}/revision-request")
+async def request_revision(
+    session_id: str,
+    payload: RevisionRequest,
+    user: dict = Depends(require_user),
+):
+    """Client asks for a revision on a delivered order.
+    Flips status -> 'revision_requested' so the admin sees a re-deliver action."""
+    tx = await db.payment_transactions.find_one(
+        {"session_id": session_id, "email": user["email"]}, {"_id": 0}
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if tx.get("status") != "delivered":
+        raise HTTPException(
+            status_code=400,
+            detail="Revision can only be requested on delivered orders",
+        )
+
+    note = (payload.message or "").strip()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    revision_entry = {
+        "message": note,
+        "requested_at": now_iso,
+        "requested_by": user["email"],
+    }
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {
+            "$set": {"status": "revision_requested", "updated_at": now_iso},
+            "$push": {"revision_requests": revision_entry},
+        },
+    )
+
+    # Notify admin via Resend (non-fatal)
+    try:
+        from email_service import send_revision_request_email
+        await send_revision_request_email(
+            client_email=user["email"],
+            project_type=tx.get("project_type", "Project"),
+            message=note,
+            session_id=session_id,
+        )
+    except Exception as e:
+        logger.warning(f"Revision admin email failed (non-fatal): {e}")
+
+    return {"success": True, "status": "revision_requested"}
+
+
 # ===================== Client Dashboard =====================
 @api_router.get("/me/orders")
 async def my_orders(user: dict = Depends(require_user)):
@@ -1226,6 +1280,7 @@ async def my_orders(user: dict = Depends(require_user)):
             "package_id": it.get("package_id"),
             "brief_files": brief_files,
             "deliveries": deliveries_enriched,
+            "revision_requests": it.get("revision_requests", []),
         })
     return {"items": enriched}
 
