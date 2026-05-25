@@ -49,6 +49,31 @@
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+
+          // Google Consent Mode v2 - default to "denied" for EEA/UK visitors
+          // until CookieYes updates the signals after the user makes a choice.
+          // 'wait_for_update' gives the CMP up to 500ms to load before any
+          // tracking pixels fire; nothing is sent during that window.
+          gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied',
+            'functionality_storage': 'granted',
+            'security_storage': 'granted',
+            'wait_for_update': 500,
+            'region': ['EEA', 'GB', 'CH']
+          });
+          // Non-EEA visitors: tracking is on by default.
+          gtag('consent', 'default', {
+            'ad_storage': 'granted',
+            'ad_user_data': 'granted',
+            'ad_personalization': 'granted',
+            'analytics_storage': 'granted',
+            'functionality_storage': 'granted',
+            'security_storage': 'granted'
+          });
+
           gtag('js', new Date());
           // We track SPA route changes manually from React, so disable the
           // default initial page_view to avoid duplicates.
