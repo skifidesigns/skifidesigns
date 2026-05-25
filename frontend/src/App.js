@@ -29,6 +29,24 @@ import { ClientDashboard } from "./components/ClientDashboard";
 import { trackPageview } from "./utils/analytics";
 
 const Home = () => {
+  const location = useLocation();
+
+  // After navigating from another route to /#sectionId, scroll the section
+  // into view (react-router does NOT do this automatically). Runs on every
+  // hash change so it also works for second-time navigations like
+  // /resources -> Pricing -> back to /resources -> Pricing.
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace('#', '');
+    // Header is fixed-position; wait a frame so the layout is committed,
+    // then scroll. requestAnimationFrame is more reliable than setTimeout(0).
+    const t = setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [location.hash, location.key]);
+
   return (
     <div className="bg-background min-h-screen">
       <Header />
