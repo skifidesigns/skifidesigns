@@ -66,7 +66,7 @@ export const Hero = () => {
             variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }}
             className="text-[2rem] leading-[1.1] sm:text-5xl sm:leading-tight md:text-6xl lg:text-7xl font-bold text-foreground tracking-tight"
           >
-            We Design Decks
+            We Design Presentations
             <span className="block mt-1.5 sm:mt-2 skifi-gradient-text">
               That Raise Money!
             </span>
