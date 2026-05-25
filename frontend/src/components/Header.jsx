@@ -40,7 +40,10 @@ export const Header = () => {
     }
   };
 
-  const navLinks = [
+  // Desktop nav: keep FAQ. Mobile nav: swap FAQ for "My Dashboard" since
+  // the user can already see FAQ by scrolling - and dashboard is otherwise
+  // hidden on small screens.
+  const desktopNavLinks = [
     { label: 'Services', id: 'services', type: 'scroll' },
     { label: 'Portfolio', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
@@ -48,14 +51,23 @@ export const Header = () => {
     { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'FAQ', id: 'faq', type: 'scroll' }
   ];
+  const mobileNavLinks = [
+    { label: 'Services', id: 'services', type: 'scroll' },
+    { label: 'Portfolio', id: 'portfolio', type: 'scroll' },
+    { label: 'Pricing', id: 'pricing', type: 'scroll' },
+    { label: 'Resources', path: '/resources', type: 'route' },
+    { label: 'Blog', path: '/blog', type: 'route' },
+    { label: 'My Dashboard', path: '/dashboard', type: 'route' }
+  ];
+  const navLinks = desktopNavLinks;
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 skifi-glass border-b transition-all duration-500 ${
           isScrolled
-            ? 'skifi-glass border-b border-border/60 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)]'
-            : 'bg-transparent'
+            ? 'border-border/60 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)]'
+            : 'border-border/30'
         }`}
       >
       <nav className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-4">
@@ -198,7 +210,7 @@ export const Header = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden mt-4 py-4 border-t border-border">
             <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
+              {mobileNavLinks.map((link) => (
                 link.type === 'route' ? (
                   <Link
                     key={link.label}
