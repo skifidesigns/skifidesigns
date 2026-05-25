@@ -2,8 +2,6 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <!-- CookieYes consent management (must be high in <head>) -->
-        <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/0a29f4ecc3cde6ff04fd6732/script.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
         <meta name="description" content="SkiFi Designs is a premium presentation design agency creating investor pitch decks, sales decks, PowerPoint presentations and corporate decks that close deals. Trusted by founders across 43+ countries." />
@@ -49,31 +47,6 @@
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
-
-          // Google Consent Mode v2 - default to "denied" for EEA/UK visitors
-          // until CookieYes updates the signals after the user makes a choice.
-          // 'wait_for_update' gives the CMP up to 500ms to load before any
-          // tracking pixels fire; nothing is sent during that window.
-          gtag('consent', 'default', {
-            'ad_storage': 'denied',
-            'ad_user_data': 'denied',
-            'ad_personalization': 'denied',
-            'analytics_storage': 'denied',
-            'functionality_storage': 'granted',
-            'security_storage': 'granted',
-            'wait_for_update': 500,
-            'region': ['EEA', 'GB', 'CH']
-          });
-          // Non-EEA visitors: tracking is on by default.
-          gtag('consent', 'default', {
-            'ad_storage': 'granted',
-            'ad_user_data': 'granted',
-            'ad_personalization': 'granted',
-            'analytics_storage': 'granted',
-            'functionality_storage': 'granted',
-            'security_storage': 'granted'
-          });
-
           gtag('js', new Date());
           // We track SPA route changes manually from React, so disable the
           // default initial page_view to avoid duplicates.
