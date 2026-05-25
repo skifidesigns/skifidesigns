@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
+import { trackEvent } from '../utils/analytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -13,6 +14,7 @@ export const PaymentSuccess = () => {
   const [status, setStatus] = useState('checking'); // checking | paid | failed | expired | error
   const [details, setDetails] = useState(null);
   const [attempts, setAttempts] = useState(0);
+  const purchaseTrackedRef = useRef(false);
 
   useEffect(() => {
     if (!sessionId) {
@@ -33,6 +35,16 @@ export const PaymentSuccess = () => {
 
         if (data.payment_status === 'paid') {
           setStatus('paid');
+          // Fire GA4 purchase event exactly once
+          if (!purchaseTrackedRef.current) {
+            purchaseTrackedRef.current = true;
+            trackEvent('purchase', {
+              transaction_id: sessionId,
+              value: Number(data.amount) || 0,
+              currency: (data.currency || 'usd').toUpperCase(),
+              items: data.package_id ? [{ item_id: data.package_id, item_name: data.package_id }] : undefined,
+            });
+          }
           return;
         }
         if (data.status === 'expired' || data.payment_status === 'expired') {

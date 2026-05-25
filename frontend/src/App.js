@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -26,6 +26,7 @@ import { Blog } from "./components/Blog";
 import { BlogPost } from "./components/BlogPost";
 import { PrivacyPolicy, TermsOfService, RefundPolicy, CookiePolicy } from "./components/Legal";
 import { ClientDashboard } from "./components/ClientDashboard";
+import { trackPageview } from "./utils/analytics";
 
 const Home = () => {
   return (
@@ -61,6 +62,12 @@ const Home = () => {
 // Synchronous check for OAuth callback hash to prevent race conditions
 const AppRouter = () => {
   const location = useLocation();
+
+  // Fire a GA4 page_view on every SPA route change (and on first paint)
+  useEffect(() => {
+    trackPageview(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+
   if (location.hash?.includes('session_id=')) {
     return <AuthCallback />;
   }

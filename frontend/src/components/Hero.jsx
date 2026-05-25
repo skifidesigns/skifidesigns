@@ -2,13 +2,20 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Calendar, ArrowDown } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
+import { trackEvent } from '../utils/analytics';
 
 export const Hero = () => {
   const [wizardOpen, setWizardOpen] = useState(false);
   const heroRef = useRef(null);
 
-  const handleBookCall = () => window.open('https://cal.com/skifi/30min', '_blank');
-  const handleStartProject = () => setWizardOpen(true);
+  const handleBookCall = () => {
+    trackEvent('book_call_clicked', { location: 'hero' });
+    window.open('https://cal.com/skifi/30min', '_blank');
+  };
+  const handleStartProject = () => {
+    trackEvent('start_project_clicked', { location: 'hero' });
+    setWizardOpen(true);
+  };
 
   // Track mouse for spotlight effect on stat card row
   const handleMouseMove = (e) => {
