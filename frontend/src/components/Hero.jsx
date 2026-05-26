@@ -28,7 +28,7 @@ export const Hero = () => {
   const stats = [
     { value: '7+', label: 'Years Experience' },
     { value: '2,700+', label: 'Presentations Designed' },
-    { value: '43+', label: 'Countries' },
+    { value: '30+', label: 'Countries' },
     { value: '150+', label: 'Clients Worldwide' },
   ];
 
