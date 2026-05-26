@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Search, Download, Lock, Loader2, Tag, Sparkles, ArrowUpRight } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Search, Download, Lock, Loader2, Tag, Sparkles, ArrowUpRight, Share2, Check, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import { Header } from './Header';
@@ -24,13 +25,37 @@ const CATEGORIES = [
   'Brand Presentation',
 ];
 
-const TemplateCard = ({ template, onAction, busyId }) => {
+const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
   const isPaid = template.type === 'paid';
   const isBusy = busyId === template.id;
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/resources/template/${template.id}`;
+    try {
+      // Use native share on mobile if available
+      if (navigator.share) {
+        await navigator.share({ title: template.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success('Link copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error('Could not copy link');
+    }
+  };
+
   return (
     <div
       data-testid={`template-card-${template.id}`}
-      className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-[#2A7AFE]/50 hover:shadow-xl hover:shadow-[#2A7AFE]/10 transition-all duration-300 hover:-translate-y-1 flex flex-col"
+      className={`group bg-card border rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col ${
+        isFocused
+          ? 'border-[#2A7AFE] ring-2 ring-[#2A7AFE]/40 shadow-xl shadow-[#2A7AFE]/20'
+          : 'border-border hover:border-[#2A7AFE]/50 hover:shadow-xl hover:shadow-[#2A7AFE]/10'
+      }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img
@@ -50,6 +75,16 @@ const TemplateCard = ({ template, onAction, busyId }) => {
             </span>
           )}
         </div>
+        {/* Share button */}
+        <button
+          onClick={handleShare}
+          data-testid={`template-share-${template.id}`}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+          aria-label={`Share ${template.title}`}
+          title="Copy share link"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+        </button>
       </div>
 
       <div className="p-5 flex flex-col flex-grow">
@@ -141,13 +176,46 @@ const SignInModal = ({ open, onClose }) => {
 
 export const Resources = () => {
   const { user, loading: authLoading } = useAuth();
+  const { id: focusedTemplateId } = useParams(); // present when route is /resources/template/:id
+  const navigate = useNavigate();
+  const focusedCardRef = useRef(null);
+
   const [templates, setTemplates] = useState([]);
+  const [focusedFromServer, setFocusedFromServer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('All');
   const [typeFilter, setTypeFilter] = useState('all'); // all | free | paid
   const [search, setSearch] = useState('');
   const [signInOpen, setSignInOpen] = useState(false);
   const [busyId, setBusyId] = useState(null);
+
+  // When the URL has /resources/template/:id, fetch that specific template's
+  // metadata so we can highlight the card AND still show the rest of the page.
+  useEffect(() => {
+    if (!focusedTemplateId) {
+      setFocusedFromServer(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await axios.get(`${API}/templates/${focusedTemplateId}`);
+        if (!cancelled) setFocusedFromServer(data);
+      } catch {
+        if (!cancelled) toast.error('That template is not available anymore');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [focusedTemplateId]);
+
+  // When the focused template appears in the filtered list, scroll to it.
+  useEffect(() => {
+    if (!focusedTemplateId) return;
+    const t = setTimeout(() => {
+      focusedCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [focusedTemplateId, templates, focusedFromServer]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -297,16 +365,60 @@ export const Resources = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((t) => (
-                <TemplateCard
-                  key={t.id}
-                  template={t}
-                  onAction={handleAction}
-                  busyId={busyId}
-                />
-              ))}
-            </div>
+            <>
+              {/* Shared-link banner: clearly shows the user which template the
+                  share link pointed to, with a "view all" escape hatch. */}
+              {focusedTemplateId && focusedFromServer && (
+                <div
+                  data-testid="shared-template-banner"
+                  className="mb-8 flex items-center justify-between gap-3 bg-[#2A7AFE]/10 border border-[#2A7AFE]/30 rounded-xl px-5 py-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Share2 className="w-5 h-5 text-[#2A7AFE] flex-shrink-0" />
+                    <p className="text-sm text-foreground truncate">
+                      Shared template:{' '}
+                      <span className="font-semibold">{focusedFromServer.title}</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/resources')}
+                    className="flex-shrink-0 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    aria-label="Show all templates"
+                  >
+                    Show all <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* If a shared template is in the URL but doesn't match current
+                    filters, show it on its own at the top. */}
+                {focusedFromServer
+                  && !templates.find((t) => t.id === focusedFromServer.id) && (
+                  <div ref={focusedCardRef}>
+                    <TemplateCard
+                      template={focusedFromServer}
+                      onAction={handleAction}
+                      busyId={busyId}
+                      isFocused
+                    />
+                  </div>
+                )}
+                {templates.map((t) => {
+                  const isFocused = t.id === focusedTemplateId;
+                  return (
+                    <div key={t.id} ref={isFocused ? focusedCardRef : null}>
+                      <TemplateCard
+                        template={t}
+                        onAction={handleAction}
+                        busyId={busyId}
+                        isFocused={isFocused}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </section>
       </main>

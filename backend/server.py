@@ -492,15 +492,26 @@ async def admin_login(payload: AdminLogin):
 async def admin_list_submissions(
     _: str = Depends(require_admin),
     payment_status: Optional[str] = None,
+    since: Optional[str] = None,  # "week" | "month" | "year" | None
     limit: int = 200,
 ):
     query = {}
     if payment_status:
         query["payment_status"] = payment_status
+
+    # Date filter: matches orders whose `created_at` ISO string is within the window.
+    # We store created_at as an ISO string; lexicographic comparison works for ISO 8601.
+    if since in ("week", "month", "year"):
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        deltas = {"week": timedelta(days=7), "month": timedelta(days=30), "year": timedelta(days=365)}
+        cutoff_iso = (now - deltas[since]).isoformat()
+        query["created_at"] = {"$gte": cutoff_iso}
+
     cursor = db.payment_transactions.find(query, {"_id": 0}).sort("created_at", -1).limit(limit)
     items = await cursor.to_list(length=limit)
 
-    # Aggregate stats
+    # Aggregate stats - keep these as ALL-TIME so the cards remain meaningful
     total = await db.payment_transactions.count_documents({})
     paid = await db.payment_transactions.count_documents({"payment_status": "paid"})
     pending = await db.payment_transactions.count_documents({"payment_status": "pending"})
@@ -1214,6 +1225,44 @@ async def request_revision(
         logger.warning(f"Revision admin email failed (non-fatal): {e}")
 
     return {"success": True, "status": "revision_requested"}
+
+
+@api_router.post("/me/orders/{session_id}/complete")
+async def mark_order_complete(
+    session_id: str,
+    user: dict = Depends(require_user),
+):
+    """Client marks a delivered order as completed - locks the order so the
+    admin no longer sees the Deliver/Re-deliver action."""
+    tx = await db.payment_transactions.find_one(
+        {"session_id": session_id, "email": user["email"]}, {"_id": 0}
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if tx.get("status") not in ("delivered", "revision_requested"):
+        raise HTTPException(
+            status_code=400,
+            detail="Order must be delivered before it can be marked complete",
+        )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$set": {"status": "completed", "completed_at": now_iso, "updated_at": now_iso}},
+    )
+
+    # Non-fatal notification to admin
+    try:
+        from email_service import send_order_completed_email
+        await send_order_completed_email(
+            client_email=user["email"],
+            project_type=tx.get("project_type", "Project"),
+            session_id=session_id,
+        )
+    except Exception as e:
+        logger.warning(f"Order-completed admin email failed (non-fatal): {e}")
+
+    return {"success": True, "status": "completed"}
 
 
 # ===================== Client Dashboard =====================

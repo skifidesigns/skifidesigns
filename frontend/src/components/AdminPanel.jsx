@@ -1237,6 +1237,7 @@ const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all'); // all | week | month | year
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('orders');
   const [deliveryFor, setDeliveryFor] = useState(null);
@@ -1244,7 +1245,10 @@ const Dashboard = ({ token, onLogout }) => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = filter !== 'all' ? `?payment_status=${filter}` : '';
+      const qs = new URLSearchParams();
+      if (filter !== 'all') qs.append('payment_status', filter);
+      if (dateFilter !== 'all') qs.append('since', dateFilter);
+      const params = qs.toString() ? `?${qs}` : '';
       const { data } = await axios.get(`${API}/admin/submissions${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1259,7 +1263,7 @@ const Dashboard = ({ token, onLogout }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, filter, onLogout]);
+  }, [token, filter, dateFilter, onLogout]);
 
   useEffect(() => {
     load();
@@ -1389,8 +1393,8 @@ const Dashboard = ({ token, onLogout }) => {
         </div>
 
         {/* Filters */}
-        <div className="bg-card border border-border rounded-2xl p-4 flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               data-testid="admin-search"
@@ -1400,21 +1404,45 @@ const Dashboard = ({ token, onLogout }) => {
               className="pl-10 bg-background border-border"
             />
           </div>
-          <div className="flex gap-2">
-            {['all', 'paid', 'pending', 'failed'].map((f) => (
-              <button
-                key={f}
-                data-testid={`admin-filter-${f}`}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  filter === f
-                    ? 'bg-[#2A7AFE] text-white'
-                    : 'bg-background border border-border text-foreground hover:bg-accent'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'paid', 'pending', 'failed'].map((f) => (
+                <button
+                  key={f}
+                  data-testid={`admin-filter-${f}`}
+                  onClick={() => setFilter(f)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
+                    filter === f
+                      ? 'bg-[#2A7AFE] text-white'
+                      : 'bg-background border border-border text-foreground hover:bg-accent'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Period</span>
+              {[
+                { id: 'all', label: 'All time' },
+                { id: 'week', label: 'Last week' },
+                { id: 'month', label: 'Last month' },
+                { id: 'year', label: 'Last year' },
+              ].map((d) => (
+                <button
+                  key={d.id}
+                  data-testid={`admin-date-${d.id}`}
+                  onClick={() => setDateFilter(d.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                    dateFilter === d.id
+                      ? 'bg-foreground text-background'
+                      : 'bg-background border border-border text-foreground hover:bg-accent'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1497,6 +1525,17 @@ const Dashboard = ({ token, onLogout }) => {
                         (() => {
                           // Status-aware action: nothing to do once delivered until client asks for revision.
                           const orderStatus = item.status || 'paid';
+                          if (orderStatus === 'completed') {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-600/15 text-emerald-700"
+                                data-testid={`status-completed-${item.session_id}`}
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                Completed
+                              </span>
+                            );
+                          }
                           if (orderStatus === 'delivered') {
                             return (
                               <span

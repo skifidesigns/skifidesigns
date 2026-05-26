@@ -277,3 +277,30 @@ async def send_revision_request_email(*, client_email: str, project_type: str,
         "html": _revision_html(client_email, project_type, message, session_id),
     }
     return await asyncio.to_thread(_send_sync, params)
+
+
+def _completed_html(client_email: str, project_type: str, session_id: str) -> str:
+    return f"""
+    <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0A0A0A;">
+      <h2 style="margin:0 0 8px;">Project marked complete ✅</h2>
+      <p style="color:#555;margin:0 0 14px;">
+        <strong>{client_email}</strong> has marked
+        <strong>{project_type}</strong> as completed. No further action needed.
+      </p>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Order session: {session_id}</p>
+    </div>
+    """
+
+
+async def send_order_completed_email(*, client_email: str, project_type: str,
+                                      session_id: str) -> Optional[str]:
+    if not RESEND_API_KEY or not ADMIN_EMAIL:
+        return None
+    params = {
+        "from": f"SkiFi Designs <{SENDER_EMAIL}>",
+        "to": [ADMIN_EMAIL],
+        "reply_to": client_email,
+        "subject": f"✅ Project completed - {project_type}",
+        "html": _completed_html(client_email, project_type, session_id),
+    }
+    return await asyncio.to_thread(_send_sync, params)

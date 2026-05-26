@@ -28,7 +28,9 @@ const formatBytes = (b) => {
 
 const StatusPill = ({ payment_status, status }) => {
   let label = 'Pending', cls = 'bg-yellow-500/15 text-yellow-600', Icon = Clock;
-  if (payment_status === 'paid' && status === 'delivered') {
+  if (payment_status === 'paid' && status === 'completed') {
+    label = 'Completed'; cls = 'bg-emerald-600/15 text-emerald-700'; Icon = CheckCircle2;
+  } else if (payment_status === 'paid' && status === 'delivered') {
     label = 'Delivered'; cls = 'bg-green-500/15 text-green-600'; Icon = CheckCircle2;
   } else if (payment_status === 'paid' && status === 'revision_requested') {
     label = 'Revision Requested'; cls = 'bg-amber-500/15 text-amber-600'; Icon = AlertCircle;
@@ -133,6 +135,21 @@ const OrderCard = ({ order, onReload }) => {
     }
   };
 
+  const markComplete = async () => {
+    if (!window.confirm("Mark this project as complete? You won't be able to request further revisions.")) return;
+    try {
+      await axios.post(
+        `${API}/me/orders/${order.session_id}/complete`,
+        {},
+        { withCredentials: true },
+      );
+      toast.success('Project marked as complete. Thank you!');
+      onReload?.();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not mark as complete');
+    }
+  };
+
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5" data-testid={`order-card-${order.session_id}`}>
       {/* Header */}
@@ -172,19 +189,47 @@ const OrderCard = ({ order, onReload }) => {
               Delivered by SkiFi
             </p>
             {order.status === 'delivered' && (
-              <button
-                onClick={() => setRevisionOpen(true)}
-                data-testid={`request-revision-${order.session_id}`}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                Request a revision
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setRevisionOpen(true)}
+                  data-testid={`request-revision-${order.session_id}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Request a revision
+                </button>
+                <span className="text-muted-foreground/40 text-xs">|</span>
+                <button
+                  onClick={markComplete}
+                  data-testid={`mark-complete-${order.session_id}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Mark as complete
+                </button>
+              </div>
             )}
             {order.status === 'revision_requested' && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-                <Clock className="w-3.5 h-3.5" />
-                Revision in progress
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                  <Clock className="w-3.5 h-3.5" />
+                  Revision in progress
+                </span>
+                <span className="text-muted-foreground/40 text-xs">|</span>
+                <button
+                  onClick={markComplete}
+                  data-testid={`mark-complete-${order.session_id}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Mark as complete
+                </button>
+              </div>
+            )}
+            {order.status === 'completed' && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Completed
               </span>
             )}
           </div>
