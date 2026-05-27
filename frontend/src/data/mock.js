@@ -1,47 +1,5 @@
-export const portfolioProjects = [
-  {
-    id: 1,
-    title: "Informed | Presentation & Infographics",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/c8f4ba223365563.Y3JvcCwxOTY2LDE1MzgsMjk2LDA.jpg",
-    link: "https://www.behance.net/gallery/223365563/Informed-Presentation-Infographics"
-  },
-  {
-    id: 2,
-    title: "Toyota Kirloskar X Value360",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/133c35224376693.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
-    link: "https://www.behance.net/gallery/224376693/Toyota-Kirloskar-X-Value360-Presentation-Design"
-  },
-  {
-    id: 3,
-    title: "Coca Cola Adria Project",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/e7b674229962441.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
-    link: "https://www.behance.net/gallery/229962441/Coca-Cola-Adria-Project-Presentation-Design"
-  },
-  {
-    id: 4,
-    title: "Indigo X Value360",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/d6f92f224117859.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
-    link: "https://www.behance.net/gallery/224117859/Indigo-X-Value360-Presentation-Infographics"
-  },
-  {
-    id: 5,
-    title: "Verizon | Presentation and Infographics",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/af3fde223638239.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
-    link: "https://www.behance.net/gallery/223638239/Verizon-Presentation-and-Infographics"
-  },
-  {
-    id: 6,
-    title: "Faculty of Dentistry | King Abdul Aziz University",
-    category: "Corporate Presentations",
-    image: "https://mir-s3-cdn-cf.behance.net/projects/404/3459c1223647841.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
-    link: "https://www.behance.net/gallery/223647841/Faculty-of-Dentistry-King-Abdul-Aziz-University"
-  }
-];
+// Note: portfolioProjects removed - homepage now uses /api/case-studies
+// (managed via /admin -> Case Studies tab)
 
 export const services = [
   {

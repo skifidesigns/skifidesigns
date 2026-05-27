@@ -5,7 +5,7 @@ import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
   Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download,
-  Upload, Send
+  Upload, Send, Briefcase, Star
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,6 +13,8 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Calendar as CalendarUI } from './ui/calendar';
 import { toast } from 'sonner';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -1233,11 +1235,281 @@ const DeliveryModal = ({ open, order, token, onClose, onSuccess }) => {
   );
 };
 
+
+// ===================== Case Studies Manager =====================
+const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
+  const isEdit = Boolean(initial?.id);
+  const [form, setForm] = useState({
+    title: '', client_name: '', industry: '', summary: '',
+    cover_image_url: '', challenge: '', approach: '',
+    outcome: '', gallery_urls: '', tags: '',
+    is_featured: false, is_published: true,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    if (initial) {
+      setForm({
+        title: initial.title || '',
+        client_name: initial.client_name || '',
+        industry: initial.industry || '',
+        summary: initial.summary || '',
+        cover_image_url: initial.cover_image_url || '',
+        challenge: initial.challenge || '',
+        approach: initial.approach || '',
+        outcome: (initial.outcome || []).join('\n'),
+        gallery_urls: (initial.gallery_urls || []).join('\n'),
+        tags: (initial.tags || []).join(', '),
+        is_featured: !!initial.is_featured,
+        is_published: initial.is_published !== false,
+      });
+    } else {
+      setForm({
+        title: '', client_name: '', industry: '', summary: '',
+        cover_image_url: '', challenge: '', approach: '',
+        outcome: '', gallery_urls: '', tags: '',
+        is_featured: false, is_published: true,
+      });
+    }
+  }, [open, initial]);
+
+  if (!open) return null;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        title: form.title.trim(),
+        client_name: form.client_name.trim(),
+        industry: form.industry.trim(),
+        summary: form.summary.trim(),
+        cover_image_url: form.cover_image_url.trim() || null,
+        challenge: form.challenge.trim(),
+        approach: form.approach.trim(),
+        outcome: form.outcome.split('\n').map((s) => s.trim()).filter(Boolean),
+        gallery_urls: form.gallery_urls.split('\n').map((s) => s.trim()).filter(Boolean),
+        tags: form.tags.split(',').map((s) => s.trim()).filter(Boolean),
+        is_featured: form.is_featured,
+        is_published: form.is_published,
+      };
+      if (isEdit) {
+        await axios.patch(`${API}/admin/case-studies/${initial.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Case study updated');
+      } else {
+        await axios.post(`${API}/admin/case-studies`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success('Case study created');
+      }
+      onSave?.();
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <form
+        onSubmit={submit}
+        className="bg-card border border-border rounded-2xl w-full max-w-3xl my-8 p-6 shadow-2xl"
+        data-testid="case-study-form"
+      >
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="text-lg font-semibold">{isEdit ? 'Edit Case Study' : 'New Case Study'}</h3>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-md hover:bg-accent">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label>Title *</Label>
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={200} />
+          </div>
+          <div>
+            <Label>Client name *</Label>
+            <Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} required maxLength={120} />
+          </div>
+          <div>
+            <Label>Industry *</Label>
+            <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} required maxLength={80} placeholder="e.g. SaaS, FMCG, Aviation" />
+          </div>
+          <div>
+            <Label>Tags (comma-separated)</Label>
+            <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="pitch-deck, saas, infographics" />
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <Label>Summary *</Label>
+          <Textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} required rows={2} maxLength={400} />
+        </div>
+
+        <div className="mt-3">
+          <Label>Cover image URL</Label>
+          <Input value={form.cover_image_url} onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })} placeholder="https://..." />
+        </div>
+
+        <div className="mt-3">
+          <Label>Challenge *</Label>
+          <Textarea value={form.challenge} onChange={(e) => setForm({ ...form, challenge: e.target.value })} required rows={3} />
+        </div>
+
+        <div className="mt-3">
+          <Label>Approach *</Label>
+          <Textarea value={form.approach} onChange={(e) => setForm({ ...form, approach: e.target.value })} required rows={3} />
+        </div>
+
+        <div className="mt-3">
+          <Label>Outcome bullets (one per line)</Label>
+          <Textarea value={form.outcome} onChange={(e) => setForm({ ...form, outcome: e.target.value })} rows={4} placeholder={'Raised $5M seed\nReduced pitch length by 40%\n...'} />
+        </div>
+
+        <div className="mt-3">
+          <Label>Gallery image URLs (one per line)</Label>
+          <Textarea value={form.gallery_urls} onChange={(e) => setForm({ ...form, gallery_urls: e.target.value })} rows={3} placeholder={'https://...\nhttps://...'} />
+        </div>
+
+        <div className="mt-4 flex items-center gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} />
+            Featured (shows on homepage)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
+            Published
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-5">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button type="submit" disabled={saving} className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            {isEdit ? 'Update' : 'Create'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+
+const CaseStudiesManager = ({ token }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/admin/case-studies`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setItems(data.items || []);
+    } catch {
+      toast.error('Failed to load case studies');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this case study? This cannot be undone.')) return;
+    try {
+      await axios.delete(`${API}/admin/case-studies/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Case study deleted');
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Delete failed');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Case Studies</h2>
+          <p className="text-sm text-muted-foreground">Manage portfolio case studies shown on /case-studies and the homepage.</p>
+        </div>
+        <Button onClick={() => { setEditing(null); setModalOpen(true); }} className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white" data-testid="case-new">
+          <Plus className="w-4 h-4 mr-2" /> New Case Study
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#2A7AFE] mx-auto" /></div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">No case studies yet.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {items.map((cs) => (
+            <div key={cs.id} className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col" data-testid={`case-row-${cs.slug}`}>
+              {cs.cover_image_url && (
+                <div className="aspect-[16/9] bg-muted overflow-hidden">
+                  <img src={cs.cover_image_url} alt={cs.title} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              )}
+              <div className="p-4 flex-grow flex flex-col">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-[10px] uppercase tracking-widest text-[#2A7AFE] font-semibold">{cs.industry}</p>
+                  <div className="flex items-center gap-1.5">
+                    {cs.is_featured && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded">
+                        <Star className="w-3 h-3" /> Featured
+                      </span>
+                    )}
+                    {!cs.is_published && (
+                      <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Draft</span>
+                    )}
+                  </div>
+                </div>
+                <h3 className="font-semibold text-foreground line-clamp-2 mb-2">{cs.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 flex-grow">{cs.summary}</p>
+                <div className="flex justify-end gap-2 mt-3">
+                  <Button size="sm" variant="outline" onClick={() => { setEditing(cs); setModalOpen(true); }} data-testid={`case-edit-${cs.slug}`}>
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(cs.id)} className="text-red-500 hover:bg-red-500/10" data-testid={`case-delete-${cs.slug}`}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CaseStudyFormModal
+        open={modalOpen}
+        initial={editing}
+        token={token}
+        onClose={() => { setModalOpen(false); setEditing(null); }}
+        onSave={() => load()}
+      />
+    </div>
+  );
+};
+
+
 const Dashboard = ({ token, onLogout }) => {
   const [data, setData] = useState({ items: [], stats: {} });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all'); // all | week | month | year
+  // Date filter: a from→to range. null means "all time".
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('orders');
   const [deliveryFor, setDeliveryFor] = useState(null);
@@ -1247,7 +1519,11 @@ const Dashboard = ({ token, onLogout }) => {
     try {
       const qs = new URLSearchParams();
       if (filter !== 'all') qs.append('payment_status', filter);
-      if (dateFilter !== 'all') qs.append('since', dateFilter);
+      const toISO = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null);
+      const fd = toISO(dateRange.from);
+      const td = toISO(dateRange.to);
+      if (fd) qs.append('from_date', fd);
+      if (td) qs.append('to_date', td);
       const params = qs.toString() ? `?${qs}` : '';
       const { data } = await axios.get(`${API}/admin/submissions${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -1263,7 +1539,7 @@ const Dashboard = ({ token, onLogout }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, filter, dateFilter, onLogout]);
+  }, [token, filter, dateRange.from, dateRange.to, onLogout]);
 
   useEffect(() => {
     load();
@@ -1352,12 +1628,26 @@ const Dashboard = ({ token, onLogout }) => {
             <BookOpen className="w-4 h-4 inline mr-2" />
             Blog
           </button>
+          <button
+            data-testid="admin-tab-case-studies"
+            onClick={() => setTab('case-studies')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === 'case-studies'
+                ? 'border-[#2A7AFE] text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Briefcase className="w-4 h-4 inline mr-2" />
+            Case Studies
+          </button>
         </div>
 
         {tab === 'templates' ? (
           <TemplatesManager token={token} />
         ) : tab === 'blog' ? (
           <BlogManager token={token} />
+        ) : tab === 'case-studies' ? (
+          <CaseStudiesManager token={token} />
         ) : (
         <div className="space-y-6">
         {/* Stats */}
@@ -1423,25 +1713,50 @@ const Dashboard = ({ token, onLogout }) => {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground uppercase tracking-wider">Period</span>
-              {[
-                { id: 'all', label: 'All time' },
-                { id: 'week', label: 'Last week' },
-                { id: 'month', label: 'Last month' },
-                { id: 'year', label: 'Last year' },
-              ].map((d) => (
-                <button
-                  key={d.id}
-                  data-testid={`admin-date-${d.id}`}
-                  onClick={() => setDateFilter(d.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                    dateFilter === d.id
-                      ? 'bg-foreground text-background'
-                      : 'bg-background border border-border text-foreground hover:bg-accent'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    data-testid="admin-date-picker"
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                      dateRange.from || dateRange.to
+                        ? 'bg-foreground text-background'
+                        : 'bg-background border border-border text-foreground hover:bg-accent'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    {dateRange.from && dateRange.to
+                      ? `${new Date(dateRange.from).toLocaleDateString()} → ${new Date(dateRange.to).toLocaleDateString()}`
+                      : dateRange.from
+                        ? `From ${new Date(dateRange.from).toLocaleDateString()}`
+                        : 'All time'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarUI
+                    mode="range"
+                    selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined}
+                    onSelect={(range) => setDateRange({ from: range?.from || null, to: range?.to || null })}
+                    numberOfMonths={2}
+                    initialFocus
+                  />
+                  <div className="flex justify-between gap-2 p-3 border-t border-border">
+                    <button
+                      onClick={() => { setDateRange({ from: null, to: null }); setCalendarOpen(false); }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                      data-testid="admin-date-clear"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setCalendarOpen(false)}
+                      className="text-xs font-semibold text-[#2A7AFE]"
+                      data-testid="admin-date-apply"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>

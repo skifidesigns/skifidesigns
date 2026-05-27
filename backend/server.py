@@ -493,20 +493,30 @@ async def admin_list_submissions(
     _: str = Depends(require_admin),
     payment_status: Optional[str] = None,
     since: Optional[str] = None,  # "week" | "month" | "year" | None
+    from_date: Optional[str] = None,  # ISO date (YYYY-MM-DD) - inclusive
+    to_date: Optional[str] = None,    # ISO date (YYYY-MM-DD) - inclusive end-of-day
     limit: int = 200,
 ):
     query = {}
     if payment_status:
         query["payment_status"] = payment_status
 
-    # Date filter: matches orders whose `created_at` ISO string is within the window.
-    # We store created_at as an ISO string; lexicographic comparison works for ISO 8601.
+    # Date filter: accept either a preset (since=week|month|year) OR an
+    # explicit ISO date range (from_date, to_date). created_at is stored as
+    # ISO 8601 string so lexicographic comparison is safe.
+    date_range = {}
     if since in ("week", "month", "year"):
         from datetime import timedelta
         now = datetime.now(timezone.utc)
         deltas = {"week": timedelta(days=7), "month": timedelta(days=30), "year": timedelta(days=365)}
-        cutoff_iso = (now - deltas[since]).isoformat()
-        query["created_at"] = {"$gte": cutoff_iso}
+        date_range["$gte"] = (now - deltas[since]).isoformat()
+    if from_date:
+        date_range["$gte"] = from_date  # expected as ISO 8601 (YYYY-MM-DD or full)
+    if to_date:
+        # inclusive end-of-day so the picker "to Jan 5" includes all of Jan 5
+        date_range["$lte"] = to_date if "T" in to_date else f"{to_date}T23:59:59.999999+00:00"
+    if date_range:
+        query["created_at"] = date_range
 
     cursor = db.payment_transactions.find(query, {"_id": 0}).sort("created_at", -1).limit(limit)
     items = await cursor.to_list(length=limit)
@@ -1601,6 +1611,147 @@ async def admin_list_blog(_: str = Depends(require_admin)):
     return {"items": [_public_blog(d) | {"is_published": d.get("is_published", True)} for d in docs]}
 
 
+# ===================== Case Studies =====================
+class CaseStudyModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    slug: str
+    title: str = Field(..., min_length=2, max_length=200)
+    client_name: str = Field(..., min_length=1, max_length=120)
+    industry: str = Field(..., min_length=1, max_length=80)
+    summary: str = Field(..., min_length=2, max_length=400)
+    cover_image_url: Optional[str] = None
+    challenge: str = Field(..., min_length=2)
+    approach: str = Field(..., min_length=2)
+    outcome: List[str] = Field(default_factory=list)  # bullet points
+    gallery_urls: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+    is_featured: bool = False
+    is_published: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CaseStudyCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=200)
+    client_name: str = Field(..., min_length=1, max_length=120)
+    industry: str = Field(..., min_length=1, max_length=80)
+    summary: str = Field(..., min_length=2, max_length=400)
+    cover_image_url: Optional[str] = None
+    challenge: str = Field(..., min_length=2)
+    approach: str = Field(..., min_length=2)
+    outcome: List[str] = Field(default_factory=list)
+    gallery_urls: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+    is_featured: bool = False
+    is_published: bool = True
+
+
+def _public_case_study(doc: dict) -> dict:
+    return {
+        "id": doc["id"],
+        "slug": doc["slug"],
+        "title": doc["title"],
+        "client_name": doc.get("client_name", ""),
+        "industry": doc.get("industry", ""),
+        "summary": doc["summary"],
+        "cover_image_url": doc.get("cover_image_url"),
+        "challenge": doc.get("challenge", ""),
+        "approach": doc.get("approach", ""),
+        "outcome": doc.get("outcome", []),
+        "gallery_urls": doc.get("gallery_urls", []),
+        "tags": doc.get("tags", []),
+        "is_featured": doc.get("is_featured", False),
+        "is_published": doc.get("is_published", True),
+        "created_at": doc.get("created_at"),
+        "updated_at": doc.get("updated_at"),
+    }
+
+
+async def _generate_unique_case_slug(title: str, exclude_id: Optional[str] = None) -> str:
+    base = _slugify(title)
+    candidate = base
+    n = 2
+    while True:
+        query = {"slug": candidate}
+        if exclude_id:
+            query["id"] = {"$ne": exclude_id}
+        existing = await db.case_studies.find_one(query, {"_id": 0, "id": 1})
+        if not existing:
+            return candidate
+        candidate = f"{base}-{n}"
+        n += 1
+
+
+@api_router.get("/case-studies")
+async def list_case_studies(
+    limit: int = 50,
+    featured: Optional[bool] = None,
+    tag: Optional[str] = None,
+):
+    query = {"is_published": True}
+    if featured is not None:
+        query["is_featured"] = featured
+    if tag:
+        query["tags"] = tag
+    # Featured first, then newest
+    docs = await db.case_studies.find(query, {"_id": 0}) \
+        .sort([("is_featured", -1), ("created_at", -1)]) \
+        .limit(min(limit, 100)).to_list(100)
+    return {"items": [_public_case_study(d) for d in docs]}
+
+
+@api_router.get("/case-studies/{slug}")
+async def get_case_study(slug: str):
+    doc = await db.case_studies.find_one({"slug": slug, "is_published": True}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Case study not found")
+    return _public_case_study(doc)
+
+
+@api_router.post("/admin/case-studies")
+async def admin_create_case_study(payload: CaseStudyCreate, _: str = Depends(require_admin)):
+    slug = await _generate_unique_case_slug(payload.title)
+    cs = CaseStudyModel(slug=slug, **payload.model_dump())
+    doc = cs.model_dump()
+    doc["created_at"] = doc["created_at"].isoformat()
+    doc["updated_at"] = doc["updated_at"].isoformat()
+    await db.case_studies.insert_one(doc)
+    return _public_case_study(doc)
+
+
+@api_router.patch("/admin/case-studies/{cs_id}")
+async def admin_update_case_study(cs_id: str, payload: dict, _: str = Depends(require_admin)):
+    allowed = {"title", "client_name", "industry", "summary", "cover_image_url",
+               "challenge", "approach", "outcome", "gallery_urls", "tags",
+               "is_featured", "is_published"}
+    update_data = {k: v for k, v in payload.items() if k in allowed}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    if "title" in update_data:
+        update_data["slug"] = await _generate_unique_case_slug(update_data["title"], exclude_id=cs_id)
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.case_studies.update_one({"id": cs_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Case study not found")
+    doc = await db.case_studies.find_one({"id": cs_id}, {"_id": 0})
+    return _public_case_study(doc)
+
+
+@api_router.delete("/admin/case-studies/{cs_id}")
+async def admin_delete_case_study(cs_id: str, _: str = Depends(require_admin)):
+    result = await db.case_studies.delete_one({"id": cs_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Case study not found")
+    return {"success": True}
+
+
+@api_router.get("/admin/case-studies")
+async def admin_list_case_studies(_: str = Depends(require_admin)):
+    docs = await db.case_studies.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"items": [_public_case_study(d) for d in docs]}
+
+
 # ===================== Dynamic Sitemap =====================
 @api_router.get("/sitemap.xml")
 async def dynamic_sitemap():
@@ -1611,6 +1762,7 @@ async def dynamic_sitemap():
         (f"{base}/", today, "1.0", "weekly"),
         (f"{base}/resources", today, "0.8", "weekly"),
         (f"{base}/blog", today, "0.9", "daily"),
+        (f"{base}/case-studies", today, "0.9", "weekly"),
         (f"{base}/privacy", today, "0.3", "yearly"),
         (f"{base}/terms", today, "0.3", "yearly"),
         (f"{base}/refund-policy", today, "0.3", "yearly"),
@@ -1622,6 +1774,13 @@ async def dynamic_sitemap():
     for p in posts:
         last = (p.get("updated_at") or p.get("created_at") or today)[:10]
         urls.append((f"{base}/blog/{p['slug']}", last, "0.7", "monthly"))
+
+    cases = await db.case_studies.find(
+        {"is_published": True}, {"_id": 0, "slug": 1, "updated_at": 1, "created_at": 1}
+    ).sort("created_at", -1).to_list(1000)
+    for c in cases:
+        last = (c.get("updated_at") or c.get("created_at") or today)[:10]
+        urls.append((f"{base}/case-studies/{c['slug']}", last, "0.8", "monthly"))
 
     xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>',
                  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']

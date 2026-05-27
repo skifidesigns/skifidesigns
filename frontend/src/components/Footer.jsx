@@ -39,12 +39,10 @@ export const Footer = () => {
             <h3 className="text-foreground font-semibold mb-4 text-lg">Quick Links</h3>
             <div className="space-y-3">
               <a
-                href="https://www.behance.net/skifidesigns"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/case-studies"
                 className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200"
               >
-                Portfolio on Behance
+                Case Studies
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a

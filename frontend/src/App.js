@@ -26,6 +26,8 @@ import { Blog } from "./components/Blog";
 import { BlogPost } from "./components/BlogPost";
 import { PrivacyPolicy, TermsOfService, RefundPolicy, CookiePolicy } from "./components/Legal";
 import { ClientDashboard } from "./components/ClientDashboard";
+import { CaseStudies } from "./components/CaseStudies";
+import { CaseStudy } from "./components/CaseStudy";
 import { trackPageview } from "./utils/analytics";
 
 const Home = () => {
@@ -96,6 +98,8 @@ const AppRouter = () => {
       <Route path="/resources/template/:id" element={<Resources />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
+      <Route path="/case-studies" element={<CaseStudies />} />
+      <Route path="/case-studies/:slug" element={<CaseStudy />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />
