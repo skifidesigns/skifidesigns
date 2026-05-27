@@ -1752,6 +1752,131 @@ async def admin_list_case_studies(_: str = Depends(require_admin)):
     return {"items": [_public_case_study(d) for d in docs]}
 
 
+# One-shot seed for production. Idempotent: skips if any case study exists.
+_DUMMY_CASE_STUDIES = [
+    {
+        "title": "Informed - Presentation & Infographics",
+        "client_name": "Informed",
+        "industry": "B2B SaaS / Education",
+        "summary": "A data-rich corporate deck transformed into a clean, storytelling-first investor presentation with custom infographics.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/c8f4ba223365563.Y3JvcCwxOTY2LDE1MzgsMjk2LDA.jpg",
+        "challenge": "Informed had dense slides packed with statistics and content. Investors struggled to absorb the value proposition in the first 60 seconds.",
+        "approach": "We restructured the narrative into a 3-act pitch flow, designed a unified colour system, and built 12 custom infographics that turned numbers into visual stories.",
+        "outcome": [
+            "Average pitch length reduced from 14 minutes to 8 minutes",
+            "Investor engagement (Q&A depth) increased noticeably",
+            "12 custom infographics designed end-to-end",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/c8f4ba223365563.Y3JvcCwxOTY2LDE1MzgsMjk2LDA.jpg"],
+        "tags": ["pitch-deck", "infographics", "saas"],
+    },
+    {
+        "title": "Toyota Kirloskar X Value360",
+        "client_name": "Toyota Kirloskar",
+        "industry": "Automotive",
+        "summary": "Corporate strategy presentation redesigned for Toyota's regional leadership team in partnership with Value360.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/133c35224376693.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
+        "challenge": "Toyota needed a brand-consistent yet modern presentation for senior leadership that balanced corporate gravitas with visual clarity.",
+        "approach": "Built a custom slide system using Toyota's official brand palette, designed editorial-style layouts, and created visual frameworks for complex KPI data.",
+        "outcome": [
+            "70+ slides delivered in under 2 weeks",
+            "Approved by Toyota brand compliance on first review",
+            "Now used as the template for regional strategy decks",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/133c35224376693.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg"],
+        "tags": ["corporate", "automotive"],
+    },
+    {
+        "title": "Coca-Cola Adria Project",
+        "client_name": "Coca-Cola Adria",
+        "industry": "FMCG / Beverages",
+        "summary": "Regional strategy presentation for Coca-Cola Adria with custom data visualisation and brand-aligned typography.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/e7b674229962441.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
+        "challenge": "Coca-Cola Adria's leadership needed a strategy deck that felt fresh and contemporary while staying within the strict Coca-Cola brand system.",
+        "approach": "Designed within brand constraints while introducing modern grid layouts, dynamic typography pairings, and bespoke chart styles for market data.",
+        "outcome": [
+            "Presented at internal regional summit",
+            "100% brand compliance maintained",
+            "Modular slide system reusable for future strategy decks",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/e7b674229962441.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg"],
+        "tags": ["corporate", "fmcg", "data-viz"],
+    },
+    {
+        "title": "IndiGo X Value360",
+        "client_name": "IndiGo Airlines",
+        "industry": "Aviation",
+        "summary": "Presentation infographics for IndiGo Airlines designed in collaboration with Value360 for a key stakeholder briefing.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/d6f92f224117859.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
+        "challenge": "Complex aviation operational data needed to be communicated to non-technical stakeholders in a digestible, visually striking way.",
+        "approach": "Created an infographic-first deck with custom iconography, route-flow visualisations, and a colour-coded data system. Maintained IndiGo's recognizable blue identity throughout.",
+        "outcome": [
+            "20+ custom aviation-themed infographics",
+            "Faster stakeholder comprehension in test sessions",
+            "Slides reused across investor and partner briefings",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/d6f92f224117859.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg"],
+        "tags": ["aviation", "infographics"],
+    },
+    {
+        "title": "Verizon - Presentation & Infographics",
+        "client_name": "Verizon",
+        "industry": "Telecommunications",
+        "summary": "Enterprise sales presentation with custom infographics designed to help Verizon's sales team close higher-value B2B contracts.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/af3fde223638239.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
+        "challenge": "Verizon's existing sales deck was text-heavy and slow to close prospects. The team needed a visually-driven story that worked in 20 minutes or less.",
+        "approach": "Storyboarded a tight 20-slide narrative, designed product-comparison infographics, and built motion-friendly transitions that work well on remote sales calls.",
+        "outcome": [
+            "Average sales pitch trimmed by ~40%",
+            "Custom infographics reused across regions",
+            "Onboarded as a continuing design partner",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/af3fde223638239.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg"],
+        "tags": ["sales-deck", "telecom"],
+    },
+    {
+        "title": "Faculty of Dentistry - King Abdul Aziz University",
+        "client_name": "King Abdul Aziz University",
+        "industry": "Higher Education",
+        "summary": "Academic presentation system for the Faculty of Dentistry at King Abdul Aziz University, designed for international accreditation review.",
+        "cover_image_url": "https://mir-s3-cdn-cf.behance.net/projects/404/3459c1223647841.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg",
+        "challenge": "An academic faculty needed a presentation system that conveyed scientific rigour while still feeling modern enough for an international accreditation panel.",
+        "approach": "Designed a calm, academic colour system with serif/sans pairings, structured data layouts for research outputs, and a reusable template covering 6 presentation categories.",
+        "outcome": [
+            "Used in successful international accreditation review",
+            "Template adopted across faculty departments",
+            "60+ slides designed across 6 presentation types",
+        ],
+        "gallery_urls": ["https://mir-s3-cdn-cf.behance.net/projects/404/3459c1223647841.Y3JvcCwzNTc5LDI4MDAsMjM5LDA.jpg"],
+        "tags": ["education", "academic"],
+    },
+]
+
+
+@api_router.post("/admin/seed/case-studies")
+async def admin_seed_case_studies(_: str = Depends(require_admin)):
+    """Idempotent one-shot seed for the 6 starter case studies.
+    Skips if the collection already contains any docs - safe to call repeatedly."""
+    existing = await db.case_studies.count_documents({})
+    if existing > 0:
+        return {"seeded": 0, "skipped": existing, "message": f"Already have {existing} case studies - nothing inserted."}
+    now_iso = datetime.now(timezone.utc).isoformat()
+    docs = []
+    for cs in _DUMMY_CASE_STUDIES:
+        slug = await _generate_unique_case_slug(cs["title"])
+        docs.append({
+            "id": str(uuid.uuid4()),
+            "slug": slug,
+            "is_published": True,
+            "is_featured": True,
+            "created_at": now_iso,
+            "updated_at": now_iso,
+            **cs,
+        })
+    await db.case_studies.insert_many(docs)
+    return {"seeded": len(docs), "skipped": 0, "message": f"Inserted {len(docs)} starter case studies."}
+
+
 # ===================== Dynamic Sitemap =====================
 @api_router.get("/sitemap.xml")
 async def dynamic_sitemap():
