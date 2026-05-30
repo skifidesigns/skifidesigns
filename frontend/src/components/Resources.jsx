@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Search, Download, Lock, Loader2, Tag, Sparkles, ArrowUpRight, Share2, Check, X } from 'lucide-react';
+import { Search, Loader2, Tag, Sparkles, ArrowUpRight, Share2, Check, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 import { useAuth } from '../context/AuthContext';
-import { GoogleIcon } from './icons/GoogleIcon';
+import { TemplateModal } from './TemplateModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
@@ -25,16 +25,14 @@ const CATEGORIES = [
   'Brand Presentation',
 ];
 
-const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
+const TemplateCard = ({ template, onOpen, isFocused }) => {
   const isPaid = template.type === 'paid';
-  const isBusy = busyId === template.id;
   const [copied, setCopied] = useState(false);
 
   const handleShare = async (e) => {
     e.stopPropagation();
     const url = `${window.location.origin}/resources/template/${template.id}`;
     try {
-      // Use native share on mobile if available
       if (navigator.share) {
         await navigator.share({ title: template.title, url });
         return;
@@ -43,15 +41,17 @@ const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
       setCopied(true);
       toast.success('Link copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error('Could not copy link');
     }
   };
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onOpen(template)}
       data-testid={`template-card-${template.id}`}
-      className={`group bg-card border rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col ${
+      className={`group bg-card border rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col text-left w-full ${
         isFocused
           ? 'border-[#2A7AFE] ring-2 ring-[#2A7AFE]/40 shadow-xl shadow-[#2A7AFE]/20'
           : 'border-border hover:border-[#2A7AFE]/50 hover:shadow-xl hover:shadow-[#2A7AFE]/10'
@@ -75,8 +75,9 @@ const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
             </span>
           )}
         </div>
-        {/* Share button */}
+        {/* Share button - prevents card click */}
         <button
+          type="button"
           onClick={handleShare}
           data-testid={`template-share-${template.id}`}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
@@ -91,7 +92,7 @@ const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
         <p className="text-[10px] uppercase tracking-widest text-[#2A7AFE] font-semibold mb-2">
           {template.category}
         </p>
-        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1">
+        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1 group-hover:text-[#2A7AFE] transition-colors">
           {template.title}
         </h3>
         {template.description && (
@@ -110,69 +111,19 @@ const TemplateCard = ({ template, onAction, busyId, isFocused }) => {
           </div>
         )}
 
-        <button
-          data-testid={`template-action-${template.id}`}
-          onClick={() => onAction(template)}
-          disabled={isBusy}
-          className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed mt-auto ${
-            isPaid
-              ? 'bg-[#2A7AFE] text-white hover:bg-[#3B82F6]'
-              : 'bg-foreground text-background hover:opacity-90'
-          }`}
-        >
-          {isBusy ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : isPaid ? (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Buy Template
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4" />
-              Download Free
-            </>
-          )}
-        </button>
+        <div className="mt-auto flex items-center justify-between text-sm font-semibold text-[#2A7AFE]">
+          <span>View details</span>
+          <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </div>
       </div>
-    </div>
+    </button>
   );
 };
 
-const SignInModal = ({ open, onClose }) => {
-  const { login } = useAuth();
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={onClose}>
-      <div
-        className="bg-card border border-border rounded-2xl p-8 max-w-md w-full text-center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="w-14 h-14 rounded-full bg-[#2A7AFE]/10 flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-7 h-7 text-[#2A7AFE]" />
-        </div>
-        <h3 className="text-2xl font-semibold text-foreground mb-2">Sign in to continue</h3>
-        <p className="text-muted-foreground mb-6">
-          Sign in with Google to download free templates and unlock paid ones.
-        </p>
-        <button
-          data-testid="signin-google-btn"
-          onClick={login}
-          className="w-full py-3 rounded-xl bg-white text-gray-900 font-semibold flex items-center justify-center gap-3 border border-gray-200 hover:bg-gray-50 transition-all hover:scale-[1.02]"
-        >
-          <GoogleIcon className="w-5 h-5" />
-          Continue with Google
-        </button>
-        <button
-          onClick={onClose}
-          className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-};
+// Note: a separate sign-in modal lived here previously. The TemplateModal now
+// owns the "sign in to download" CTA inline so users dont juggle two modals.
+
+
 
 export const Resources = () => {
   const { user, loading: authLoading } = useAuth();
@@ -186,8 +137,7 @@ export const Resources = () => {
   const [category, setCategory] = useState('All');
   const [typeFilter, setTypeFilter] = useState('all'); // all | free | paid
   const [search, setSearch] = useState('');
-  const [signInOpen, setSignInOpen] = useState(false);
-  const [busyId, setBusyId] = useState(null);
+  const [modalTemplate, setModalTemplate] = useState(null);
 
   // When the URL has /resources/template/:id, fetch that specific template's
   // metadata so we can highlight the card AND still show the rest of the page.
@@ -238,39 +188,29 @@ export const Resources = () => {
     return () => clearTimeout(t);
   }, [load]);
 
-  const handleAction = async (template) => {
-    if (!user) {
-      setSignInOpen(true);
+  const handleOpen = useCallback((template) => {
+    setModalTemplate(template);
+    // Push the share-friendly URL so refresh/share works
+    if (template?.id && (!focusedTemplateId || focusedTemplateId !== template.id)) {
+      navigate(`/resources/template/${template.id}`, { replace: false });
+    }
+  }, [focusedTemplateId, navigate]);
+
+  const handleClose = () => {
+    setModalTemplate(null);
+    if (focusedTemplateId) navigate('/resources', { replace: false });
+  };
+
+  // Auto-open the modal whenever the URL points at /resources/template/:id
+  useEffect(() => {
+    if (!focusedTemplateId) {
+      setModalTemplate(null);
       return;
     }
-    setBusyId(template.id);
-    try {
-      const { data } = await axios.post(
-        `${API}/templates/${template.id}/access`,
-        { origin_url: window.location.origin },
-        { withCredentials: true }
-      );
-      if (data.type === 'free' && data.download_url) {
-        window.open(data.download_url, '_blank');
-        toast.success('Download started');
-      } else if (data.already_purchased && data.download_url) {
-        window.open(data.download_url, '_blank');
-        toast.success('Welcome back - download started');
-      } else if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-      } else {
-        toast.error('No download link available');
-      }
-    } catch (err) {
-      if (err?.response?.status === 401) {
-        setSignInOpen(true);
-      } else {
-        toast.error(err?.response?.data?.detail || 'Action failed');
-      }
-    } finally {
-      setBusyId(null);
-    }
-  };
+    // Prefer template already loaded in the grid; otherwise use the fetched copy
+    const t = templates.find((x) => x.id === focusedTemplateId) || focusedFromServer;
+    if (t) setModalTemplate(t);
+  }, [focusedTemplateId, templates, focusedFromServer]);
 
   return (
     <div className="bg-background min-h-screen">
@@ -398,8 +338,7 @@ export const Resources = () => {
                   <div ref={focusedCardRef}>
                     <TemplateCard
                       template={focusedFromServer}
-                      onAction={handleAction}
-                      busyId={busyId}
+                      onOpen={handleOpen}
                       isFocused
                     />
                   </div>
@@ -410,8 +349,7 @@ export const Resources = () => {
                     <div key={t.id} ref={isFocused ? focusedCardRef : null}>
                       <TemplateCard
                         template={t}
-                        onAction={handleAction}
-                        busyId={busyId}
+                        onOpen={handleOpen}
                         isFocused={isFocused}
                       />
                     </div>
@@ -426,7 +364,11 @@ export const Resources = () => {
       <Footer />
       <FloatingContact />
 
-      <SignInModal open={signInOpen} onClose={() => setSignInOpen(false)} />
+      <TemplateModal
+        open={!!modalTemplate}
+        template={modalTemplate}
+        onClose={handleClose}
+      />
     </div>
   );
 };

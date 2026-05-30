@@ -66,6 +66,55 @@ const downloadAuth = async (file_id, filename) => {
   }
 };
 
+const assetUrl = (u) => {
+  if (!u) return '';
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  return `${process.env.REACT_APP_BACKEND_URL}${u.startsWith('/') ? u : '/' + u}`;
+};
+
+const LibraryCard = ({ item }) => {
+  const handleDownload = () => {
+    if (!item.download_url) {
+      toast.error('Download link unavailable - try again later');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = assetUrl(item.download_url);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.download = `${item.title}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col" data-testid={`library-item-${item.id}`}>
+      <div className="aspect-[4/3] bg-muted overflow-hidden">
+        {item.thumbnail_url ? (
+          <img src={assetUrl(item.thumbnail_url)} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+        ) : null}
+      </div>
+      <div className="p-4 flex flex-col flex-grow">
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`text-[10px] uppercase tracking-widest font-semibold ${item.unlock_kind === 'paid' ? 'text-[#2A7AFE]' : 'text-green-600'}`}>
+            {item.unlock_kind === 'paid' ? `$${item.price} - Paid` : 'Free'}
+          </span>
+        </div>
+        <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-3 flex-grow">{item.title}</h3>
+        <Button
+          size="sm"
+          onClick={handleDownload}
+          data-testid={`library-download-${item.id}`}
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+        >
+          <Download className="w-3.5 h-3.5 mr-1.5" />
+          Download
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const FileItem = ({ file, accent = '#2A7AFE' }) => (
   <li className="flex items-center gap-3 bg-background border border-border rounded-lg px-3 py-2.5">
     <FileText className="w-4 h-4 shrink-0" style={{ color: accent }} />
@@ -358,15 +407,20 @@ const OrderCard = ({ order, onReload }) => {
 export const ClientDashboard = () => {
   const { user, loading: authLoading, login } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/me/orders`, { withCredentials: true });
-      setOrders(data.items || []);
+      const [ordersRes, libraryRes] = await Promise.all([
+        axios.get(`${API}/me/orders`, { withCredentials: true }),
+        axios.get(`${API}/me/library`, { withCredentials: true }).catch(() => ({ data: { items: [] } })),
+      ]);
+      setOrders(ordersRes.data.items || []);
+      setLibrary(libraryRes.data.items || []);
     } catch {
-      toast.error('Could not load your projects');
+      toast.error('Could not load your dashboard');
     } finally {
       setLoading(false);
     }
@@ -451,26 +505,68 @@ export const ClientDashboard = () => {
             <div className="flex justify-center py-20">
               <Loader2 className="w-7 h-7 animate-spin text-[#2A7AFE]" />
             </div>
-          ) : orders.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center" data-testid="dashboard-empty">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-60" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">No projects yet</h2>
-              <p className="text-muted-foreground mb-6">
-                Once you place an order using this email, you'll see project status, file deliveries and chat here.
-              </p>
-              <Button asChild className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white">
-                <a href="/">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Start a project
-                </a>
-              </Button>
-            </div>
           ) : (
-            <div className="space-y-6" data-testid="dashboard-orders">
-              {orders.map((o) => (
-                <OrderCard key={o.session_id} order={o} onReload={load} />
-              ))}
-            </div>
+            <>
+              {/* Section 1 - Projects */}
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  <Package className="w-5 h-5 text-[#2A7AFE]" />
+                  My Projects
+                  <span className="text-xs text-muted-foreground font-normal">({orders.length})</span>
+                </h2>
+              </div>
+              {orders.length === 0 ? (
+                <div className="bg-card border border-border rounded-2xl p-10 text-center mb-12" data-testid="dashboard-empty">
+                  <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
+                  <p className="text-muted-foreground mb-5">
+                    Once you place an order using this email, project status and file deliveries appear here.
+                  </p>
+                  <Button asChild className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white">
+                    <a href="/">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Start a project
+                    </a>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6 mb-12" data-testid="dashboard-orders">
+                  {orders.map((o) => (
+                    <OrderCard key={o.session_id} order={o} onReload={load} />
+                  ))}
+                </div>
+              )}
+
+              {/* Section 2 - Digital Products / Library */}
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#2A7AFE]" />
+                  My Library
+                  <span className="text-xs text-muted-foreground font-normal">({library.length})</span>
+                </h2>
+                {library.length > 0 && (
+                  <a href="/resources" className="text-xs text-[#2A7AFE] hover:underline">
+                    Browse more →
+                  </a>
+                )}
+              </div>
+              {library.length === 0 ? (
+                <div className="bg-card border border-border rounded-2xl p-10 text-center" data-testid="library-empty">
+                  <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
+                  <p className="text-muted-foreground mb-5">
+                    Free + paid templates you download will live here for unlimited re-downloads.
+                  </p>
+                  <Button asChild variant="outline">
+                    <a href="/resources">Browse templates</a>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="dashboard-library">
+                  {library.map((t) => (
+                    <LibraryCard key={t.id} item={t} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

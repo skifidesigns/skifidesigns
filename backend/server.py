@@ -788,6 +788,26 @@ async def access_template(
             "email": user["email"],
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
         })
+        # Also record an entry in template_purchases (payment_status='free')
+        # so this template shows up under the user's library going forward.
+        # Idempotent: skip if a free record already exists.
+        existing_free = await db.template_purchases.find_one(
+            {"template_id": template_id, "user_id": user["user_id"], "payment_status": "free"},
+            {"_id": 0, "id": 1},
+        )
+        if not existing_free:
+            await db.template_purchases.insert_one({
+                "id": str(uuid.uuid4()),
+                "template_id": template_id,
+                "user_id": user["user_id"],
+                "email": user["email"],
+                "session_id": None,
+                "amount": 0.0,
+                "currency": "usd",
+                "payment_status": "free",
+                "status": "unlocked",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
         download_url = (
             f"/api/templates/{template_id}/file" if doc.get("template_file_id") else doc.get("file_url")
         )
@@ -862,23 +882,33 @@ async def access_template(
 
 @api_router.get("/me/library")
 async def my_library(user: dict = Depends(require_user)):
-    """User's purchased + downloaded templates with full file URLs."""
+    """User's unlocked templates - both free downloads and paid purchases.
+    Sorted newest unlock first."""
     purchases = await db.template_purchases.find(
-        {"user_id": user["user_id"], "payment_status": "paid"},
+        {"user_id": user["user_id"], "payment_status": {"$in": ["paid", "free"]}},
         {"_id": 0},
-    ).to_list(500)
+    ).sort("created_at", -1).to_list(500)
     template_ids = list({p["template_id"] for p in purchases})
     templates = await db.templates.find({"id": {"$in": template_ids}}, {"_id": 0}).to_list(500)
     by_id = {t["id"]: t for t in templates}
     items = []
+    seen = set()  # dedupe in case same template appears as both free+paid
     for p in purchases:
-        t = by_id.get(p["template_id"])
+        tid = p["template_id"]
+        if tid in seen:
+            continue
+        seen.add(tid)
+        t = by_id.get(tid)
         if not t:
             continue
+        download_url = (
+            f"/api/templates/{tid}/file" if t.get("template_file_id") else t.get("file_url")
+        )
         items.append({
             **_public_template(t),
-            "download_url": t.get("file_url"),
-            "purchased_at": p.get("created_at"),
+            "download_url": download_url,
+            "unlocked_at": p.get("created_at"),
+            "unlock_kind": p.get("payment_status"),  # 'paid' or 'free'
         })
     return {"items": items}
 
