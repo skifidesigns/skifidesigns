@@ -39,6 +39,11 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-02-30 (bug fix + UX)
+- **🐛 Fixed P0 template file upload bug**: `PATCH /api/admin/templates/{id}` allow-list was missing `template_file_id` (and `thumbnail_file_id`) → uploaded files silently dropped when editing a template. Added both to allowed update fields. Verified end-to-end via curl with real GridFS upload.
+- **🐛 Fixed frontend endpoint mismatch**: `TemplateModal.jsx` was calling `/api/templates/{id}/checkout` (404). Renamed to `/access` to match backend. This unblocks free downloads + paid Stripe checkout from the modal.
+- **✨ Quick-download icon on template cards** (`Resources.jsx`): hover-revealed download button next to share button. Calls `/access` directly — free → instant download, paid (not owned) → Stripe checkout, paid (owned) → re-download. Mirrors `TemplateModal` CTA logic and emits the same GA4 events.
+
 ### 2026-02 (current session — pre-launch polish & blog)
 - Rotated live Stripe key + admin password
 - Updated meta title, favicon, Open Graph, Twitter Card with SkiFi branding

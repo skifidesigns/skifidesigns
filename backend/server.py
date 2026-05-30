@@ -1486,7 +1486,8 @@ async def admin_create_template(payload: TemplateCreate, _: str = Depends(requir
 @api_router.patch("/admin/templates/{template_id}")
 async def admin_update_template(template_id: str, payload: dict, _: str = Depends(require_admin)):
     allowed = {"title", "description", "category", "type", "price", "thumbnail_url",
-               "file_url", "preview_url", "tags", "is_published"}
+               "thumbnail_file_id", "file_url", "template_file_id", "preview_url",
+               "tags", "is_published"}
     update_data = {k: v for k, v in payload.items() if k in allowed}
     if not update_data:
         raise HTTPException(status_code=400, detail="No valid fields to update")

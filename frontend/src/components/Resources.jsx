@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Search, Loader2, Tag, Sparkles, ArrowUpRight, Share2, Check, X } from 'lucide-react';
+import { Search, Loader2, Tag, Sparkles, ArrowUpRight, Share2, Check, X, Download } from 'lucide-react';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import { Header } from './Header';
@@ -9,6 +9,7 @@ import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 import { useAuth } from '../context/AuthContext';
 import { TemplateModal } from './TemplateModal';
+import { trackEvent } from '../utils/analytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
@@ -25,7 +26,7 @@ const CATEGORIES = [
   'Brand Presentation',
 ];
 
-const TemplateCard = ({ template, onOpen, isFocused }) => {
+const TemplateCard = ({ template, onOpen, onQuickDownload, isFocused, isDownloading }) => {
   const isPaid = template.type === 'paid';
   const [copied, setCopied] = useState(false);
 
@@ -44,6 +45,11 @@ const TemplateCard = ({ template, onOpen, isFocused }) => {
     } catch {
       toast.error('Could not copy link');
     }
+  };
+
+  const handleDownloadClick = (e) => {
+    e.stopPropagation();
+    onQuickDownload?.(template);
   };
 
   return (
@@ -75,17 +81,30 @@ const TemplateCard = ({ template, onOpen, isFocused }) => {
             </span>
           )}
         </div>
-        {/* Share button - prevents card click */}
-        <button
-          type="button"
-          onClick={handleShare}
-          data-testid={`template-share-${template.id}`}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-          aria-label={`Share ${template.title}`}
-          title="Copy share link"
-        >
-          {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-        </button>
+        {/* Top-right action cluster: Quick download + Share */}
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadClick}
+            data-testid={`template-quick-download-${template.id}`}
+            disabled={isDownloading}
+            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#2A7AFE] transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-100"
+            aria-label={isPaid ? `Buy ${template.title}` : `Download ${template.title}`}
+            title={isPaid ? `Buy for $${template.price}` : 'Download now'}
+          >
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            data-testid={`template-share-${template.id}`}
+            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            aria-label={`Share ${template.title}`}
+            title="Copy share link"
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       <div className="p-5 flex flex-col flex-grow">
@@ -126,7 +145,7 @@ const TemplateCard = ({ template, onOpen, isFocused }) => {
 
 
 export const Resources = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const { id: focusedTemplateId } = useParams(); // present when route is /resources/template/:id
   const navigate = useNavigate();
   const focusedCardRef = useRef(null);
@@ -138,6 +157,7 @@ export const Resources = () => {
   const [typeFilter, setTypeFilter] = useState('all'); // all | free | paid
   const [search, setSearch] = useState('');
   const [modalTemplate, setModalTemplate] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   // When the URL has /resources/template/:id, fetch that specific template's
   // metadata so we can highlight the card AND still show the rest of the page.
@@ -200,6 +220,58 @@ export const Resources = () => {
     setModalTemplate(null);
     if (focusedTemplateId) navigate('/resources', { replace: false });
   };
+
+  // Quick-download from the card without opening the modal.
+  //  - signed out  → trigger Google sign-in
+  //  - free        → /access (saves to library) → stream file
+  //  - paid (new)  → redirect to Stripe checkout
+  //  - paid (own)  → re-download immediately
+  const handleQuickDownload = useCallback(async (template) => {
+    if (!template) return;
+    if (!user) {
+      toast.message('Please sign in to download');
+      login();
+      return;
+    }
+    setDownloadingId(template.id);
+    try {
+      const { data } = await axios.post(
+        `${API}/templates/${template.id}/access`,
+        { origin_url: window.location.origin },
+        { withCredentials: true },
+      );
+      if (data.type === 'free' || data.already_purchased) {
+        trackEvent('template_downloaded', {
+          template_id: template.id,
+          template_name: template.title,
+          template_type: template.type,
+          source: 'card_quick_download',
+        });
+        toast.success('Saved to your library - opening download…');
+        const a = document.createElement('a');
+        a.href = assetUrl(data.download_url);
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.download = `${template.title}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else if (data.checkout_url) {
+        trackEvent('template_checkout_started', {
+          template_id: template.id,
+          template_name: template.title,
+          value: template.price,
+          currency: 'USD',
+          source: 'card_quick_download',
+        });
+        window.location.href = data.checkout_url;
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not start that download');
+    } finally {
+      setDownloadingId(null);
+    }
+  }, [user, login]);
 
   // Auto-open the modal whenever the URL points at /resources/template/:id
   useEffect(() => {
@@ -339,6 +411,8 @@ export const Resources = () => {
                     <TemplateCard
                       template={focusedFromServer}
                       onOpen={handleOpen}
+                      onQuickDownload={handleQuickDownload}
+                      isDownloading={downloadingId === focusedFromServer.id}
                       isFocused
                     />
                   </div>
@@ -350,6 +424,8 @@ export const Resources = () => {
                       <TemplateCard
                         template={t}
                         onOpen={handleOpen}
+                        onQuickDownload={handleQuickDownload}
+                        isDownloading={downloadingId === t.id}
                         isFocused={isFocused}
                       />
                     </div>

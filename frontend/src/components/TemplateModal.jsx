@@ -100,7 +100,7 @@ export const TemplateModal = ({ template, open, onClose }) => {
     setBusy(true);
     try {
       const { data } = await axios.post(
-        `${API}/templates/${template.id}/checkout`,
+        `${API}/templates/${template.id}/access`,
         { origin_url: window.location.origin },
         { withCredentials: true },
       );
