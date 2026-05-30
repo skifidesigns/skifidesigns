@@ -36,7 +36,10 @@ export const CaseStudy = () => {
         if (!cancelled) {
           setRelated((all.items || []).filter((x) => x.slug !== slug).slice(0, 3));
         }
-      } catch { /* non-fatal */ }
+      } catch (err) {
+        // Non-fatal: related case studies are an optional UX enhancement
+        console.warn('[CaseStudy] related fetch failed:', err);
+      }
     })();
     return () => { cancelled = true; };
   }, [slug]);
@@ -119,7 +122,7 @@ export const CaseStudy = () => {
               <p className="text-xs uppercase tracking-widest text-[#2A7AFE] font-semibold mb-3">Outcome</p>
               <ul className="space-y-2">
                 {cs.outcome?.length ? cs.outcome.map((o, i) => (
-                  <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground">
+                  <li key={`${o}-${i}`} className="flex gap-2 text-sm leading-relaxed text-foreground">
                     <CheckCircle2 className="w-4 h-4 text-[#2A7AFE] flex-shrink-0 mt-0.5" />
                     <span>{o}</span>
                   </li>
@@ -134,7 +137,7 @@ export const CaseStudy = () => {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Selected slides</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cs.gallery_urls.map((url, i) => (
-                  <div key={i} className="rounded-xl overflow-hidden border border-border">
+                  <div key={url} className="rounded-xl overflow-hidden border border-border">
                     <img src={url} alt={`${cs.title} slide ${i + 1}`} className="w-full h-auto" loading="lazy" />
                   </div>
                 ))}

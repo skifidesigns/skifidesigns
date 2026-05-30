@@ -43,8 +43,9 @@ export const TemplateModal = ({ template, open, onClose }) => {
         const { data } = await axios.get(`${API}/me/library`, { withCredentials: true });
         const isOwned = (data.items || []).some((t) => t.id === template.id);
         setOwned(isOwned);
-      } catch {
+      } catch (err) {
         // non-fatal; user can still try the action
+        console.warn('[TemplateModal] ownership check failed:', err);
       } finally {
         setOwnershipChecking(false);
       }
