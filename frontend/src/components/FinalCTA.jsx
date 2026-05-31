@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, ArrowRight } from 'lucide-react';
 
 export const FinalCTA = () => {
-  const handleBookCall = () => window.open('https://cal.com/skifi/30min', '_blank');
+  // Cal.com embed (init in public/index.html) opens on click via data-cal-* attrs.
   const handleStartProject = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
@@ -44,8 +44,10 @@ export const FinalCTA = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
-                onClick={handleBookCall}
                 data-testid="final-cta-book"
+                data-cal-link="skifi/30min"
+                data-cal-namespace="30min"
+                data-cal-config='{"layout":"month_view"}'
                 className="skifi-btn-primary group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-semibold"
               >
                 <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />

@@ -59,15 +59,17 @@ export const Footer = () => {
                 Blog
                 <ExternalLink className="w-4 h-4" />
               </a>
-              <a
-                href="https://cal.com/skifi/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200"
+              <button
+                type="button"
+                data-cal-link="skifi/30min"
+                data-cal-namespace="30min"
+                data-cal-config='{"layout":"month_view"}'
+                data-testid="footer-book-meeting"
+                className="flex items-center gap-2 text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 bg-transparent border-0 p-0 cursor-pointer text-left"
               >
                 Book a Meeting
                 <ExternalLink className="w-4 h-4" />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -155,14 +157,16 @@ export const Footer = () => {
               >
                 Resources
               </a>
-              <a
-                href="https://cal.com/skifi/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 text-sm"
+              <button
+                type="button"
+                data-cal-link="skifi/30min"
+                data-cal-namespace="30min"
+                data-cal-config='{"layout":"month_view"}'
+                data-testid="footer-book-call"
+                className="text-muted-foreground hover:text-[#2A7AFE] transition-colors duration-200 text-sm bg-transparent border-0 p-0 cursor-pointer text-left"
               >
                 Book a Call
-              </a>
+              </button>
             </div>
           </div>
         </div>

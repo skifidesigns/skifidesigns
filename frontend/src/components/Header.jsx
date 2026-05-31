@@ -24,7 +24,7 @@ export const Header = () => {
   }, []);
 
   const handleBookCall = () => {
-    window.open('https://cal.com/skifi/30min', '_blank');
+    // Cal.com embed (init in public/index.html) opens on click via data-cal-* attrs.
   };
 
   const scrollToSection = (sectionId) => {
@@ -177,6 +177,10 @@ export const Header = () => {
             {/* CTA Button */}
             <Button
               onClick={handleBookCall}
+              data-cal-link="skifi/30min"
+              data-cal-namespace="30min"
+              data-cal-config='{"layout":"month_view"}'
+              data-testid="header-book-call-btn"
               className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 group"
             >
               <Calendar className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
@@ -242,6 +246,10 @@ export const Header = () => {
               )}
               <Button
                 onClick={handleBookCall}
+                data-cal-link="skifi/30min"
+                data-cal-namespace="30min"
+                data-cal-config='{"layout":"month_view"}'
+                data-testid="mobile-book-call-btn"
                 className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white w-full mt-2"
               >
                 <Calendar className="w-4 h-4 mr-2" />

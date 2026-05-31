@@ -10,7 +10,8 @@ export const Hero = () => {
 
   const handleBookCall = () => {
     trackEvent('book_call_clicked', { location: 'hero' });
-    window.open('https://cal.com/skifi/30min', '_blank');
+    // Cal.com embed (set up in public/index.html) listens for clicks on
+    // elements with data-cal-link and opens the modal automatically.
   };
   const handleStartProject = () => {
     trackEvent('start_project_clicked', { location: 'hero' });
@@ -94,6 +95,9 @@ export const Hero = () => {
             <button
               onClick={handleBookCall}
               data-testid="hero-book-call-btn"
+              data-cal-link="skifi/30min"
+              data-cal-namespace="30min"
+              data-cal-config='{"layout":"month_view"}'
               className="skifi-btn-primary group inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold"
             >
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform duration-300" />
