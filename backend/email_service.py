@@ -17,6 +17,59 @@ if RESEND_API_KEY:
 
 
 BRAND_COLOR = "#2A7AFE"
+BRAND_DARK = "#0A0F1E"
+BRAND_OFFWHITE = "#F5F4EE"
+BRAND_BORDER = "#ECEAE2"
+LOGO_URL = "https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/7h3c6nvn_skifi%20insta%20logo%202.png"
+
+# Shared inline-CSS header (dark navy hero with the SkiFi logo). Email clients
+# strip <head>/@font-face so we lean on system fonts + heavy inline styling.
+_EMAIL_FONT_STACK = "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+
+def _email_header(tagline: str) -> str:
+    """Branded dark hero with the SkiFi logo, used at the top of every email."""
+    return f"""
+    <tr><td style="padding:0;background:{BRAND_DARK};">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:28px 40px 30px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td valign="middle" style="padding-right:14px;">
+                  <img src="{LOGO_URL}" width="48" height="48" alt="SkiFi Designs"
+                       style="display:block;border:0;outline:none;text-decoration:none;width:48px;height:48px;" />
+                </td>
+                <td valign="middle">
+                  <div style="font-family:{_EMAIL_FONT_STACK};font-size:20px;font-weight:600;color:#ffffff;letter-spacing:-0.01em;line-height:1.1;">SkiFi Designs</div>
+                  <div style="font-family:{_EMAIL_FONT_STACK};font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:4px;">{tagline}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+    """
+
+
+def _email_footer() -> str:
+    """Branded legal footer with SKIFI GROUP LLC details."""
+    return f"""
+    <tr><td style="padding:24px 40px 28px;background:#FAFAF7;border-top:1px solid {BRAND_BORDER};
+                   font-family:{_EMAIL_FONT_STACK};font-size:11px;color:#7a7a7a;line-height:1.6;text-align:center;">
+      <div style="color:#0A0A0A;font-weight:600;letter-spacing:-0.005em;font-size:12.5px;margin-bottom:4px;">SKIFI GROUP LLC</div>
+      <div>30 N Gould St Ste R &middot; Sheridan, WY 82801 &middot; United States</div>
+      <div style="margin-top:6px;">
+        <a href="mailto:contact@skifidesigns.com" style="color:#0A0A0A;text-decoration:none;font-weight:500;">contact@skifidesigns.com</a>
+        &nbsp;&middot;&nbsp;
+        <a href="https://skifidesigns.com" style="color:{BRAND_COLOR};text-decoration:none;font-weight:500;">skifidesigns.com</a>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid {BRAND_BORDER};font-size:10.5px;color:#9C9A8E;">
+        &copy; SKIFI GROUP LLC &middot; All rights reserved.
+      </div>
+    </td></tr>
+    """
 
 
 def _client_html(full_name: str, package_label: str, amount: float, currency: str,
@@ -200,46 +253,71 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
 def _delivery_html(client_name: str, project_type: str, message: str,
                    files: list, dashboard_url: str) -> str:
     file_rows = "".join([
-        f'<tr><td style="padding:6px 0;color:#444;font-size:14px;">📄 {f.get("filename","file")}</td>'
-        f'<td style="padding:6px 0;text-align:right;color:#888;font-size:12px;">{f.get("size",0)/1024/1024:.2f} MB</td></tr>'
+        f'''<tr>
+            <td style="padding:10px 14px;border-bottom:1px solid {BRAND_BORDER};font-family:{_EMAIL_FONT_STACK};font-size:13px;color:#0A0A0A;font-weight:500;vertical-align:middle;">
+              <span style="display:inline-block;width:8px;height:8px;background:{BRAND_COLOR};border-radius:50%;margin-right:12px;vertical-align:middle;"></span>
+              {f.get("filename","file")}
+            </td>
+            <td style="padding:10px 14px;border-bottom:1px solid {BRAND_BORDER};text-align:right;font-family:{_EMAIL_FONT_STACK};font-size:12px;color:#9C9A8E;vertical-align:middle;white-space:nowrap;">
+              {f.get("size",0)/1024/1024:.2f} MB
+            </td>
+          </tr>'''
         for f in (files or [])
     ])
+    files_block = f"""
+      <p style="margin:0 0 10px;font-family:{_EMAIL_FONT_STACK};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9C9A8E;font-weight:600;">Delivered files</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFAF7;border:1px solid {BRAND_BORDER};border-radius:12px;margin:0 0 28px;">
+        {file_rows}
+      </table>
+    """ if file_rows else ""
+
     message_block = f"""
-    <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px;
-                font-size:14px;color:#444;line-height:1.6;white-space:pre-wrap;margin:0 0 24px;">
-      {message}
-    </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFAF7;border-left:3px solid {BRAND_COLOR};border-radius:8px;margin:0 0 24px;">
+        <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13.5px;color:#444;line-height:1.6;white-space:pre-wrap;">
+          {message}
+        </td></tr>
+      </table>
     """ if message else ""
+
     return f"""
 <!doctype html>
-<html><body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:40px 20px;">
+<html><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+  <div style="display:none;max-height:0;overflow:hidden;color:transparent;">Your {project_type} is ready - open your dashboard to download.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="padding:32px 40px;background:#0a0a0a;color:#ffffff;">
-          <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">SkiFi Designs</h1>
-          <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.7);">Your project is ready 🎉</p>
-        </td></tr>
-        <tr><td style="padding:40px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111;">Hi {client_name},</h2>
-          <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6;">
-            We've just uploaded your <strong>{project_type}</strong> deliverables. You can download everything from your client dashboard below.
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 12px 40px -16px rgba(10,10,10,0.12);">
+
+        {_email_header("Project delivery")}
+
+        <tr><td style="padding:36px 40px 8px;">
+          <h2 style="margin:0 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.2;">Your project is ready.</h2>
+          <p style="margin:0 0 26px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#6b6b6b;line-height:1.6;">
+            Hi {client_name}, we've just uploaded your <strong style="color:#0A0A0A;font-weight:600;">{project_type}</strong> deliverables. Everything is waiting for you in the client dashboard.
           </p>
+
           {message_block}
-          {('<p style="margin:0 0 8px;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:' + BRAND_COLOR + ';font-weight:700;">Delivered Files</p><table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin:0 0 24px;">' + file_rows + '</table>') if file_rows else ""}
-          <p style="text-align:center;margin:30px 0 6px;">
-            <a href="{dashboard_url}" style="display:inline-block;background:{BRAND_COLOR};color:#ffffff;font-weight:600;
-                padding:14px 28px;border-radius:10px;text-decoration:none;font-size:15px;">
-              Open my dashboard →
-            </a>
-          </p>
-          <p style="text-align:center;margin:0 0 24px;font-size:12px;color:#888;">
+          {files_block}
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:8px auto 6px;">
+            <tr><td align="center" style="border-radius:12px;background:{BRAND_COLOR};">
+              <a href="{dashboard_url}" style="display:inline-block;padding:14px 30px;font-family:{_EMAIL_FONT_STACK};font-size:14.5px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:12px;letter-spacing:0.01em;">
+                Open my dashboard &rarr;
+              </a>
+            </td></tr>
+          </table>
+          <p style="text-align:center;margin:14px 0 28px;font-family:{_EMAIL_FONT_STACK};font-size:11.5px;color:#9C9A8E;">
             Sign in with Google using the same email you used to order.
           </p>
-          <p style="margin:0;font-size:13px;color:#666;line-height:1.6;">
-            Need a revision? Just reply to this email or leave a note in the dashboard. We're here to make it perfect.
-          </p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border:1px solid #BFDBFE;border-radius:12px;margin:0 0 8px;">
+            <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:12.5px;color:#1E3A8A;line-height:1.55;">
+              <strong style="color:#0A0A0A;font-weight:600;">Need a tweak?</strong>
+              Reply to this email or request a revision from your dashboard &mdash; we'll make it perfect.
+            </td></tr>
+          </table>
         </td></tr>
+
+        {_email_footer()}
       </table>
     </td></tr>
   </table>

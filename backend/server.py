@@ -1536,7 +1536,7 @@ def _render_receipt_html(tx: dict) -> str:
       gap:24px; position:relative; z-index:2;
     }}
     .brand-block {{ display:flex; align-items:center; gap:14px; }}
-    .logo-img {{ width:50px; height:50px; border-radius:11px; display:block; }}
+    .logo-img {{ width:54px; height:54px; display:block; object-fit:contain; }}
     .brand-name {{
       font-family: 'Nohemi', 'Outfit', sans-serif;
       font-size: 20px; font-weight: 600; letter-spacing: -.01em;
@@ -1619,6 +1619,7 @@ def _render_receipt_html(tx: dict) -> str:
     .totals .row.grand .lbl {{
       font-family:'Nohemi','Outfit',sans-serif; font-weight:600;
       font-size:13.5px; color:#0A0A0A; letter-spacing:-.005em;
+      white-space: nowrap;
     }}
     .totals .row.grand .amt {{
       font-family:'Nohemi','Outfit',sans-serif; font-weight:600;

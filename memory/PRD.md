@@ -39,6 +39,18 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (logo + delivery email polish)
+- **Replaced receipt logo** with the new circular SkiFi insta logo (216×216 PNG, 35 KB). Fixed the stretched aspect-ratio issue by adding `object-fit: contain` and matching square dimensions on the `<img>`. Also added `white-space: nowrap` to "Total paid" so it never wraps.
+- **Brand-polished the delivery email** (`_delivery_html`):
+  - Dark navy hero with the new SkiFi logo image + "PROJECT DELIVERY" tagline (hosted via Emergent assets CDN for email-client compatibility)
+  - Headline: "Your project is ready." in semibold 28px
+  - Blue-accent quote block for the admin's project message
+  - Files list with blue dot markers + filenames + MB sizes
+  - Big blue CTA button "Open my dashboard →"
+  - Gradient blue "Need a tweak?" callout for revisions
+  - **Branded legal footer** on every email: SKIFI GROUP LLC · WY address · contact@skifidesigns.com · © line
+- Added shared `_email_header(tagline)` and `_email_footer()` helpers so all transactional emails (delivery, revision-ack, completion, future ones) can reuse the same branded chrome.
+
 ### 2026-06-01 (premium-branded PDF receipt v2)
 - **Complete redesign** of the PDF receipt to match SkiFi's brand system: actual SkiFi logo image embedded, `Nohemi` (semibold) loaded for headings, `Outfit` for body via Google Fonts, dark navy hero with subtle blue radial glow, warm off-white #F5F4EE page background, green "Paid in full" pill, big blue total in tabular-numerics.
 - **Full legal entity details** now shown in the "From" block and 3-column legal footer (Legal entity / Registered office / Contact):
