@@ -1344,6 +1344,71 @@ async def mark_order_complete(
     return {"success": True, "status": "completed"}
 
 
+class ResumeCheckoutPayload(BaseModel):
+    origin_url: str
+
+
+@api_router.post("/me/orders/{session_id}/resume-checkout")
+async def my_resume_checkout(
+    session_id: str,
+    payload: ResumeCheckoutPayload,
+    http_request: Request,
+    user: dict = Depends(require_user),
+):
+    """Re-create a Stripe checkout session for a PENDING order so the client
+    can finish paying without re-filling the onboarding form. The original
+    Stripe session_id is replaced with the new one in-place so webhooks +
+    receipt lookups still resolve cleanly."""
+    tx = await db.payment_transactions.find_one(
+        {"session_id": session_id, "email": user["email"]}
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if tx.get("payment_status") == "paid":
+        raise HTTPException(status_code=400, detail="Order is already paid")
+
+    pkg = PACKAGES.get(tx.get("package_id"))
+    if not pkg:
+        raise HTTPException(status_code=400, detail="Cannot resume - invalid package")
+
+    origin = payload.origin_url.rstrip("/")
+    success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin}/dashboard?payment=cancelled"
+
+    amount = float(tx.get("amount") or pkg["price"])
+    metadata = {
+        **(tx.get("metadata") or {}),
+        "resumed_from": session_id,
+    }
+
+    host_url = str(http_request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    checkout_request = CheckoutSessionRequest(
+        amount=amount,
+        currency=pkg["currency"],
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+    )
+    try:
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+    except Exception as e:
+        logger.exception("Resume checkout failed")
+        raise HTTPException(status_code=500, detail=f"Payment provider error: {str(e)}")
+
+    # Swap session_id in place + bump updated_at + bump resume count
+    await db.payment_transactions.update_one(
+        {"_id": tx["_id"]},
+        {"$set": {
+            "session_id": session.session_id,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "previous_session_id": session_id,
+        }, "$inc": {"resume_count": 1}},
+    )
+    return {"checkout_url": session.url, "session_id": session.session_id}
+
+
 # ===================== Client Dashboard =====================
 @api_router.get("/me/orders")
 async def my_orders(user: dict = Depends(require_user)):

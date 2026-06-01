@@ -39,6 +39,11 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (resume pending checkout)
+- **Backend**: New `POST /api/me/orders/{session_id}/resume-checkout` endpoint (user-scoped). Creates a fresh Stripe checkout session with the original package_id + amount + metadata, swaps the new `session_id` into the existing `payment_transactions` row in place (preserving brief, file uploads, project info), stores `previous_session_id` for traceability, and increments `resume_count`. Returns `{checkout_url, session_id}`.
+- **Client dashboard**: amber "Payment not completed yet" callout appears on every pending order with a blue **"Complete payment →"** CTA. Click → backend resume call → redirect to Stripe → on success, the existing webhook flow paid-marks the order without needing the client to re-fill any form.
+- Verified: 401 unauth, 200 auth (returns real `cs_live_...` Stripe URL), re-resume works (re-resumes a re-resume), DB row updated with previous session id + resume_count.
+
 ### 2026-06-01 (uniform Outfit+Nohemi fonts in emails + Trustpilot BCC)
 - **Brand fonts in all transactional emails**: Outfit loaded via Google Fonts `@import` (works in all modern email clients), Nohemi served via new backend route `GET /api/assets/nohemi-semibold.woff` (32 KB, CORS `*`, 1-year cache, immutable). All headings use the Nohemi→Outfit→system cascade so emails match the website typography on Apple Mail/Yahoo/Outlook-Mac, and degrade gracefully to Outfit on Gmail/Outlook-web (which strip `@font-face`).
 - Updated `_email_header`, `_email_footer`, `_admin_alert_shell`, `_delivery_html`, and the payment-receipt `_client_html` to all use the new shared `_HEADING_FONT_STACK` and the inlined `_EMAIL_FONT_HEAD` `<style>` block.

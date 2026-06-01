@@ -199,6 +199,27 @@ const OrderCard = ({ order, onReload }) => {
     }
   };
 
+  const [resuming, setResuming] = useState(false);
+  const resumeCheckout = async () => {
+    setResuming(true);
+    try {
+      const { data } = await axios.post(
+        `${API}/me/orders/${order.session_id}/resume-checkout`,
+        { origin_url: window.location.origin },
+        { withCredentials: true },
+      );
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        toast.error('Could not start checkout');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not resume checkout');
+    } finally {
+      setResuming(false);
+    }
+  };
+
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-7 space-y-5" data-testid={`order-card-${order.session_id}`}>
       {/* Header */}
@@ -235,6 +256,45 @@ const OrderCard = ({ order, onReload }) => {
             <Receipt className="w-3.5 h-3.5" />
             Download receipt (PDF)
           </a>
+        </div>
+      )}
+
+      {/* Pending payment - resume checkout */}
+      {order.payment_status === 'pending' && (
+        <div
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4"
+          data-testid={`resume-checkout-card-${order.session_id}`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-900">Payment not completed yet</p>
+              <p className="text-xs text-amber-800/80 mt-0.5">
+                Finish payment to put this project in the queue. Your brief &amp; uploaded files are saved.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={resumeCheckout}
+            disabled={resuming}
+            data-testid={`resume-checkout-btn-${order.session_id}`}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#2A7AFE] text-white text-sm font-semibold hover:bg-[#3B82F6] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {resuming ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Starting checkout…
+              </>
+            ) : (
+              <>
+                Complete payment
+                <span aria-hidden="true">→</span>
+              </>
+            )}
+          </button>
         </div>
       )}
 
