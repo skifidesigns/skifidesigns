@@ -20,11 +20,19 @@ BRAND_COLOR = "#2A7AFE"
 
 
 def _client_html(full_name: str, package_label: str, amount: float, currency: str,
-                 project_type: str, timeline: str, slide_count: Optional[int]) -> str:
+                 project_type: str, timeline: str, slide_count: Optional[int],
+                 has_receipt: bool = False) -> str:
     slide_row = (
         f'<tr><td style="padding:8px 0;color:#666;">Slides</td>'
         f'<td style="padding:8px 0;text-align:right;color:#111;font-weight:600;">{slide_count}</td></tr>'
         if slide_count else ""
+    )
+    receipt_line = (
+        '<p style="margin:0 0 8px;font-size:15px;color:#555;line-height:1.6;">'
+        '<strong style="color:#111;">📎 Your PDF receipt is attached to this email</strong> - '
+        'keep it for your records or reimbursement.'
+        '</p>'
+        if has_receipt else ''
     )
     return f"""
 <!doctype html>
@@ -54,6 +62,7 @@ def _client_html(full_name: str, package_label: str, amount: float, currency: st
                   <td style="padding:8px 0;text-align:right;color:{BRAND_COLOR};font-weight:700;font-size:18px;">${amount:.2f} {currency.upper()}</td></tr>
             </table>
           </div>
+          {receipt_line}
           <p style="margin:0 0 8px;font-size:15px;color:#555;line-height:1.6;">
             <strong style="color:#111;">What's next?</strong>
           </p>
@@ -134,8 +143,14 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
                               package_id: str, amount: float, currency: str,
                               project_type: str, timeline: str,
                               slide_count: Optional[int], description: str,
-                              files: Optional[list] = None) -> dict:
-    """Sends client receipt + admin notification. Non-blocking."""
+                              files: Optional[list] = None,
+                              receipt_pdf_b64: Optional[str] = None,
+                              receipt_filename: str = "SkiFi-Designs-Receipt.pdf") -> dict:
+    """Sends client receipt + admin notification. Non-blocking.
+
+    If `receipt_pdf_b64` is provided, attaches the branded PDF receipt to the
+    client email so they have an offline copy for reimbursement.
+    """
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY not set - skipping emails")
         return {"client": None, "admin": None, "skipped": True}
@@ -152,8 +167,15 @@ async def send_payment_emails(*, full_name: str, email: str, company: Optional[s
         "to": [email],
         "subject": f"Your SkiFi Designs order - {package_label}",
         "html": _client_html(full_name, package_label, amount, currency,
-                             project_type, timeline, slide_count),
+                             project_type, timeline, slide_count,
+                             has_receipt=bool(receipt_pdf_b64)),
     }
+    if receipt_pdf_b64:
+        client_params["attachments"] = [{
+            "filename": receipt_filename,
+            "content": receipt_pdf_b64,
+            "content_type": "application/pdf",
+        }]
 
     tasks = [asyncio.to_thread(_send_sync, client_params)]
     if ADMIN_EMAIL:

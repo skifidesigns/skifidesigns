@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from bson import ObjectId
 import os
 import io
+import asyncio
 import logging
 import secrets
 import httpx
@@ -337,6 +338,18 @@ async def _maybe_send_emails(tx: dict):
             except Exception:
                 pass
 
+        # Generate the branded PDF receipt so we can attach it to the
+        # client email. Best-effort - if PDF rendering fails for any reason,
+        # the email still goes out without the attachment.
+        receipt_pdf_b64 = None
+        try:
+            import base64 as _b64
+            receipt_pdf_b64 = _b64.b64encode(
+                await asyncio.to_thread(_render_receipt_pdf, tx)
+            ).decode("ascii")
+        except Exception:
+            logger.exception(f"Receipt PDF generation failed for {tx['session_id']}")
+
         result = await send_payment_emails(
             full_name=tx["full_name"],
             email=tx["email"],
@@ -349,6 +362,8 @@ async def _maybe_send_emails(tx: dict):
             slide_count=tx.get("slide_count"),
             description=tx["description"],
             files=files_info,
+            receipt_pdf_b64=receipt_pdf_b64,
+            receipt_filename=_receipt_filename(tx, "pdf"),
         )
         await db.payment_transactions.update_one(
             {"session_id": tx["session_id"]},
@@ -1214,16 +1229,20 @@ async def admin_list_deliveries(session_id: str, _: str = Depends(require_admin)
 
 
 @api_router.get("/admin/orders/{session_id}/receipt")
-async def admin_order_receipt(session_id: str, _: str = Depends(require_admin)):
+async def admin_order_receipt(
+    session_id: str,
+    format: Optional[str] = None,
+    _: str = Depends(require_admin),
+):
     """Admin-side receipt download (same template as the client receipt, but
     accessible to admin for any paid order - e.g. to forward to a client
-    that hasn't created a dashboard account)."""
+    that hasn't created a dashboard account). Pass ?format=pdf for a PDF."""
     tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
     if not tx:
         raise HTTPException(status_code=404, detail="Order not found")
     if tx.get("payment_status") != "paid":
         raise HTTPException(status_code=400, detail="Receipt is only available for paid orders")
-    return HTMLResponse(content=_render_receipt_html(tx))
+    return _receipt_response(tx, format)
 
 
 # ===== Revision request (client-side) =====
@@ -1614,9 +1633,48 @@ def _render_receipt_html(tx: dict) -> str:
 </html>"""
 
 
+def _render_receipt_pdf(tx: dict) -> bytes:
+    """Convert the HTML receipt into a branded PDF via WeasyPrint.
+
+    WeasyPrint honours @media print rules, so the on-screen "Print/Close"
+    buttons defined in the HTML template are auto-hidden in the rendered PDF.
+    """
+    from weasyprint import HTML  # local import - heavy lib, only used here
+    html = _render_receipt_html(tx)
+    return HTML(string=html).write_pdf()
+
+
+def _receipt_filename(tx: dict, ext: str) -> str:
+    """Build a clean filename for a downloaded receipt."""
+    sid = tx.get("session_id") or ""
+    sid_clean = "".join(c for c in sid if c.isalnum())
+    inv = sid_clean[-10:].upper() if sid_clean else "INVOICE"
+    return f"SkiFi-Designs-Receipt-SKF-{inv}.{ext}"
+
+
+def _receipt_response(tx: dict, fmt: Optional[str]):
+    """Shared response builder for both /me and /admin receipt endpoints.
+    fmt='pdf' returns an inline PDF; anything else returns the HTML view.
+    """
+    if (fmt or "").lower() == "pdf":
+        pdf_bytes = _render_receipt_pdf(tx)
+        filename = _receipt_filename(tx, "pdf")
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{filename}"'},
+        )
+    return HTMLResponse(content=_render_receipt_html(tx))
+
+
 @api_router.get("/me/orders/{session_id}/receipt")
-async def my_order_receipt(session_id: str, user: dict = Depends(require_user)):
-    """Branded HTML receipt for a paid order, scoped to the requesting user."""
+async def my_order_receipt(
+    session_id: str,
+    format: Optional[str] = None,
+    user: dict = Depends(require_user),
+):
+    """Branded receipt for a paid order, scoped to the requesting user.
+    Pass ?format=pdf for a downloadable PDF, otherwise renders HTML."""
     tx = await db.payment_transactions.find_one(
         {"session_id": session_id, "email": user["email"]}, {"_id": 0}
     )
@@ -1624,7 +1682,7 @@ async def my_order_receipt(session_id: str, user: dict = Depends(require_user)):
         raise HTTPException(status_code=404, detail="Order not found")
     if tx.get("payment_status") != "paid":
         raise HTTPException(status_code=400, detail="Receipt is only available for paid orders")
-    return HTMLResponse(content=_render_receipt_html(tx))
+    return _receipt_response(tx, format)
 
 
 @api_router.get("/me/files/{file_id}")

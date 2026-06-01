@@ -39,10 +39,12 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
-### 2026-06-01 (receipt download)
-- **✨ Branded HTML receipt** for paid orders. New backend route `GET /api/me/orders/{session_id}/receipt` (auth scoped to the requesting user's email; returns 401/404/400 appropriately). Itemises **$15 × N slides** (per_slide) or **$999 × 1 month** (monthly_retainer). Includes SkiFi branding, invoice #, billed-to, line items, totals, Stripe transaction reference, and a "Print / Save as PDF" button (hidden in print CSS). Verified with seeded fixtures for both package types.
-- **Frontend (Client)**: "Download receipt" link added to every paid order card in `ClientDashboard.jsx`. Opens in a new tab; auth carried via the existing `session_token` httpOnly cookie.
-- **Admin parity**: New `GET /api/admin/orders/{session_id}/receipt` (admin Bearer auth) renders the same receipt for any paid order. `AdminPanel.jsx` Orders tab now shows a small Receipt icon next to the Deliver action — fetches via authenticated axios + blob URL (since admin auth is Bearer, not cookie). Useful for forwarding to clients that haven't signed into their dashboard.
+### 2026-06-01 (receipt download + PDF email attachment)
+- **✨ Branded HTML receipt** for paid orders. Routes: `GET /api/me/orders/{session_id}/receipt` (user-scoped) and `GET /api/admin/orders/{session_id}/receipt` (admin). Both support `?format=pdf` for an inline PDF download. Itemises **$15 × N slides** (per_slide) or **$999 × 1 month** (monthly_retainer). Branded layout: SkiFi logo, invoice #, billed-to, line items, totals, Stripe transaction reference.
+- **PDF rendering** via WeasyPrint (added to `requirements.txt`). Honours `@media print` so on-screen action buttons are hidden in the PDF. Verified: 1-page, ~18 KB, all branding + itemisation intact (pypdf text extraction confirmed).
+- **Auto-attach PDF receipt to payment email**: `_maybe_send_emails` now generates the PDF and passes a base64-encoded copy through `send_payment_emails` → Resend `attachments` array. Best-effort: if PDF generation fails, email still goes out without the attachment, and a conditional "📎 PDF receipt attached" notice only renders when the file is actually attached.
+- **Client dashboard** (`ClientDashboard.jsx`): "Download receipt (PDF)" link on every paid order card. Cookie auth.
+- **Admin dashboard** (`AdminPanel.jsx`): Receipt icon button next to the Deliver action. Bearer auth → axios → blob URL → new tab.
 
 ### 2026-05-31 (Cal.com inline modal)
 - **✨ Cal.com element-click embed** wired into all "Book a Call" CTAs (Header desktop+mobile, Hero, FinalCTA, Footer × 2). One-time init in `public/index.html` with brand color `#2A7AFE`. Clicking a CTA now opens an inline calendar modal instead of redirecting to `cal.com/skifi/30min`. `trackEvent('book_call_clicked')` analytics preserved.

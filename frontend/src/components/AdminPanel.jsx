@@ -1520,12 +1520,12 @@ const Dashboard = ({ token, onLogout }) => {
   const handleDownloadReceipt = useCallback(async (sessionId) => {
     try {
       const res = await axios.get(`${API}/admin/orders/${sessionId}/receipt`, {
+        params: { format: 'pdf' },
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       });
-      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const w = window.open(url, '_blank', 'noopener,noreferrer');
-      // Revoke after the new tab has loaded; small delay is enough for blob URLs.
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
       if (!w) toast.error('Pop-up blocked - allow pop-ups to view the receipt');
     } catch (err) {

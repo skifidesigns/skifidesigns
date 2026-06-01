@@ -226,14 +226,14 @@ const OrderCard = ({ order, onReload }) => {
       {order.payment_status === 'paid' && (
         <div className="flex justify-end -mt-2">
           <a
-            href={`${API}/me/orders/${order.session_id}/receipt`}
+            href={`${API}/me/orders/${order.session_id}/receipt?format=pdf`}
             target="_blank"
             rel="noopener noreferrer"
             data-testid={`download-receipt-${order.session_id}`}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2A7AFE] hover:text-[#3B82F6] hover:underline transition-colors"
           >
             <Receipt className="w-3.5 h-3.5" />
-            Download receipt
+            Download receipt (PDF)
           </a>
         </div>
       )}
