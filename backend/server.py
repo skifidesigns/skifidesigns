@@ -2439,6 +2439,27 @@ async def dynamic_sitemap():
 # ===================== App wiring =====================
 app.include_router(api_router)
 
+
+@app.get("/api/assets/nohemi-semibold.woff")
+async def serve_nohemi_font():
+    """Serves Nohemi SemiBold for email clients that honour @font-face
+    (Apple Mail, Yahoo, Outlook for Mac). Gmail strips @font-face so it
+    falls back to Outfit/system fonts; we ship the file with permissive
+    CORS so any email client can fetch it.
+    """
+    font_path = _ASSETS_DIR / "Nohemi-SemiBold.woff"
+    if not font_path.exists():
+        raise HTTPException(status_code=404)
+    return Response(
+        content=font_path.read_bytes(),
+        media_type="font/woff",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=31536000, immutable",
+        },
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

@@ -39,6 +39,11 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (uniform Outfit+Nohemi fonts in emails + Trustpilot BCC)
+- **Brand fonts in all transactional emails**: Outfit loaded via Google Fonts `@import` (works in all modern email clients), Nohemi served via new backend route `GET /api/assets/nohemi-semibold.woff` (32 KB, CORS `*`, 1-year cache, immutable). All headings use the Nohemi→Outfit→system cascade so emails match the website typography on Apple Mail/Yahoo/Outlook-Mac, and degrade gracefully to Outfit on Gmail/Outlook-web (which strip `@font-face`).
+- Updated `_email_header`, `_email_footer`, `_admin_alert_shell`, `_delivery_html`, and the payment-receipt `_client_html` to all use the new shared `_HEADING_FONT_STACK` and the inlined `_EMAIL_FONT_HEAD` `<style>` block.
+- **🌟 Trustpilot review loop**: `TRUSTPILOT_BCC` env var (set to `skifidesigns.com+04d594bc23@invite.trustpilot.com`) is now BCC'd on every delivery email via `send_delivery_email`. Trustpilot auto-sends the client a branded review invitation moments after they receive the project — capturing 5-star reviews at peak satisfaction without any manual effort.
+
 ### 2026-06-01 (full transactional email brand polish)
 - Brand-polished the remaining 2 transactional emails using the shared `_email_header` / `_email_footer` helpers + new `_admin_alert_shell()`:
   - **Revision-requested email** (admin): dark navy hero with "REVISION REQUESTED" tag, bold headline, blue-accent "Client notes" quote block, "Open admin panel →" CTA, mono-styled session reference, branded legal footer.

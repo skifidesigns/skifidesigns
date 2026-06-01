@@ -21,10 +21,27 @@ BRAND_DARK = "#0A0F1E"
 BRAND_OFFWHITE = "#F5F4EE"
 BRAND_BORDER = "#ECEAE2"
 LOGO_URL = "https://customer-assets.emergentagent.com/job_presentation-studio-22/artifacts/7h3c6nvn_skifi%20insta%20logo%202.png"
+NOHEMI_URL = "https://skifidesigns.com/api/assets/nohemi-semibold.woff"
+TRUSTPILOT_BCC = os.environ.get("TRUSTPILOT_BCC", "")
 
-# Shared inline-CSS header (dark navy hero with the SkiFi logo). Email clients
-# strip <head>/@font-face so we lean on system fonts + heavy inline styling.
+# Match the website: Outfit for body, Nohemi for headings. Gmail strips
+# @font-face but Apple Mail / Yahoo / native mail clients honour it. The
+# stack falls back gracefully to system fonts everywhere else.
 _EMAIL_FONT_STACK = "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+_HEADING_FONT_STACK = "'Nohemi', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+# Inlined <head> webfonts. Goes in every transactional email so Apple Mail
+# (and any other @font-face-supporting client) gets the real brand fonts.
+_EMAIL_FONT_HEAD = f"""
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+  @font-face {{
+    font-family: 'Nohemi';
+    src: url('{NOHEMI_URL}') format('woff');
+    font-weight: 600; font-style: normal; font-display: swap;
+  }}
+</style>
+"""
 
 
 def _email_header(tagline: str) -> str:
@@ -41,7 +58,7 @@ def _email_header(tagline: str) -> str:
                        style="display:block;border:0;outline:none;text-decoration:none;width:48px;height:48px;" />
                 </td>
                 <td valign="middle">
-                  <div style="font-family:{_EMAIL_FONT_STACK};font-size:20px;font-weight:600;color:#ffffff;letter-spacing:-0.01em;line-height:1.1;">SkiFi Designs</div>
+                  <div style="font-family:{_HEADING_FONT_STACK};font-size:20px;font-weight:600;color:#ffffff;letter-spacing:-0.01em;line-height:1.1;">SkiFi Designs</div>
                   <div style="font-family:{_EMAIL_FONT_STACK};font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:4px;">{tagline}</div>
                 </td>
               </tr>
@@ -58,7 +75,7 @@ def _email_footer() -> str:
     return f"""
     <tr><td style="padding:24px 40px 28px;background:#FAFAF7;border-top:1px solid {BRAND_BORDER};
                    font-family:{_EMAIL_FONT_STACK};font-size:11px;color:#7a7a7a;line-height:1.6;text-align:center;">
-      <div style="color:#0A0A0A;font-weight:600;letter-spacing:-0.005em;font-size:12.5px;margin-bottom:4px;">SKIFI GROUP LLC</div>
+      <div style="font-family:{_HEADING_FONT_STACK};color:#0A0A0A;font-weight:600;letter-spacing:-0.005em;font-size:12.5px;margin-bottom:4px;">SKIFI GROUP LLC</div>
       <div>30 N Gould St Ste R &middot; Sheridan, WY 82801 &middot; United States</div>
       <div style="margin-top:6px;">
         <a href="mailto:contact@skifidesigns.com" style="color:#0A0A0A;text-decoration:none;font-weight:500;">contact@skifidesigns.com</a>
@@ -89,16 +106,16 @@ def _client_html(full_name: str, package_label: str, amount: float, currency: st
     )
     return f"""
 <!doctype html>
-<html><body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<html><head>{_EMAIL_FONT_HEAD}</head><body style="margin:0;padding:0;background:#f5f5f7;font-family:{_EMAIL_FONT_STACK};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:40px 20px;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;">
         <tr><td style="padding:32px 40px;background:#0a0a0a;color:#ffffff;">
-          <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">SkiFi Designs</h1>
-          <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.7);">Premium Presentation Studio</p>
+          <h1 style="margin:0;font-family:{_HEADING_FONT_STACK};font-size:24px;font-weight:600;letter-spacing:-0.02em;">SkiFi Designs</h1>
+          <p style="margin:8px 0 0;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:rgba(255,255,255,0.7);">Premium Presentation Studio</p>
         </td></tr>
-        <tr><td style="padding:40px;">
-          <h2 style="margin:0 0 12px;font-size:22px;color:#111;">Hi {full_name},</h2>
+        <tr><td style="padding:40px;font-family:{_EMAIL_FONT_STACK};">
+          <h2 style="margin:0 0 12px;font-family:{_HEADING_FONT_STACK};font-size:22px;color:#111;font-weight:600;letter-spacing:-0.01em;">Hi {full_name},</h2>
           <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6;">
             Thanks for choosing SkiFi Designs. We've received your payment and your project is officially in the queue.
             Our team will reach out within <strong>24 hours</strong> to kick things off.
@@ -281,7 +298,7 @@ def _delivery_html(client_name: str, project_type: str, message: str,
 
     return f"""
 <!doctype html>
-<html><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+<html><head>{_EMAIL_FONT_HEAD}</head><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
   <div style="display:none;max-height:0;overflow:hidden;color:transparent;">Your {project_type} is ready - open your dashboard to download.</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
     <tr><td align="center">
@@ -290,7 +307,7 @@ def _delivery_html(client_name: str, project_type: str, message: str,
         {_email_header("Project delivery")}
 
         <tr><td style="padding:36px 40px 8px;">
-          <h2 style="margin:0 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.2;">Your project is ready.</h2>
+          <h2 style="margin:0 0 8px;font-family:{_HEADING_FONT_STACK};font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.2;">Your project is ready.</h2>
           <p style="margin:0 0 26px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#6b6b6b;line-height:1.6;">
             Hi {client_name}, we've just uploaded your <strong style="color:#0A0A0A;font-weight:600;">{project_type}</strong> deliverables. Everything is waiting for you in the client dashboard.
           </p>
@@ -328,7 +345,12 @@ def _delivery_html(client_name: str, project_type: str, message: str,
 async def send_delivery_email(*, client_email: str, client_name: str,
                               project_type: str, message: str,
                               files: list, dashboard_url: str) -> Optional[str]:
-    """Notify a client that their project has been delivered."""
+    """Notify a client that their project has been delivered.
+
+    BCCs Trustpilot's unique invite address so they auto-send the client a
+    review invitation right after the delivery email lands (timing: client
+    is at peak satisfaction, ready to give a 5-star).
+    """
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY not set - skipping delivery email")
         return None
@@ -338,6 +360,8 @@ async def send_delivery_email(*, client_email: str, client_name: str,
         "subject": f"Your {project_type} is ready 🎉 - SkiFi Designs",
         "html": _delivery_html(client_name, project_type, message, files, dashboard_url),
     }
+    if TRUSTPILOT_BCC:
+        params["bcc"] = [TRUSTPILOT_BCC]
     return await asyncio.to_thread(_send_sync, params)
 
 
@@ -362,7 +386,7 @@ def _admin_alert_shell(*, tagline: str, headline: str, intro: str,
         """
     return f"""
 <!doctype html>
-<html><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+<html><head>{_EMAIL_FONT_HEAD}</head><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 12px 40px -16px rgba(10,10,10,0.12);">
@@ -370,7 +394,7 @@ def _admin_alert_shell(*, tagline: str, headline: str, intro: str,
         {_email_header(tagline)}
 
         <tr><td style="padding:32px 40px 12px;">
-          <h2 style="margin:0 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:24px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.25;">{headline}</h2>
+          <h2 style="margin:0 0 8px;font-family:{_HEADING_FONT_STACK};font-size:24px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.25;">{headline}</h2>
           <p style="margin:0 0 22px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#555;line-height:1.6;">{intro}</p>
 
           {body_html}
