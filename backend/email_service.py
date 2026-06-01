@@ -341,26 +341,74 @@ async def send_delivery_email(*, client_email: str, client_name: str,
     return await asyncio.to_thread(_send_sync, params)
 
 
-def _revision_html(client_email: str, project_type: str, message: str, session_id: str) -> str:
-    msg_block = (
-        f'<blockquote style="border-left:3px solid {BRAND_COLOR};margin:16px 0;'
-        f'padding:10px 14px;background:#F4F8FF;border-radius:4px;color:#333;'
-        f'white-space:pre-wrap;">{message}</blockquote>'
-        if (message or "").strip()
-        else "<p><em>The client did not include specific notes.</em></p>"
-    )
-    return f"""
-    <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0A0A0A;">
-      <h2 style="margin:0 0 8px;">Revision requested</h2>
-      <p style="color:#555;margin:0 0 18px;">
-        <strong>{client_email}</strong> has requested a revision on
-        <strong>{project_type}</strong>.
-      </p>
-      {msg_block}
-      <p style="margin:20px 0 0;">Open the Admin panel to upload the revised delivery.</p>
-      <p style="font-size:12px;color:#999;margin-top:32px;">Order session: {session_id}</p>
-    </div>
+def _admin_alert_shell(*, tagline: str, headline: str, intro: str,
+                       body_html: str, session_id: str,
+                       cta_label: Optional[str] = None,
+                       cta_url: Optional[str] = None) -> str:
+    """Shared shell for admin-facing transactional notifications
+    (revision request, project completion, etc.). Uses the same branded
+    header/footer as client emails so every touchpoint feels consistent.
     """
+    cta_block = ""
+    if cta_label and cta_url:
+        cta_block = f"""
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 6px;">
+            <tr><td align="center" style="border-radius:12px;background:{BRAND_COLOR};">
+              <a href="{cta_url}" style="display:inline-block;padding:12px 24px;font-family:{_EMAIL_FONT_STACK};font-size:13.5px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:12px;letter-spacing:0.01em;">
+                {cta_label} &rarr;
+              </a>
+            </td></tr>
+          </table>
+        """
+    return f"""
+<!doctype html>
+<html><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 12px 40px -16px rgba(10,10,10,0.12);">
+
+        {_email_header(tagline)}
+
+        <tr><td style="padding:32px 40px 12px;">
+          <h2 style="margin:0 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:24px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.25;">{headline}</h2>
+          <p style="margin:0 0 22px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#555;line-height:1.6;">{intro}</p>
+
+          {body_html}
+          {cta_block}
+
+          <p style="margin:26px 0 0;padding-top:18px;border-top:1px solid {BRAND_BORDER};font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;color:#9C9A8E;letter-spacing:0.02em;">
+            Order session &nbsp; <span style="color:#555;">{session_id}</span>
+          </p>
+        </td></tr>
+
+        {_email_footer()}
+      </table>
+    </td></tr>
+  </table>
+</body></html>
+""".strip()
+
+
+def _revision_html(client_email: str, project_type: str, message: str, session_id: str) -> str:
+    if (message or "").strip():
+        body = f"""
+          <p style="margin:0 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9C9A8E;font-weight:600;">Client notes</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4F8FF;border-left:3px solid {BRAND_COLOR};border-radius:8px;margin:0 0 6px;">
+            <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13.5px;color:#333;line-height:1.6;white-space:pre-wrap;">{message}</td></tr>
+          </table>
+        """
+    else:
+        body = f'<p style="margin:0;font-family:{_EMAIL_FONT_STACK};font-size:13px;color:#9C9A8E;font-style:italic;">The client did not include specific notes.</p>'
+
+    return _admin_alert_shell(
+        tagline="Revision requested",
+        headline="A revision was requested.",
+        intro=f"<strong style=\"color:#0A0A0A;font-weight:600;\">{client_email}</strong> has requested a revision on <strong style=\"color:#0A0A0A;font-weight:600;\">{project_type}</strong>. Open the admin panel to upload the revised delivery.",
+        body_html=body,
+        session_id=session_id,
+        cta_label="Open admin panel",
+        cta_url="https://skifidesigns.com/admin",
+    )
 
 
 async def send_revision_request_email(*, client_email: str, project_type: str,
@@ -380,16 +428,21 @@ async def send_revision_request_email(*, client_email: str, project_type: str,
 
 
 def _completed_html(client_email: str, project_type: str, session_id: str) -> str:
-    return f"""
-    <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0A0A0A;">
-      <h2 style="margin:0 0 8px;">Project marked complete ✅</h2>
-      <p style="color:#555;margin:0 0 14px;">
-        <strong>{client_email}</strong> has marked
-        <strong>{project_type}</strong> as completed. No further action needed.
-      </p>
-      <p style="font-size:12px;color:#999;margin-top:32px;">Order session: {session_id}</p>
-    </div>
+    body = f"""
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:12px;margin:0 0 6px;">
+        <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13px;color:#065F46;line-height:1.55;">
+          <span style="display:inline-block;width:22px;height:22px;background:#10B981;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:12px;margin-right:10px;vertical-align:middle;font-weight:600;">&#10003;</span>
+          <strong style="color:#0A0A0A;font-weight:600;">All done.</strong> &nbsp;No further action needed on this order.
+        </td></tr>
+      </table>
     """
+    return _admin_alert_shell(
+        tagline="Order completed",
+        headline="Project marked complete.",
+        intro=f"<strong style=\"color:#0A0A0A;font-weight:600;\">{client_email}</strong> has marked <strong style=\"color:#0A0A0A;font-weight:600;\">{project_type}</strong> as completed.",
+        body_html=body,
+        session_id=session_id,
+    )
 
 
 async def send_order_completed_email(*, client_email: str, project_type: str,

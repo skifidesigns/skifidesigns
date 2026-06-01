@@ -39,6 +39,12 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (full transactional email brand polish)
+- Brand-polished the remaining 2 transactional emails using the shared `_email_header` / `_email_footer` helpers + new `_admin_alert_shell()`:
+  - **Revision-requested email** (admin): dark navy hero with "REVISION REQUESTED" tag, bold headline, blue-accent "Client notes" quote block, "Open admin panel →" CTA, mono-styled session reference, branded legal footer.
+  - **Order-completed email** (admin): "ORDER COMPLETED" tag, green success callout with checkmark, mono session reference, same branded footer.
+- All four transactional touchpoints (payment receipt, project delivery, revision request, order completion) now feel like one cohesive brand experience.
+
 ### 2026-06-01 (logo + delivery email polish)
 - **Replaced receipt logo** with the new circular SkiFi insta logo (216×216 PNG, 35 KB). Fixed the stretched aspect-ratio issue by adding `object-fit: contain` and matching square dimensions on the `<img>`. Also added `white-space: nowrap` to "Total paid" so it never wraps.
 - **Brand-polished the delivery email** (`_delivery_html`):
