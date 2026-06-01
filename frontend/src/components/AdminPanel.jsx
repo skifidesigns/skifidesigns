@@ -5,7 +5,7 @@ import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
   Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download,
-  Upload, Send, Briefcase, Star
+  Upload, Send, Briefcase, Star, Receipt
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -1514,6 +1514,25 @@ const Dashboard = ({ token, onLogout }) => {
   const [tab, setTab] = useState('orders');
   const [deliveryFor, setDeliveryFor] = useState(null);
 
+  // Fetches the receipt HTML via authenticated admin token and opens it in a
+  // new tab as a blob URL (admin auth is Bearer, not cookie - so we cannot
+  // just window.open the URL directly like the client dashboard does).
+  const handleDownloadReceipt = useCallback(async (sessionId) => {
+    try {
+      const res = await axios.get(`${API}/admin/orders/${sessionId}/receipt`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      // Revoke after the new tab has loaded; small delay is enough for blob URLs.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      if (!w) toast.error('Pop-up blocked - allow pop-ups to view the receipt');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not load receipt');
+    }
+  }, [token]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -1837,7 +1856,18 @@ const Dashboard = ({ token, onLogout }) => {
                     </td>
                     <td className="px-4 py-4 text-center">
                       {item.payment_status === 'paid' && (
-                        (() => {
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadReceipt(item.session_id)}
+                            data-testid={`admin-receipt-${item.session_id}`}
+                            title="Download payment receipt"
+                            aria-label="Download payment receipt"
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:text-[#2A7AFE] hover:bg-[#2A7AFE]/10 transition-colors"
+                          >
+                            <Receipt className="w-3.5 h-3.5" />
+                          </button>
+                          {(() => {
                           // Status-aware action: nothing to do once delivered until client asks for revision.
                           const orderStatus = item.status || 'paid';
                           if (orderStatus === 'completed') {
@@ -1878,7 +1908,8 @@ const Dashboard = ({ token, onLogout }) => {
                               {isRevision ? 'Re-deliver' : 'Deliver'}
                             </button>
                           );
-                        })()
+                        })()}
+                        </div>
                       )}
                     </td>
                   </tr>

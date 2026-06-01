@@ -1213,6 +1213,19 @@ async def admin_list_deliveries(session_id: str, _: str = Depends(require_admin)
     return {"items": docs}
 
 
+@api_router.get("/admin/orders/{session_id}/receipt")
+async def admin_order_receipt(session_id: str, _: str = Depends(require_admin)):
+    """Admin-side receipt download (same template as the client receipt, but
+    accessible to admin for any paid order - e.g. to forward to a client
+    that hasn't created a dashboard account)."""
+    tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if tx.get("payment_status") != "paid":
+        raise HTTPException(status_code=400, detail="Receipt is only available for paid orders")
+    return HTMLResponse(content=_render_receipt_html(tx))
+
+
 # ===== Revision request (client-side) =====
 class RevisionRequest(BaseModel):
     message: Optional[str] = Field(None, max_length=2000)
