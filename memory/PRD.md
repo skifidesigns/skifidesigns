@@ -39,6 +39,16 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (premium-branded PDF receipt v2)
+- **Complete redesign** of the PDF receipt to match SkiFi's brand system: actual SkiFi logo image embedded, `Nohemi` (semibold) loaded for headings, `Outfit` for body via Google Fonts, dark navy hero with subtle blue radial glow, warm off-white #F5F4EE page background, green "Paid in full" pill, big blue total in tabular-numerics.
+- **Full legal entity details** now shown in the "From" block and 3-column legal footer (Legal entity / Registered office / Contact):
+  - **SKIFI GROUP LLC** — Wyoming LLC
+  - **30 N Gould St Ste R, Sheridan, WY 82801**, United States
+  - **EIN 98-1917005**
+  - contact@skifidesigns.com · skifidesigns.com
+- Assets bundled at `/app/backend/assets/` (logo PNG + Nohemi WOFF), base64-embedded so the PDF is fully self-contained (no external fetches at render time).
+- Verified: single A4 page, ~35 KB PDF, all branding intact, AI visual review: "exceptionally well-designed, no layout/font fallback/overlap issues".
+
 ### 2026-06-01 (receipt download + PDF email attachment)
 - **✨ Branded HTML receipt** for paid orders. Routes: `GET /api/me/orders/{session_id}/receipt` (user-scoped) and `GET /api/admin/orders/{session_id}/receipt` (admin). Both support `?format=pdf` for an inline PDF download. Itemises **$15 × N slides** (per_slide) or **$999 × 1 month** (monthly_retainer). Branded layout: SkiFi logo, invoice #, billed-to, line items, totals, Stripe transaction reference.
 - **PDF rendering** via WeasyPrint (added to `requirements.txt`). Honours `@media print` so on-screen action buttons are hidden in the PDF. Verified: 1-page, ~18 KB, all branding + itemisation intact (pypdf text extraction confirmed).

@@ -1422,6 +1422,23 @@ def _format_receipt_date(iso: Optional[str]) -> str:
         return iso[:10]
 
 
+# Brand assets loaded once at module import - logo PNG + Nohemi heading font.
+# Embedded as data: URIs so the PDF is fully self-contained (no fetches at print).
+_ASSETS_DIR = Path(__file__).parent / "assets"
+
+
+def _load_b64(filename: str) -> str:
+    import base64 as _b64
+    try:
+        return _b64.b64encode((_ASSETS_DIR / filename).read_bytes()).decode("ascii")
+    except Exception:
+        return ""
+
+
+_LOGO_PNG_B64 = _load_b64("skifi-logo.png")
+_NOHEMI_WOFF_B64 = _load_b64("Nohemi-SemiBold.woff")
+
+
 def _render_receipt_html(tx: dict) -> str:
     """Branded, printable invoice/receipt for a paid order.
 
@@ -1475,84 +1492,208 @@ def _render_receipt_html(tx: dict) -> str:
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <meta name=\"robots\" content=\"noindex\" />
   <style>
+    @font-face {{
+      font-family: 'Nohemi';
+      src: url(data:font/woff;base64,{_NOHEMI_WOFF_B64}) format('woff');
+      font-weight: 600; font-style: normal; font-display: swap;
+    }}
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    @page {{ size: A4; margin: 0; }}
+
     *,*::before,*::after {{ box-sizing: border-box; }}
-    html,body {{ margin:0; padding:0; }}
+    html, body {{ margin:0; padding:0; }}
     body {{
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f7fb; color: #0f172a; -webkit-font-smoothing: antialiased;
-      padding: 32px 16px;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #F5F4EE;
+      color: #0A0A0A;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px 18px;
+      font-size: 12.5px;
+      line-height: 1.5;
     }}
     .sheet {{
-      max-width: 760px; margin: 0 auto; background:#fff; border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(15,23,42,.08);
-      padding: 48px 56px 40px;
+      max-width: 780px; margin: 0 auto; background:#FFFFFF;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px -20px rgba(10,10,10,.15);
+      overflow: hidden;
+      position: relative;
     }}
-    .brand-row {{ display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap; margin-bottom:32px; }}
-    .brand {{ display:flex; align-items:center; gap:12px; }}
-    .brand-mark {{
-      background:#0a0a0a; color:#fff; font-weight:700; padding:8px 12px; border-radius:8px;
-      letter-spacing:.5px; font-size:18px;
+
+    /* === HEADER === */
+    .hero {{
+      background:#0A0F1E; color:#fff; padding:28px 44px 32px;
+      position: relative; overflow: hidden;
     }}
-    .brand-mark .blue {{ background:#2A7AFE; padding:2px 6px; border-radius:5px; margin-left:2px; }}
-    .brand-meta {{ font-size:11px; color:#64748b; line-height:1.5; }}
-    .doc-meta {{ text-align:right; font-size:13px; color:#475569; line-height:1.65; }}
-    .doc-meta strong {{ color:#0f172a; }}
-    .badge-paid {{
-      display:inline-block; padding:4px 10px; border-radius:999px; font-size:11px;
-      font-weight:600; letter-spacing:.04em; text-transform:uppercase;
-      background:#dcfce7; color:#15803d; margin-top:6px;
+    .hero::before {{
+      content:""; position:absolute; top:-100px; right:-80px;
+      width:340px; height:340px; border-radius:50%;
+      background: radial-gradient(circle, #2A7AFE 0%, transparent 65%);
+      opacity:.45;
     }}
+    .hero-row {{
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:24px; position:relative; z-index:2;
+    }}
+    .brand-block {{ display:flex; align-items:center; gap:14px; }}
+    .logo-img {{ width:50px; height:50px; border-radius:11px; display:block; }}
+    .brand-name {{
+      font-family: 'Nohemi', 'Outfit', sans-serif;
+      font-size: 20px; font-weight: 600; letter-spacing: -.01em;
+      line-height: 1.1; color: #fff;
+    }}
+    .brand-tag {{
+      font-family: 'Outfit', sans-serif;
+      font-size: 10.5px; letter-spacing:.16em; text-transform:uppercase;
+      color: rgba(255,255,255,.55); margin-top: 4px;
+    }}
+    .doc-meta {{
+      text-align:right; font-size:11.5px; color:rgba(255,255,255,.7);
+      line-height:1.8;
+    }}
+    .doc-meta .k {{ color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.12em; font-size:9px; }}
+    .doc-meta .v {{ color:#fff; font-weight:500; }}
+    .doc-meta .badge {{
+      display:inline-block; margin-top:8px;
+      padding:5px 11px; border-radius:999px;
+      background:#10B981; color:#fff; font-size:10px;
+      font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    }}
+
+    /* === BODY === */
+    .body {{ padding: 28px 44px 16px; }}
+
     .title {{
-      font-size:32px; font-weight:600; letter-spacing:-.01em; margin:0 0 4px;
+      font-family: 'Nohemi', 'Outfit', sans-serif;
+      font-size: 32px; font-weight: 600; letter-spacing: -.02em;
+      color: #0A0A0A; margin: 0 0 4px;
     }}
-    .subtitle {{ color:#64748b; font-size:13px; margin-bottom:32px; }}
-    .parties {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px; }}
-    .party {{ background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; }}
-    .party h4 {{ font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:#64748b; margin:0 0 8px; font-weight:600; }}
-    .party .name {{ font-weight:600; color:#0f172a; margin-bottom:2px; }}
-    .party .line {{ font-size:13px; color:#475569; line-height:1.55; }}
-    table.items {{
-      width:100%; border-collapse:collapse; margin-bottom:8px;
+    .subtitle {{ color:#6b6b6b; font-size:12px; margin:0 0 24px; max-width:520px; }}
+
+    .parties {{
+      display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px;
     }}
+    .party {{
+      background:#FAFAF7; border:1px solid #ECEAE2; border-radius:12px;
+      padding: 14px 16px;
+    }}
+    .party .k {{
+      font-size:9px; text-transform:uppercase; letter-spacing:.16em;
+      color:#9C9A8E; margin:0 0 6px; font-weight:600;
+    }}
+    .party .name {{
+      font-family:'Nohemi','Outfit',sans-serif; font-weight:600;
+      font-size:14px; color:#0A0A0A; margin:0 0 3px; letter-spacing:-.005em;
+    }}
+    .party .line {{ font-size:11.5px; color:#555; line-height:1.55; margin:0; }}
+    .party .line + .line {{ margin-top:2px; }}
+    .party .line strong {{ color:#0A0A0A; font-weight:500; }}
+
+    /* === ITEMS TABLE === */
+    table.items {{ width:100%; border-collapse:collapse; margin-bottom:6px; }}
     .items thead th {{
-      text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.12em;
-      color:#64748b; font-weight:600; border-bottom:1px solid #e2e8f0; padding:12px 8px;
+      text-align:left; font-size:9px; text-transform:uppercase; letter-spacing:.16em;
+      color:#9C9A8E; font-weight:600; border-bottom:1.5px solid #0A0A0A;
+      padding:10px 8px;
     }}
     .items thead th.num {{ text-align:right; }}
-    .items tbody td {{ padding:16px 8px; vertical-align:top; border-bottom:1px solid #f1f5f9; }}
-    .items td.num {{ text-align:right; font-variant-numeric:tabular-nums; }}
-    .items td .desc {{ font-weight:500; }}
-    .items td .meta {{ font-size:12px; color:#64748b; margin-top:4px; }}
-    .totals {{ margin-top:16px; margin-left:auto; max-width:300px; }}
-    .totals .row {{ display:flex; justify-content:space-between; padding:8px 0; font-size:14px; color:#475569; }}
+    .items tbody td {{
+      padding:14px 8px; vertical-align:top; border-bottom:1px solid #ECEAE2;
+    }}
+    .items td.num {{ text-align:right; font-variant-numeric:tabular-nums; font-size:13px; }}
+    .items td .desc {{
+      font-family:'Nohemi','Outfit',sans-serif; font-weight:600;
+      color:#0A0A0A; font-size:13px; letter-spacing:-.005em; margin-bottom:3px;
+    }}
+    .items td .meta {{ font-size:11px; color:#7a7a7a; }}
+
+    /* === TOTALS === */
+    .totals {{ margin: 14px 0 0 auto; max-width: 320px; }}
+    .totals .row {{
+      display:flex; justify-content:space-between; padding:6px 0;
+      font-size:12.5px; color:#555;
+    }}
     .totals .row.grand {{
-      border-top:2px solid #0f172a; margin-top:8px; padding-top:14px;
-      font-size:18px; font-weight:700; color:#0f172a;
+      border-top:2px solid #0A0A0A; margin-top:6px; padding-top:10px;
     }}
-    .totals .row.grand .amt {{ color:#2A7AFE; }}
-    .pay-note {{
-      margin-top:32px; padding:14px 16px; background:#eff6ff; border:1px solid #bfdbfe;
-      border-radius:10px; font-size:13px; color:#1e3a8a;
+    .totals .row.grand .lbl {{
+      font-family:'Nohemi','Outfit',sans-serif; font-weight:600;
+      font-size:13.5px; color:#0A0A0A; letter-spacing:-.005em;
     }}
-    .pay-note code {{ font-family: 'JetBrains Mono', ui-monospace, monospace; font-size:12px; background:#fff; padding:2px 6px; border-radius:4px; color:#475569; }}
-    .footer {{ margin-top:32px; border-top:1px solid #e2e8f0; padding-top:20px; font-size:12px; color:#94a3b8; text-align:center; line-height:1.6; }}
-    .actions {{ max-width:760px; margin:0 auto 16px; display:flex; gap:8px; justify-content:flex-end; }}
+    .totals .row.grand .amt {{
+      font-family:'Nohemi','Outfit',sans-serif; font-weight:600;
+      font-size:20px; color:#2A7AFE; letter-spacing:-.01em;
+      font-variant-numeric:tabular-nums;
+    }}
+
+    /* === PAYMENT BANNER === */
+    .pay-banner {{
+      margin-top: 20px;
+      background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+      border: 1px solid #BFDBFE;
+      border-radius:12px; padding:12px 16px;
+      display:flex; align-items:center; gap:12px;
+    }}
+    .pay-banner .icon {{
+      width:30px; height:30px; flex-shrink:0;
+      background:#2A7AFE; color:#fff; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:15px; font-weight:600;
+    }}
+    .pay-banner .txt {{ font-size:11.5px; color:#1E3A8A; line-height:1.5; }}
+    .pay-banner .txt strong {{ color:#0A0A0A; font-weight:600; }}
+    .pay-banner .ref {{
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      background:#fff; padding:2px 6px; border-radius:5px;
+      font-size:10px; color:#475569; border:1px solid #DBEAFE;
+    }}
+
+    /* === LEGAL FOOTER === */
+    .legal {{
+      background:#FAFAF7; padding:20px 44px 24px;
+      border-top: 1px solid #ECEAE2; margin-top: 24px;
+    }}
+    .legal-grid {{
+      display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
+      font-size:10.5px; color:#555; line-height:1.6;
+    }}
+    .legal-grid h5 {{
+      font-family:'Nohemi','Outfit',sans-serif; font-size:9.5px;
+      text-transform:uppercase; letter-spacing:.16em;
+      color:#0A0A0A; font-weight:600; margin:0 0 6px;
+    }}
+    .legal-grid .line strong {{ color:#0A0A0A; font-weight:500; }}
+    .copyright {{
+      margin-top:16px; padding-top:14px; border-top:1px solid #ECEAE2;
+      font-size:10px; color:#9C9A8E; text-align:center; line-height:1.6;
+    }}
+    .copyright a {{ color:#2A7AFE; text-decoration:none; }}
+
+    /* === ON-SCREEN ACTIONS (hidden in PDF) === */
+    .actions {{
+      max-width:780px; margin:0 auto 14px;
+      display:flex; gap:8px; justify-content:flex-end;
+    }}
     .btn {{
-      appearance:none; border:1px solid #cbd5e1; background:#fff; color:#0f172a;
-      padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer;
-      box-shadow:0 1px 2px rgba(15,23,42,.04);
+      appearance:none; border:1px solid #ECEAE2; background:#fff; color:#0A0A0A;
+      padding:9px 16px; border-radius:10px; font-size:12.5px; font-weight:500;
+      font-family:'Outfit',sans-serif; cursor:pointer;
+      box-shadow: 0 1px 3px rgba(10,10,10,.04);
     }}
     .btn.primary {{ background:#2A7AFE; border-color:#2A7AFE; color:#fff; }}
+
     @media print {{
-      body {{ background:#fff; padding:0; }}
+      body {{ background:#fff; padding:0; font-size:11.5px; }}
       .actions {{ display:none !important; }}
-      .sheet {{ box-shadow:none; border-radius:0; padding:24px 32px; }}
+      .sheet {{ box-shadow:none; border-radius:0; max-width:none; }}
     }}
     @media (max-width:640px) {{
-      .sheet {{ padding:28px 22px; }}
-      .parties {{ grid-template-columns:1fr; }}
-      .brand-row {{ flex-direction:column; }}
+      .hero, .body {{ padding-left:22px; padding-right:22px; }}
+      .legal {{ padding-left:22px; padding-right:22px; }}
+      .parties, .legal-grid {{ grid-template-columns:1fr; }}
+      .hero-row {{ flex-direction:column; }}
       .doc-meta {{ text-align:left; }}
+      .title {{ font-size:26px; }}
     }}
   </style>
 </head>
@@ -1563,78 +1704,105 @@ def _render_receipt_html(tx: dict) -> str:
   </div>
 
   <div class=\"sheet\">
-    <div class=\"brand-row\">
-      <div class=\"brand\">
-        <div class=\"brand-mark\">Ski<span class=\"blue\">Fi</span></div>
-        <div class=\"brand-meta\">
-          <strong style=\"color:#0f172a; display:block; font-size:13px;\">SkiFi Designs</strong>
-          Presentation Design Agency<br/>
-          contact@skifidesigns.com<br/>
-          https://skifidesigns.com
+
+    <!-- HEADER -->
+    <div class=\"hero\">
+      <div class=\"hero-row\">
+        <div class=\"brand-block\">
+          <img class=\"logo-img\" src=\"data:image/png;base64,{_LOGO_PNG_B64}\" alt=\"SkiFi Designs\" />
+          <div>
+            <div class=\"brand-name\">SkiFi Designs</div>
+            <div class=\"brand-tag\">Presentation Design Studio</div>
+          </div>
+        </div>
+        <div class=\"doc-meta\">
+          <div><span class=\"k\">Receipt no.</span> &nbsp; <span class=\"v\">{invoice_no}</span></div>
+          <div><span class=\"k\">Issue date</span> &nbsp; <span class=\"v\">{paid_date}</span></div>
+          <div><span class=\"k\">Method</span> &nbsp; <span class=\"v\">Card &middot; Stripe</span></div>
+          <div><span class=\"badge\">&#10003; &nbsp; Paid in full</span></div>
         </div>
       </div>
-      <div class=\"doc-meta\">
-        <div><strong>Receipt #</strong> {invoice_no}</div>
-        <div><strong>Issue date</strong> {paid_date}</div>
-        <div><strong>Payment</strong> Card (Stripe)</div>
-        <span class=\"badge-paid\">&#10003; Paid</span>
+    </div>
+
+    <!-- BODY -->
+    <div class=\"body\">
+      <h1 class=\"title\">Payment Receipt</h1>
+      <p class=\"subtitle\">Thank you for partnering with SkiFi Designs. This is your official, tax-eligible receipt &mdash; retain it for your records or reimbursement.</p>
+
+      <div class=\"parties\">
+        <div class=\"party\">
+          <p class=\"k\">Billed to</p>
+          <p class=\"name\">{client_name}</p>
+          {f'<p class="line"><strong>{client_company}</strong></p>' if client_company else ''}
+          <p class=\"line\">{client_email}</p>
+        </div>
+        <div class=\"party\">
+          <p class=\"k\">From</p>
+          <p class=\"name\">SKIFI GROUP LLC</p>
+          <p class=\"line\">30 N Gould St Ste R<br/>Sheridan, WY 82801 &middot; United States</p>
+          <p class=\"line\" style=\"margin-top:6px;\">EIN <strong>98-1917005</strong></p>
+        </div>
+      </div>
+
+      <table class=\"items\">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class=\"num\">Qty</th>
+            <th class=\"num\">Unit price</th>
+            <th class=\"num\">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class=\"desc\">{line_desc}</div>
+              <div class=\"meta\">Project: {project_type} &middot; {item_meta}</div>
+            </td>
+            <td class=\"num\">{qty}</td>
+            <td class=\"num\">${unit_price:,.2f}</td>
+            <td class=\"num\">${line_total:,.2f}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class=\"totals\">
+        <div class=\"row\"><span>Subtotal</span><span>${grand_total:,.2f} {currency}</span></div>
+        <div class=\"row\"><span>Tax</span><span>$0.00</span></div>
+        <div class=\"row grand\"><span class=\"lbl\">Total paid</span><span class=\"amt\">${grand_total:,.2f}</span></div>
+      </div>
+
+      <div class=\"pay-banner\">
+        <div class=\"icon\">&#10003;</div>
+        <div class=\"txt\">
+          <strong>Paid in full via Stripe on {paid_date}.</strong><br/>
+          Transaction reference &nbsp; <span class=\"ref\">{session_id}</span>
+        </div>
       </div>
     </div>
 
-    <h1 class=\"title\">Payment Receipt</h1>
-    <p class=\"subtitle\">Thank you for partnering with SkiFi Designs. This is your official receipt - retain it for your records or reimbursement.</p>
-
-    <div class=\"parties\">
-      <div class=\"party\">
-        <h4>Billed to</h4>
-        <div class=\"name\">{client_name}</div>
-        {f'<div class="line">{client_company}</div>' if client_company else ''}
-        <div class=\"line\">{client_email}</div>
+    <!-- LEGAL FOOTER -->
+    <div class=\"legal\">
+      <div class=\"legal-grid\">
+        <div>
+          <h5>Legal entity</h5>
+          <div class=\"line\"><strong>SKIFI GROUP LLC</strong><br/>Wyoming LLC<br/>EIN <strong>98-1917005</strong></div>
+        </div>
+        <div>
+          <h5>Registered office</h5>
+          <div class=\"line\">30 N Gould St Ste R<br/>Sheridan, WY 82801<br/>United States</div>
+        </div>
+        <div>
+          <h5>Contact</h5>
+          <div class=\"line\"><a href=\"mailto:contact@skifidesigns.com\" style=\"color:#0A0A0A;text-decoration:none;\"><strong>contact@skifidesigns.com</strong></a><br/>skifidesigns.com</div>
+        </div>
       </div>
-      <div class=\"party\">
-        <h4>From</h4>
-        <div class=\"name\">SkiFi Designs</div>
-        <div class=\"line\">contact@skifidesigns.com</div>
-        <div class=\"line\">https://skifidesigns.com</div>
+      <div class=\"copyright\">
+        &copy; {datetime.now(timezone.utc).year} SKIFI GROUP LLC &middot; All rights reserved. &nbsp;|&nbsp;
+        Questions about this receipt? Email <a href=\"mailto:contact@skifidesigns.com\">contact@skifidesigns.com</a>
       </div>
     </div>
 
-    <table class=\"items\">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th class=\"num\">Qty</th>
-          <th class=\"num\">Unit price</th>
-          <th class=\"num\">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <div class=\"desc\">{line_desc}</div>
-            <div class=\"meta\">Project: {project_type}{f' &middot; {item_meta}'}</div>
-          </td>
-          <td class=\"num\">{qty}</td>
-          <td class=\"num\">${unit_price:,.2f}</td>
-          <td class=\"num\">${line_total:,.2f}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class=\"totals\">
-      <div class=\"row\"><span>Subtotal</span><span>${grand_total:,.2f} {currency}</span></div>
-      <div class=\"row\"><span>Tax</span><span>$0.00</span></div>
-      <div class=\"row grand\"><span>Total paid</span><span class=\"amt\">${grand_total:,.2f} {currency}</span></div>
-    </div>
-
-    <div class=\"pay-note\">
-      Paid in full via Stripe on {paid_date}. Transaction reference: <code>{session_id}</code>
-    </div>
-
-    <div class=\"footer\">
-      SkiFi Designs - Premium Presentation Design Agency<br/>
-      Questions about this receipt? Email <a href=\"mailto:contact@skifidesigns.com\" style=\"color:#2A7AFE;\">contact@skifidesigns.com</a>
-    </div>
   </div>
 </body>
 </html>"""
