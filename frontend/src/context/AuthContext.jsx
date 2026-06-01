@@ -37,8 +37,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = () => {
     // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/resources';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    // Send the user to our backend Google OAuth bootstrap endpoint. Backend
+    // handles the Google consent dance and 302s the user back to `redirect`
+    // (relative path) at the same origin they started from.
+    const redirectPath = window.location.pathname + window.location.search;
+    window.location.href = `${API}/auth/google/login?redirect=${encodeURIComponent(redirectPath)}`;
   };
 
   const logout = async () => {

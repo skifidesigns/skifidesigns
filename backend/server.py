@@ -1,7 +1,9 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Cookie, UploadFile, File
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth, OAuthError
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from bson import ObjectId
 import os
@@ -568,8 +570,47 @@ async def admin_me(_: str = Depends(require_admin)):
     return {"authenticated": True}
 
 
-# ===================== Auth (Google via Emergent) =====================
+# ===================== Auth (Native Google OAuth) =====================
+# REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+# Backend computes the callback URL from `request.url_for(...)` at runtime so it
+# works on both preview and production without any env-var ceremony.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
+# Legacy Emergent-managed flow URL is no longer hit by the frontend, but the
+# /auth/session endpoint stays mounted as a fail-safe so any stale browser tab
+# returning from the old flow doesn't 404.
 EMERGENT_AUTH_SESSION_DATA_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+
+# Authlib OAuth client - reads Google's discovery doc once at startup.
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+
+def _frontend_origin_from_request(request: Request) -> str:
+    """Resolve which frontend to redirect back to after login.
+
+    The frontend always opens /api/auth/google/login with a ?redirect=<path>
+    query param built from window.location.origin. We trust only the origin
+    of the Referer/Origin header so attackers can't trick us into open-redirect.
+    """
+    referer = request.headers.get("referer") or request.headers.get("origin") or ""
+    if referer:
+        try:
+            from urllib.parse import urlparse
+            p = urlparse(referer)
+            if p.scheme and p.netloc:
+                return f"{p.scheme}://{p.netloc}"
+        except Exception:
+            pass
+    # Fallback - same host the request came in on (preview/production parity).
+    return str(request.base_url).rstrip("/")
 
 
 class UserModel(BaseModel):
@@ -704,6 +745,111 @@ async def auth_me(user: dict = Depends(require_user)):
         "name": user.get("name"),
         "picture": user.get("picture"),
     }
+
+
+async def _upsert_user_and_session(*, email: str, name: Optional[str],
+                                    picture: Optional[str], response: Response) -> dict:
+    """Shared upsert + session-cookie creator for both OAuth providers.
+    Existing users are matched by email so the migration from Emergent Auth
+    is invisible to clients - their orders/library/etc. carry over."""
+    existing = await db.users.find_one({"email": email}, {"_id": 0})
+    if existing:
+        user_id = existing["user_id"]
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": name or existing.get("name"),
+                "picture": picture or existing.get("picture"),
+                "last_login_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+    else:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id, "email": email, "name": name, "picture": picture,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_login_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    session_token = secrets.token_urlsafe(48)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.user_sessions.insert_one({
+        "user_id": user_id, "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    response.set_cookie(
+        key="session_token", value=session_token,
+        max_age=7 * 24 * 3600, httponly=True, secure=True,
+        samesite="none", path="/",
+    )
+    return {"user_id": user_id, "email": email, "name": name, "picture": picture,
+            "session_token": session_token}
+
+
+@api_router.get("/auth/google/login")
+async def auth_google_login(request: Request, redirect: Optional[str] = None):
+    """Kick off the Google OAuth flow. Stashes the post-login redirect path
+    in the signed session cookie so the callback can land the user back where
+    they came from (e.g. /resources, /dashboard).
+    """
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured")
+
+    # Build the callback URL from the PUBLIC origin (Referer/X-Forwarded headers)
+    # so it matches what's whitelisted in Google Cloud Console. `request.url_for`
+    # returns the internal cluster hostname behind our Kubernetes ingress,
+    # which Google would reject with redirect_uri_mismatch.
+    public_origin = _frontend_origin_from_request(request)
+    callback_url = f"{public_origin}/api/auth/google/callback"
+
+    request.session["post_login_redirect"] = redirect or "/"
+    request.session["post_login_origin"] = public_origin
+    return await oauth.google.authorize_redirect(request, callback_url)
+
+
+@api_router.get("/auth/google/callback", name="auth_google_callback")
+async def auth_google_callback(request: Request):
+    """OAuth callback. Verifies Google's ID token, upserts the user, sets the
+    session cookie, and 302's back to the SPA where the user started."""
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except OAuthError as e:
+        logger.warning(f"Google OAuth failed: {e}")
+        raise HTTPException(status_code=401, detail=f"Google OAuth failed: {e.error}")
+
+    user_info = token.get("userinfo") or {}
+    if not user_info:
+        # Fallback: hit Google's userinfo endpoint manually
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
+                ui = await http_client.get(
+                    "https://openidconnect.googleapis.com/v1/userinfo",
+                    headers={"Authorization": f"Bearer {token['access_token']}"},
+                )
+            user_info = ui.json() if ui.status_code == 200 else {}
+        except Exception:
+            user_info = {}
+
+    email = user_info.get("email")
+    if not email or not user_info.get("email_verified", True):
+        raise HTTPException(status_code=401, detail="Google did not return a verified email")
+
+    # We need to set the cookie on a RedirectResponse, so build it first.
+    origin = request.session.pop("post_login_origin", "") or str(request.base_url).rstrip("/")
+    redirect_path = request.session.pop("post_login_redirect", "/") or "/"
+    if not redirect_path.startswith("/"):
+        redirect_path = "/"
+    target = f"{origin}{redirect_path}"
+
+    redirect_response = RedirectResponse(url=target, status_code=302)
+    await _upsert_user_and_session(
+        email=email,
+        name=user_info.get("name"),
+        picture=user_info.get("picture"),
+        response=redirect_response,
+    )
+    return redirect_response
 
 
 @api_router.post("/auth/logout")
@@ -2531,6 +2677,18 @@ app.add_middleware(
     allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# SessionMiddleware powers Authlib's CSRF state during the Google OAuth dance.
+# It only stores transient flow state (post-login redirect path + OAuth nonce)
+# in a signed cookie - it does NOT replace our app's httpOnly session_token.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ.get("SESSION_SECRET", "change-me-for-prod"),
+    same_site="lax",
+    https_only=True,
+    max_age=600,            # 10 min - just enough to bounce through Google
+    session_cookie="oauth_state",
 )
 
 

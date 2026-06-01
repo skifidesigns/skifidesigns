@@ -39,6 +39,16 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (native Google OAuth migration)
+- **Migrated from Emergent-managed Google Auth to native Google OAuth 2.0** so the consent screen shows the SkiFi brand directly.
+- **Backend**: Added Authlib + Starlette `SessionMiddleware` (used only for transient OAuth state in a signed 10-min cookie; keeps the existing httpOnly `session_token` app cookie unchanged). New endpoints:
+  - `GET /api/auth/google/login?redirect=<path>` → 302 to Google consent
+  - `GET /api/auth/google/callback` → verifies ID token, upserts user (matched by email so existing accounts/orders carry over), sets httpOnly session_token cookie, 302s back to the SPA's `redirect` path
+  - Public callback URL built from the request `Referer`/`Origin` headers (NOT `url_for`, which returns the internal cluster hostname behind the K8s ingress)
+- **Frontend**: `AuthContext.login()` now redirects to `${API}/auth/google/login` instead of `auth.emergentagent.com`. All 4 OAuth touchpoints (Header, ClientDashboard, TemplateModal, Resources) inherit the new flow automatically since they all call `useAuth().login()`.
+- **Env**: Added `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` to `/app/backend/.env`. `requirements.txt` updated with `Authlib==1.7.2` + `itsdangerous==2.2.0`.
+- **Verified end-to-end** via Playwright — consent screen renders with SkiFi logo, "Sign in to continue to SkiFi Designs", Privacy Policy + Terms of Service links. Existing user data (`users` + `user_sessions` collections) is fully compatible — same email = same account.
+
 ### 2026-06-01 (resume pending checkout)
 - **Backend**: New `POST /api/me/orders/{session_id}/resume-checkout` endpoint (user-scoped). Creates a fresh Stripe checkout session with the original package_id + amount + metadata, swaps the new `session_id` into the existing `payment_transactions` row in place (preserving brief, file uploads, project info), stores `previous_session_id` for traceability, and increments `resume_count`. Returns `{checkout_url, session_id}`.
 - **Client dashboard**: amber "Payment not completed yet" callout appears on every pending order with a blue **"Complete payment →"** CTA. Click → backend resume call → redirect to Stripe → on success, the existing webhook flow paid-marks the order without needing the client to re-fill any form.
