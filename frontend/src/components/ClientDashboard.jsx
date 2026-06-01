@@ -485,6 +485,7 @@ export const ClientDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('projects'); // 'projects' | 'library'
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -583,64 +584,94 @@ export const ClientDashboard = () => {
             </div>
           ) : (
             <>
-              {/* Section 1 - Projects */}
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <Package className="w-5 h-5 text-[#2A7AFE]" />
+              {/* Tabs: My Projects | My Library */}
+              <div className="mb-6 flex items-center gap-2 p-1 bg-muted/40 border border-border rounded-xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('projects')}
+                  data-testid="tab-projects"
+                  className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === 'projects'
+                      ? 'bg-background text-foreground shadow-sm border border-border'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Package className={`w-4 h-4 ${activeTab === 'projects' ? 'text-[#2A7AFE]' : ''}`} />
                   My Projects
-                  <span className="text-xs text-muted-foreground font-normal">({orders.length})</span>
-                </h2>
+                  <span className={`text-xs font-medium ${activeTab === 'projects' ? 'text-muted-foreground' : 'opacity-60'}`}>
+                    ({orders.length})
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('library')}
+                  data-testid="tab-library"
+                  className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === 'library'
+                      ? 'bg-background text-foreground shadow-sm border border-border'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <FileText className={`w-4 h-4 ${activeTab === 'library' ? 'text-[#2A7AFE]' : ''}`} />
+                  My Library
+                  <span className={`text-xs font-medium ${activeTab === 'library' ? 'text-muted-foreground' : 'opacity-60'}`}>
+                    ({library.length})
+                  </span>
+                </button>
               </div>
-              {orders.length === 0 ? (
-                <div className="bg-card border border-border rounded-2xl p-10 text-center mb-12" data-testid="dashboard-empty">
-                  <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
-                  <p className="text-muted-foreground mb-5">
-                    Once you place an order using this email, project status and file deliveries appear here.
-                  </p>
-                  <Button asChild className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white">
-                    <a href="/">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Start a project
-                    </a>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6 mb-12" data-testid="dashboard-orders">
-                  {orders.map((o) => (
-                    <OrderCard key={o.session_id} order={o} onReload={load} />
-                  ))}
-                </div>
+
+              {/* Projects panel */}
+              {activeTab === 'projects' && (
+                orders.length === 0 ? (
+                  <div className="bg-card border border-border rounded-2xl p-10 text-center" data-testid="dashboard-empty">
+                    <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
+                    <p className="text-muted-foreground mb-5">
+                      Once you place an order using this email, project status and file deliveries appear here.
+                    </p>
+                    <Button asChild className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white">
+                      <a href="/">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Start a project
+                      </a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6" data-testid="dashboard-orders">
+                    {orders.map((o) => (
+                      <OrderCard key={o.session_id} order={o} onReload={load} />
+                    ))}
+                  </div>
+                )
               )}
 
-              {/* Section 2 - Digital Products / Library */}
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#2A7AFE]" />
-                  My Library
-                  <span className="text-xs text-muted-foreground font-normal">({library.length})</span>
-                </h2>
-                {library.length > 0 && (
-                  <a href="/resources" className="text-xs text-[#2A7AFE] hover:underline">
-                    Browse more →
-                  </a>
-                )}
-              </div>
-              {library.length === 0 ? (
-                <div className="bg-card border border-border rounded-2xl p-10 text-center" data-testid="library-empty">
-                  <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
-                  <p className="text-muted-foreground mb-5">
-                    Free + paid templates you download will live here for unlimited re-downloads.
-                  </p>
-                  <Button asChild variant="outline">
-                    <a href="/resources">Browse templates</a>
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="dashboard-library">
-                  {library.map((t) => (
-                    <LibraryCard key={t.id} item={t} />
-                  ))}
-                </div>
+              {/* Library panel */}
+              {activeTab === 'library' && (
+                <>
+                  {library.length > 0 && (
+                    <div className="mb-4 flex justify-end">
+                      <a href="/resources" className="text-xs text-[#2A7AFE] hover:underline">
+                        Browse more &rarr;
+                      </a>
+                    </div>
+                  )}
+                  {library.length === 0 ? (
+                    <div className="bg-card border border-border rounded-2xl p-10 text-center" data-testid="library-empty">
+                      <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-60" />
+                      <p className="text-muted-foreground mb-5">
+                        Free + paid templates you download will live here for unlimited re-downloads.
+                      </p>
+                      <Button asChild variant="outline">
+                        <a href="/resources">Browse templates</a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="dashboard-library">
+                      {library.map((t) => (
+                        <LibraryCard key={t.id} item={t} />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
