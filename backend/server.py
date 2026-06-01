@@ -377,6 +377,48 @@ async def _maybe_send_emails(tx: dict):
         logger.exception(f"Email send failed for {tx['session_id']}: {e}")
 
 
+async def _maybe_send_template_purchase_email(purchase: dict) -> None:
+    """Once a template payment is confirmed paid, send the buyer a branded
+    confirmation email with the PDF receipt attached. Idempotent - bails if
+    we've already sent for this purchase."""
+    if not purchase or purchase.get("emails_sent"):
+        return
+    try:
+        from email_service import send_template_purchase_email
+        tx = await _template_purchase_to_tx(purchase)
+
+        # Build a usable absolute download URL for the email CTA
+        download_url = "https://skifidesigns.com/dashboard"  # land them in My Library
+
+        # Generate the PDF receipt (best-effort).
+        receipt_pdf_b64 = None
+        try:
+            import base64 as _b64
+            receipt_pdf_b64 = _b64.b64encode(
+                await asyncio.to_thread(_render_receipt_pdf, tx)
+            ).decode("ascii")
+        except Exception:
+            logger.exception(f"Template receipt PDF generation failed for purchase {purchase.get('id')}")
+
+        result = await send_template_purchase_email(
+            client_email=tx["email"],
+            client_name=tx["full_name"],
+            template_title=tx["template_title"],
+            amount=float(tx["amount"]),
+            download_url=download_url,
+            receipt_pdf_b64=receipt_pdf_b64,
+            receipt_filename=_receipt_filename(tx, "pdf"),
+        )
+        await db.template_purchases.update_one(
+            {"id": purchase["id"]},
+            {"$set": {"emails_sent": True, "email_result": result,
+                      "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        logger.info(f"Template purchase email sent for {purchase.get('id')}: {result}")
+    except Exception as e:
+        logger.exception(f"Template purchase email send failed: {e}")
+
+
 @api_router.get("/payments/status/{session_id}")
 async def get_payment_status(session_id: str):
     # Check both payment_transactions (projects) and template_purchases (templates)
@@ -391,8 +433,11 @@ async def get_payment_status(session_id: str):
     is_template = tx is None
 
     if active_tx.get("payment_status") in ("paid", "failed", "expired"):
-        if active_tx.get("payment_status") == "paid" and not is_template:
-            await _maybe_send_emails(active_tx)
+        if active_tx.get("payment_status") == "paid":
+            if not is_template:
+                await _maybe_send_emails(active_tx)
+            else:
+                await _maybe_send_template_purchase_email(active_tx)
         return {
             "session_id": session_id,
             "payment_status": active_tx["payment_status"],
@@ -432,6 +477,10 @@ async def get_payment_status(session_id: str):
                       "status": "complete" if new_payment_status == "paid" else new_status,
                       "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
+        if new_payment_status == "paid":
+            updated_purchase = await db.template_purchases.find_one({"session_id": session_id}, {"_id": 0})
+            if updated_purchase:
+                await _maybe_send_template_purchase_email(updated_purchase)
 
     return {
         "session_id": session_id,
@@ -477,6 +526,12 @@ async def stripe_webhook(request: Request):
                           "status": "complete" if event.payment_status == "paid" else "open",
                           "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
+            if event.payment_status == "paid":
+                updated_purchase = await db.template_purchases.find_one(
+                    {"session_id": event.session_id}, {"_id": 0}
+                )
+                if updated_purchase:
+                    await _maybe_send_template_purchase_email(updated_purchase)
 
     return {"received": True}
 
@@ -1077,6 +1132,11 @@ async def my_library(user: dict = Depends(require_user)):
             "download_url": download_url,
             "unlocked_at": p.get("created_at"),
             "unlock_kind": p.get("payment_status"),  # 'paid' or 'free'
+            "purchase_id": p.get("id"),
+            "receipt_url": (
+                f"/api/me/templates/purchases/{p.get('id')}/receipt?format=pdf"
+                if p.get("payment_status") == "paid" and p.get("id") else None
+            ),
         })
     return {"items": items}
 
@@ -1679,6 +1739,14 @@ def _render_receipt_html(tx: dict) -> str:
         unit_price = 999.00
         line_total = 999.00
         item_meta = "1 month &times; $999.00"
+    elif package_id == "template":
+        # Digital template / presentation asset purchase
+        tpl_title = (tx.get("template_title") or "Premium Template").strip()
+        line_desc = tpl_title
+        qty = 1
+        unit_price = amount
+        line_total = amount
+        item_meta = "Digital download &middot; Licensed for personal &amp; commercial use"
     else:
         line_desc = tx.get("project_type") or "Design Service"
         qty = 1
@@ -1969,7 +2037,7 @@ def _render_receipt_html(tx: dict) -> str:
           <tr>
             <td>
               <div class=\"desc\">{line_desc}</div>
-              <div class=\"meta\">Project: {project_type} &middot; {item_meta}</div>
+              <div class=\"meta\">{('Template purchase' if package_id == 'template' else 'Project: ' + project_type)} &middot; {item_meta}</div>
             </td>
             <td class=\"num\">{qty}</td>
             <td class=\"num\">${unit_price:,.2f}</td>
@@ -2069,6 +2137,60 @@ async def my_order_receipt(
         raise HTTPException(status_code=404, detail="Order not found")
     if tx.get("payment_status") != "paid":
         raise HTTPException(status_code=400, detail="Receipt is only available for paid orders")
+    return _receipt_response(tx, format)
+
+
+async def _template_purchase_to_tx(purchase: dict) -> dict:
+    """Project the template_purchase row into the shape `_render_receipt_html`
+    expects. Joins client name from users + template title from templates."""
+    user_doc = await db.users.find_one({"user_id": purchase.get("user_id")}, {"_id": 0}) or {}
+    tpl = await db.templates.find_one({"id": purchase.get("template_id")}, {"_id": 0}) or {}
+    return {
+        "session_id": purchase.get("session_id") or purchase.get("id") or "",
+        "email": purchase.get("email") or user_doc.get("email"),
+        "full_name": user_doc.get("name") or "Valued Client",
+        "company": "",
+        "package_id": "template",
+        "amount": float(purchase.get("amount") or 0),
+        "currency": purchase.get("currency") or "usd",
+        "project_type": tpl.get("title") or "Template",
+        "template_title": tpl.get("title") or "Premium Template",
+        "created_at": purchase.get("created_at"),
+    }
+
+
+@api_router.get("/me/templates/purchases/{purchase_id}/receipt")
+async def my_template_receipt(
+    purchase_id: str,
+    format: Optional[str] = None,
+    user: dict = Depends(require_user),
+):
+    """Branded receipt for a PAID template purchase, scoped to the user."""
+    purchase = await db.template_purchases.find_one(
+        {"id": purchase_id, "user_id": user["user_id"]}, {"_id": 0}
+    )
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Template purchase not found")
+    if purchase.get("payment_status") != "paid":
+        # Free downloads have no receipt - return a clear error
+        raise HTTPException(status_code=400, detail="Receipt is only available for paid templates")
+    tx = await _template_purchase_to_tx(purchase)
+    return _receipt_response(tx, format)
+
+
+@api_router.get("/admin/templates/purchases/{purchase_id}/receipt")
+async def admin_template_receipt(
+    purchase_id: str,
+    format: Optional[str] = None,
+    _: str = Depends(require_admin),
+):
+    """Admin-side template purchase receipt download (any user, any paid purchase)."""
+    purchase = await db.template_purchases.find_one({"id": purchase_id}, {"_id": 0})
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Template purchase not found")
+    if purchase.get("payment_status") != "paid":
+        raise HTTPException(status_code=400, detail="Receipt is only available for paid templates")
+    tx = await _template_purchase_to_tx(purchase)
     return _receipt_response(tx, format)
 
 

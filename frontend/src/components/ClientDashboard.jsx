@@ -110,6 +110,18 @@ const LibraryCard = ({ item }) => {
           <Download className="w-3.5 h-3.5 mr-1.5" />
           Download
         </Button>
+        {item.unlock_kind === 'paid' && item.receipt_url && (
+          <a
+            href={`${API}${item.receipt_url}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`library-receipt-${item.id}`}
+            className="mt-2 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-[#2A7AFE] hover:text-[#3B82F6] hover:underline transition-colors"
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            Download receipt (PDF)
+          </a>
+        )}
       </div>
     </div>
   );

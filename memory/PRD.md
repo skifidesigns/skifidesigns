@@ -65,6 +65,18 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
   - **Order-completed email** (admin): "ORDER COMPLETED" tag, green success callout with checkmark, mono session reference, same branded footer.
 - All four transactional touchpoints (payment receipt, project delivery, revision request, order completion) now feel like one cohesive brand experience.
 
+### 2026-06-01 (template purchase receipts)
+- **Paid template purchases now get the same branded PDF receipt** as project orders.
+- **Backend**: new routes
+  - `GET /api/me/templates/purchases/{purchase_id}/receipt[?format=pdf]` (user-scoped)
+  - `GET /api/admin/templates/purchases/{purchase_id}/receipt[?format=pdf]` (admin)
+- `_render_receipt_html` extended with a `package_id == "template"` branch → renders the template title as the line item, "Digital download · Licensed for personal & commercial use" as meta, and "Template purchase" instead of "Project:" in the description row.
+- `_template_purchase_to_tx` helper joins `template_purchases` + `users` + `templates` so the renderer gets the same shape as project receipts.
+- `GET /api/me/library` now includes `purchase_id` + `receipt_url` for every paid item.
+- **Auto-emailed receipt**: new `send_template_purchase_email` (branded "Template purchase" header, order summary table, blue "Download your template" CTA, PDF receipt attached). Fired from both the webhook handler and the polled `/payments/status/{session_id}` path → idempotent via `emails_sent` flag.
+- **Client dashboard**: `LibraryCard` now shows a "Download receipt (PDF)" link below the Download button for paid items only.
+- Verified end-to-end via curl + Playwright with seeded fixtures.
+
 ### 2026-06-01 (logo + delivery email polish)
 - **Replaced receipt logo** with the new circular SkiFi insta logo (216×216 PNG, 35 KB). Fixed the stretched aspect-ratio issue by adding `object-fit: contain` and matching square dimensions on the `<img>`. Also added `white-space: nowrap` to "Total paid" so it never wraps.
 - **Brand-polished the delivery email** (`_delivery_html`):

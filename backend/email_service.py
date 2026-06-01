@@ -481,3 +481,82 @@ async def send_order_completed_email(*, client_email: str, project_type: str,
         "html": _completed_html(client_email, project_type, session_id),
     }
     return await asyncio.to_thread(_send_sync, params)
+
+
+def _template_purchase_html(client_name: str, template_title: str,
+                            amount: float, download_url: str) -> str:
+    body = f"""
+      <p style="margin:0 0 12px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#555;line-height:1.6;">
+        Payment confirmed for <strong style="color:#0A0A0A;font-weight:600;">{template_title}</strong>.
+        Your PDF receipt is attached to this email - keep it for your records or reimbursement.
+      </p>
+      <p style="margin:18px 0 8px;font-family:{_EMAIL_FONT_STACK};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9C9A8E;font-weight:600;">Order summary</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFAF7;border:1px solid {BRAND_BORDER};border-radius:12px;margin:0 0 24px;">
+        <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13.5px;color:#0A0A0A;border-bottom:1px solid {BRAND_BORDER};">
+          {template_title}
+        </td>
+        <td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13.5px;color:#0A0A0A;text-align:right;border-bottom:1px solid {BRAND_BORDER};font-weight:600;">
+          ${amount:,.2f}
+        </td></tr>
+        <tr><td style="padding:12px 18px;font-family:{_EMAIL_FONT_STACK};font-size:12.5px;color:#555;" colspan="1">Total paid</td>
+        <td style="padding:12px 18px;font-family:{_HEADING_FONT_STACK};font-size:16px;color:{BRAND_COLOR};text-align:right;font-weight:600;letter-spacing:-0.01em;">
+          ${amount:,.2f} USD
+        </td></tr>
+      </table>
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:8px auto 6px;">
+        <tr><td align="center" style="border-radius:12px;background:{BRAND_COLOR};">
+          <a href="{download_url}" style="display:inline-block;padding:14px 28px;font-family:{_EMAIL_FONT_STACK};font-size:14.5px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:12px;letter-spacing:0.01em;">
+            Download your template &rarr;
+          </a>
+        </td></tr>
+      </table>
+      <p style="text-align:center;margin:14px 0 0;font-family:{_EMAIL_FONT_STACK};font-size:11.5px;color:#9C9A8E;">
+        You can also re-download anytime from your dashboard &rarr; My Library.
+      </p>
+    """
+    return f"""
+<!doctype html>
+<html><head>{_EMAIL_FONT_HEAD}</head><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 12px 40px -16px rgba(10,10,10,0.12);">
+
+        {_email_header("Template purchase")}
+
+        <tr><td style="padding:32px 40px 12px;">
+          <h2 style="margin:0 0 14px;font-family:{_HEADING_FONT_STACK};font-size:24px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.25;">Hi {client_name}, your template is ready.</h2>
+          {body}
+        </td></tr>
+
+        {_email_footer()}
+      </table>
+    </td></tr>
+  </table>
+</body></html>
+""".strip()
+
+
+async def send_template_purchase_email(*, client_email: str, client_name: str,
+                                        template_title: str, amount: float,
+                                        download_url: str,
+                                        receipt_pdf_b64: Optional[str] = None,
+                                        receipt_filename: str = "SkiFi-Designs-Receipt.pdf") -> Optional[str]:
+    """Confirmation email for a paid template purchase with the PDF receipt
+    auto-attached. Same pattern as the project payment email."""
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set - skipping template purchase email")
+        return None
+    params = {
+        "from": f"SkiFi Designs <{SENDER_EMAIL}>",
+        "to": [client_email],
+        "subject": f"Your template is ready - {template_title}",
+        "html": _template_purchase_html(client_name or "there", template_title, amount, download_url),
+    }
+    if receipt_pdf_b64:
+        params["attachments"] = [{
+            "filename": receipt_filename,
+            "content": receipt_pdf_b64,
+            "content_type": "application/pdf",
+        }]
+    return await asyncio.to_thread(_send_sync, params)
