@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import {
   Loader2, FileText, Calendar, Download, Upload, Building2,
-  Package, CheckCircle2, Clock, AlertCircle, Sparkles, Send, MessageCircle, X,
+  Package, CheckCircle2, Clock, AlertCircle, Sparkles, Send, MessageCircle, X, Receipt,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from './Header';
@@ -221,6 +221,22 @@ const OrderCard = ({ order, onReload }) => {
           </p>
         </div>
       </div>
+
+      {/* Receipt download - only for paid orders */}
+      {order.payment_status === 'paid' && (
+        <div className="flex justify-end -mt-2">
+          <a
+            href={`${API}/me/orders/${order.session_id}/receipt`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`download-receipt-${order.session_id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2A7AFE] hover:text-[#3B82F6] hover:underline transition-colors"
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            Download receipt
+          </a>
+        </div>
+      )}
 
       {/* Description */}
       {order.description && (

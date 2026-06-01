@@ -39,6 +39,13 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-01 (receipt download)
+- **✨ Branded HTML receipt** for paid orders. New backend route `GET /api/me/orders/{session_id}/receipt` (auth scoped to the requesting user's email; returns 401/404/400 appropriately). Itemises **$15 × N slides** (per_slide) or **$999 × 1 month** (monthly_retainer). Includes SkiFi branding, invoice #, billed-to, line items, totals, Stripe transaction reference, and a "Print / Save as PDF" button (hidden in print CSS). Verified with seeded fixtures for both package types.
+- **Frontend**: "Download receipt" link added to every paid order card in `ClientDashboard.jsx`. Opens in a new tab; auth carried via the existing `session_token` httpOnly cookie.
+
+### 2026-05-31 (Cal.com inline modal)
+- **✨ Cal.com element-click embed** wired into all "Book a Call" CTAs (Header desktop+mobile, Hero, FinalCTA, Footer × 2). One-time init in `public/index.html` with brand color `#2A7AFE`. Clicking a CTA now opens an inline calendar modal instead of redirecting to `cal.com/skifi/30min`. `trackEvent('book_call_clicked')` analytics preserved.
+
 ### 2026-02-30 (bug fix + UX)
 - **🐛 Fixed P0 template file upload bug**: `PATCH /api/admin/templates/{id}` allow-list was missing `template_file_id` (and `thumbnail_file_id`) → uploaded files silently dropped when editing a template. Added both to allowed update fields. Verified end-to-end via curl with real GridFS upload.
 - **🐛 Fixed frontend endpoint mismatch**: `TemplateModal.jsx` was calling `/api/templates/{id}/checkout` (404). Renamed to `/access` to match backend. This unblocks free downloads + paid Stripe checkout from the modal.

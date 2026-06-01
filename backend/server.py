@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Cookie, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
@@ -1372,6 +1372,246 @@ async def my_orders(user: dict = Depends(require_user)):
             "revision_requests": it.get("revision_requests", []),
         })
     return {"items": enriched}
+
+
+def _format_receipt_date(iso: Optional[str]) -> str:
+    if not iso:
+        return ""
+    try:
+        return datetime.fromisoformat(iso.replace("Z", "+00:00")).strftime("%b %d, %Y")
+    except Exception:
+        return iso[:10]
+
+
+def _render_receipt_html(tx: dict) -> str:
+    """Branded, printable invoice/receipt for a paid order.
+
+    Itemises either '$15 / slide' or '$999 monthly retainer' so the
+    client's finance team can use it for reimbursement.
+    """
+    package_id = tx.get("package_id") or ""
+    slide_count = int(tx.get("slide_count") or 0)
+    amount = float(tx.get("amount") or 0)
+    currency = (tx.get("currency") or "usd").upper()
+    session_id = tx.get("session_id") or ""
+    created_at = tx.get("created_at")
+    paid_date = _format_receipt_date(created_at)
+    # Build a clean human invoice number: alnum-only suffix from the session id
+    sid_clean = "".join(c for c in session_id if c.isalnum())
+    invoice_no = f"SKF-{sid_clean[-10:].upper()}" if sid_clean else "SKF-INVOICE"
+
+    if package_id == "per_slide":
+        line_desc = "Pitch Deck / Presentation Design - Per Slide"
+        qty = slide_count if slide_count > 0 else max(1, round(amount / 15))
+        unit_price = 15.00
+        line_total = round(unit_price * qty, 2)
+        item_meta = f"{qty} slide{'s' if qty != 1 else ''} &times; ${unit_price:.2f}"
+    elif package_id == "monthly_retainer":
+        line_desc = "Monthly Design Retainer (up to 100 slide credits)"
+        qty = 1
+        unit_price = 999.00
+        line_total = 999.00
+        item_meta = "1 month &times; $999.00"
+    else:
+        line_desc = tx.get("project_type") or "Design Service"
+        qty = 1
+        unit_price = amount
+        line_total = amount
+        item_meta = f"1 &times; ${amount:.2f}"
+
+    # If the stored amount disagrees with the computed line total, trust the
+    # stored amount (Stripe is the source of truth) and surface it as the grand total.
+    grand_total = amount if amount > 0 else line_total
+
+    client_name = (tx.get("full_name") or "Valued Client").strip()
+    client_company = (tx.get("company") or "").strip()
+    client_email = tx.get("email") or ""
+    project_type = tx.get("project_type") or "Presentation Design"
+
+    return f"""<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\" />
+  <title>Receipt {invoice_no} - SkiFi Designs</title>
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <meta name=\"robots\" content=\"noindex\" />
+  <style>
+    *,*::before,*::after {{ box-sizing: border-box; }}
+    html,body {{ margin:0; padding:0; }}
+    body {{
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fb; color: #0f172a; -webkit-font-smoothing: antialiased;
+      padding: 32px 16px;
+    }}
+    .sheet {{
+      max-width: 760px; margin: 0 auto; background:#fff; border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(15,23,42,.08);
+      padding: 48px 56px 40px;
+    }}
+    .brand-row {{ display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap; margin-bottom:32px; }}
+    .brand {{ display:flex; align-items:center; gap:12px; }}
+    .brand-mark {{
+      background:#0a0a0a; color:#fff; font-weight:700; padding:8px 12px; border-radius:8px;
+      letter-spacing:.5px; font-size:18px;
+    }}
+    .brand-mark .blue {{ background:#2A7AFE; padding:2px 6px; border-radius:5px; margin-left:2px; }}
+    .brand-meta {{ font-size:11px; color:#64748b; line-height:1.5; }}
+    .doc-meta {{ text-align:right; font-size:13px; color:#475569; line-height:1.65; }}
+    .doc-meta strong {{ color:#0f172a; }}
+    .badge-paid {{
+      display:inline-block; padding:4px 10px; border-radius:999px; font-size:11px;
+      font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+      background:#dcfce7; color:#15803d; margin-top:6px;
+    }}
+    .title {{
+      font-size:32px; font-weight:600; letter-spacing:-.01em; margin:0 0 4px;
+    }}
+    .subtitle {{ color:#64748b; font-size:13px; margin-bottom:32px; }}
+    .parties {{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px; }}
+    .party {{ background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; }}
+    .party h4 {{ font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:#64748b; margin:0 0 8px; font-weight:600; }}
+    .party .name {{ font-weight:600; color:#0f172a; margin-bottom:2px; }}
+    .party .line {{ font-size:13px; color:#475569; line-height:1.55; }}
+    table.items {{
+      width:100%; border-collapse:collapse; margin-bottom:8px;
+    }}
+    .items thead th {{
+      text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.12em;
+      color:#64748b; font-weight:600; border-bottom:1px solid #e2e8f0; padding:12px 8px;
+    }}
+    .items thead th.num {{ text-align:right; }}
+    .items tbody td {{ padding:16px 8px; vertical-align:top; border-bottom:1px solid #f1f5f9; }}
+    .items td.num {{ text-align:right; font-variant-numeric:tabular-nums; }}
+    .items td .desc {{ font-weight:500; }}
+    .items td .meta {{ font-size:12px; color:#64748b; margin-top:4px; }}
+    .totals {{ margin-top:16px; margin-left:auto; max-width:300px; }}
+    .totals .row {{ display:flex; justify-content:space-between; padding:8px 0; font-size:14px; color:#475569; }}
+    .totals .row.grand {{
+      border-top:2px solid #0f172a; margin-top:8px; padding-top:14px;
+      font-size:18px; font-weight:700; color:#0f172a;
+    }}
+    .totals .row.grand .amt {{ color:#2A7AFE; }}
+    .pay-note {{
+      margin-top:32px; padding:14px 16px; background:#eff6ff; border:1px solid #bfdbfe;
+      border-radius:10px; font-size:13px; color:#1e3a8a;
+    }}
+    .pay-note code {{ font-family: 'JetBrains Mono', ui-monospace, monospace; font-size:12px; background:#fff; padding:2px 6px; border-radius:4px; color:#475569; }}
+    .footer {{ margin-top:32px; border-top:1px solid #e2e8f0; padding-top:20px; font-size:12px; color:#94a3b8; text-align:center; line-height:1.6; }}
+    .actions {{ max-width:760px; margin:0 auto 16px; display:flex; gap:8px; justify-content:flex-end; }}
+    .btn {{
+      appearance:none; border:1px solid #cbd5e1; background:#fff; color:#0f172a;
+      padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer;
+      box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }}
+    .btn.primary {{ background:#2A7AFE; border-color:#2A7AFE; color:#fff; }}
+    @media print {{
+      body {{ background:#fff; padding:0; }}
+      .actions {{ display:none !important; }}
+      .sheet {{ box-shadow:none; border-radius:0; padding:24px 32px; }}
+    }}
+    @media (max-width:640px) {{
+      .sheet {{ padding:28px 22px; }}
+      .parties {{ grid-template-columns:1fr; }}
+      .brand-row {{ flex-direction:column; }}
+      .doc-meta {{ text-align:left; }}
+    }}
+  </style>
+</head>
+<body>
+  <div class=\"actions\">
+    <button class=\"btn\" onclick=\"window.close()\">Close</button>
+    <button class=\"btn primary\" onclick=\"window.print()\">Print / Save as PDF</button>
+  </div>
+
+  <div class=\"sheet\">
+    <div class=\"brand-row\">
+      <div class=\"brand\">
+        <div class=\"brand-mark\">Ski<span class=\"blue\">Fi</span></div>
+        <div class=\"brand-meta\">
+          <strong style=\"color:#0f172a; display:block; font-size:13px;\">SkiFi Designs</strong>
+          Presentation Design Agency<br/>
+          contact@skifidesigns.com<br/>
+          https://skifidesigns.com
+        </div>
+      </div>
+      <div class=\"doc-meta\">
+        <div><strong>Receipt #</strong> {invoice_no}</div>
+        <div><strong>Issue date</strong> {paid_date}</div>
+        <div><strong>Payment</strong> Card (Stripe)</div>
+        <span class=\"badge-paid\">&#10003; Paid</span>
+      </div>
+    </div>
+
+    <h1 class=\"title\">Payment Receipt</h1>
+    <p class=\"subtitle\">Thank you for partnering with SkiFi Designs. This is your official receipt - retain it for your records or reimbursement.</p>
+
+    <div class=\"parties\">
+      <div class=\"party\">
+        <h4>Billed to</h4>
+        <div class=\"name\">{client_name}</div>
+        {f'<div class="line">{client_company}</div>' if client_company else ''}
+        <div class=\"line\">{client_email}</div>
+      </div>
+      <div class=\"party\">
+        <h4>From</h4>
+        <div class=\"name\">SkiFi Designs</div>
+        <div class=\"line\">contact@skifidesigns.com</div>
+        <div class=\"line\">https://skifidesigns.com</div>
+      </div>
+    </div>
+
+    <table class=\"items\">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class=\"num\">Qty</th>
+          <th class=\"num\">Unit price</th>
+          <th class=\"num\">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class=\"desc\">{line_desc}</div>
+            <div class=\"meta\">Project: {project_type}{f' &middot; {item_meta}'}</div>
+          </td>
+          <td class=\"num\">{qty}</td>
+          <td class=\"num\">${unit_price:,.2f}</td>
+          <td class=\"num\">${line_total:,.2f}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class=\"totals\">
+      <div class=\"row\"><span>Subtotal</span><span>${grand_total:,.2f} {currency}</span></div>
+      <div class=\"row\"><span>Tax</span><span>$0.00</span></div>
+      <div class=\"row grand\"><span>Total paid</span><span class=\"amt\">${grand_total:,.2f} {currency}</span></div>
+    </div>
+
+    <div class=\"pay-note\">
+      Paid in full via Stripe on {paid_date}. Transaction reference: <code>{session_id}</code>
+    </div>
+
+    <div class=\"footer\">
+      SkiFi Designs - Premium Presentation Design Agency<br/>
+      Questions about this receipt? Email <a href=\"mailto:contact@skifidesigns.com\" style=\"color:#2A7AFE;\">contact@skifidesigns.com</a>
+    </div>
+  </div>
+</body>
+</html>"""
+
+
+@api_router.get("/me/orders/{session_id}/receipt")
+async def my_order_receipt(session_id: str, user: dict = Depends(require_user)):
+    """Branded HTML receipt for a paid order, scoped to the requesting user."""
+    tx = await db.payment_transactions.find_one(
+        {"session_id": session_id, "email": user["email"]}, {"_id": 0}
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if tx.get("payment_status") != "paid":
+        raise HTTPException(status_code=400, detail="Receipt is only available for paid orders")
+    return HTMLResponse(content=_render_receipt_html(tx))
 
 
 @api_router.get("/me/files/{file_id}")
