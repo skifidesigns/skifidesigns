@@ -1537,7 +1537,10 @@ const Dashboard = ({ token, onLogout }) => {
     setLoading(true);
     try {
       const qs = new URLSearchParams();
-      if (filter !== 'all') qs.append('payment_status', filter);
+      // "All" hides pending/unpaid clutter (abandoned checkouts) - show only
+      // orders that actually matter for fulfilment. Other tabs are exact.
+      if (filter === 'all') qs.append('payment_status', 'paid,failed');
+      else qs.append('payment_status', filter);
       const toISO = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null);
       const fd = toISO(dateRange.from);
       const td = toISO(dateRange.to);

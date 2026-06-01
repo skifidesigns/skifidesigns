@@ -514,7 +514,14 @@ async def admin_list_submissions(
 ):
     query = {}
     if payment_status:
-        query["payment_status"] = payment_status
+        # Support comma-separated values so the dashboard "All" tab can fetch
+        # "paid,failed" - i.e. everything except pending/unpaid noise from
+        # abandoned checkouts.
+        statuses = [s.strip() for s in payment_status.split(",") if s.strip()]
+        if len(statuses) == 1:
+            query["payment_status"] = statuses[0]
+        elif len(statuses) > 1:
+            query["payment_status"] = {"$in": statuses}
 
     # Date filter: accept either a preset (since=week|month|year) OR an
     # explicit ISO date range (from_date, to_date). created_at is stored as
