@@ -65,6 +65,10 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
   - **Order-completed email** (admin): "ORDER COMPLETED" tag, green success callout with checkmark, mono session reference, same branded footer.
 - All four transactional touchpoints (payment receipt, project delivery, revision request, order completion) now feel like one cohesive brand experience.
 
+### 2026-06-02 (admin period quick-filters + pending auto-expiry)
+- **Admin Orders**: added "This Week" + "This Month" quick chips next to the existing All-time calendar picker (matches the Stripe/Shopify pattern). Clicking a chip sets the date range; the calendar reflects it; clicking again or picking a different chip swaps cleanly. Active state is the same dark pill style as the calendar.
+- **Pending auto-expiry**: new background loop (`_pending_expiry_loop`) runs every hour. Any `payment_status='pending'` row in `payment_transactions` or `template_purchases` older than `PENDING_ORDER_EXPIRY_DAYS` (default 7d, env-tunable) gets flipped to `payment_status='expired'` with an `expired_at` timestamp. Side effect: stale pending orders fall out of the All/Pending tabs automatically while preserving the audit trail for forensics. Verified end-to-end with seeded fixtures (10-day-old → expired, 2-day-old → still pending).
+
 ### 2026-06-01 (template purchase receipts)
 - **Paid template purchases now get the same branded PDF receipt** as project orders.
 - **Backend**: new routes

@@ -2817,3 +2817,44 @@ app.add_middleware(
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+# ===================== Background Maintenance =====================
+# Pending orders that never complete payment shouldn't pile up forever.
+# We mark them `expired` after a grace period so they fall out of the
+# admin/All filter (which only shows paid+failed) while preserving the
+# audit trail for forensics. Configurable via env, defaults to 7 days.
+PENDING_ORDER_EXPIRY_DAYS = int(os.environ.get("PENDING_ORDER_EXPIRY_DAYS", "7"))
+
+
+async def _expire_stale_pending_orders():
+    """Mark `payment_status='expired'` on any order/template purchase that's
+    sat in 'pending' for longer than the grace window. Idempotent."""
+    try:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=PENDING_ORDER_EXPIRY_DAYS)).isoformat()
+        q = {"payment_status": "pending", "created_at": {"$lt": cutoff}}
+        upd = {"$set": {"payment_status": "expired",
+                        "status": "expired",
+                        "expired_at": datetime.now(timezone.utc).isoformat()}}
+        r1 = await db.payment_transactions.update_many(q, upd)
+        r2 = await db.template_purchases.update_many(q, upd)
+        if r1.modified_count or r2.modified_count:
+            logger.info(
+                f"Auto-expired stale pending: orders={r1.modified_count} "
+                f"templates={r2.modified_count} (older than {PENDING_ORDER_EXPIRY_DAYS}d)"
+            )
+    except Exception:
+        logger.exception("Failed to expire stale pending orders")
+
+
+async def _pending_expiry_loop():
+    """Background loop that runs the expiry job once an hour."""
+    while True:
+        await _expire_stale_pending_orders()
+        await asyncio.sleep(3600)  # 1 hour
+
+
+@app.on_event("startup")
+async def _start_background_jobs():
+    # Run once at startup, then schedule the recurring loop
+    asyncio.create_task(_pending_expiry_loop())

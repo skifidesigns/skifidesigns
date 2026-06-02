@@ -1735,6 +1735,49 @@ const Dashboard = ({ token, onLogout }) => {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground uppercase tracking-wider">Period</span>
+              {(() => {
+                // Quick range presets - same UX as Stripe/Shopify dashboards
+                const today = () => { const d = new Date(); d.setHours(23, 59, 59, 999); return d; };
+                const startOfWeek = () => {
+                  const d = new Date(); d.setHours(0, 0, 0, 0);
+                  // Monday-anchored week (matches calendar's default)
+                  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+                  return d;
+                };
+                const startOfMonth = () => {
+                  const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(1); return d;
+                };
+                const isExactRange = (from, to) => {
+                  if (!dateRange.from || !dateRange.to) return false;
+                  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+                  return sameDay(dateRange.from, from) && sameDay(dateRange.to, to);
+                };
+                const isThisWeek = isExactRange(startOfWeek(), today());
+                const isThisMonth = isExactRange(startOfMonth(), today());
+                const presetBtn = (label, active, onClick, testId) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={onClick}
+                    data-testid={testId}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                      active
+                        ? 'bg-foreground text-background'
+                        : 'bg-background border border-border text-foreground hover:bg-accent'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+                return (
+                  <>
+                    {presetBtn('This Week', isThisWeek,
+                      () => setDateRange({ from: startOfWeek(), to: today() }), 'admin-period-week')}
+                    {presetBtn('This Month', isThisMonth,
+                      () => setDateRange({ from: startOfMonth(), to: today() }), 'admin-period-month')}
+                  </>
+                );
+              })()}
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <button
