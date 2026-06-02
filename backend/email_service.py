@@ -483,6 +483,78 @@ async def send_order_completed_email(*, client_email: str, project_type: str,
     return await asyncio.to_thread(_send_sync, params)
 
 
+def _recovery_html(client_name: str, project_type: str, amount: float,
+                   currency: str, resume_url: str) -> str:
+    return f"""
+<!doctype html>
+<html><head>{_EMAIL_FONT_HEAD}</head><body style="margin:0;padding:0;background:{BRAND_OFFWHITE};font-family:{_EMAIL_FONT_STACK};">
+  <div style="display:none;max-height:0;overflow:hidden;color:transparent;">Your {project_type} is one click away - finish payment.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{BRAND_OFFWHITE};padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 12px 40px -16px rgba(10,10,10,0.12);">
+
+        {_email_header("Pick up where you left off")}
+
+        <tr><td style="padding:36px 40px 8px;">
+          <h2 style="margin:0 0 8px;font-family:{_HEADING_FONT_STACK};font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#0A0A0A;line-height:1.2;">Your project is one click away.</h2>
+          <p style="margin:0 0 24px;font-family:{_EMAIL_FONT_STACK};font-size:14px;color:#6b6b6b;line-height:1.6;">
+            Hi {client_name}, we noticed your <strong style="color:#0A0A0A;font-weight:600;">{project_type}</strong> order is still waiting on payment. Your brief and uploaded files are safe with us &mdash; finish checkout in 30 seconds and we'll get started.
+          </p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFAF7;border:1px solid {BRAND_BORDER};border-radius:12px;margin:0 0 24px;">
+            <tr>
+              <td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:13px;color:#555;">Order total</td>
+              <td style="padding:14px 18px;text-align:right;font-family:{_HEADING_FONT_STACK};font-size:18px;font-weight:600;color:{BRAND_COLOR};letter-spacing:-0.005em;">
+                ${amount:,.2f} {currency.upper()}
+              </td>
+            </tr>
+          </table>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:6px auto;">
+            <tr><td align="center" style="border-radius:12px;background:{BRAND_COLOR};">
+              <a href="{resume_url}" style="display:inline-block;padding:14px 30px;font-family:{_EMAIL_FONT_STACK};font-size:14.5px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:12px;letter-spacing:0.01em;">
+                Complete my payment &rarr;
+              </a>
+            </td></tr>
+          </table>
+          <p style="text-align:center;margin:14px 0 28px;font-family:{_EMAIL_FONT_STACK};font-size:11.5px;color:#9C9A8E;">
+            Secure checkout via Stripe. Takes 30 seconds.
+          </p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border:1px solid #BFDBFE;border-radius:12px;margin:0 0 8px;">
+            <tr><td style="padding:14px 18px;font-family:{_EMAIL_FONT_STACK};font-size:12.5px;color:#1E3A8A;line-height:1.55;">
+              <strong style="color:#0A0A0A;font-weight:600;">Changed your mind or need help?</strong>
+              Just reply to this email &mdash; we're here to help.
+            </td></tr>
+          </table>
+        </td></tr>
+
+        {_email_footer()}
+      </table>
+    </td></tr>
+  </table>
+</body></html>
+""".strip()
+
+
+async def send_recovery_email(*, client_email: str, client_name: str,
+                              project_type: str, amount: float,
+                              currency: str, resume_url: str) -> Optional[str]:
+    """Friendly 'finish your checkout' nudge for pending orders. The
+    `resume_url` lands the client on their dashboard where the existing
+    'Complete payment' button generates a fresh Stripe checkout."""
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set - skipping recovery email")
+        return None
+    params = {
+        "from": f"SkiFi Designs <{SENDER_EMAIL}>",
+        "to": [client_email],
+        "subject": f"Your {project_type} is one click away - SkiFi Designs",
+        "html": _recovery_html(client_name or "there", project_type, amount, currency, resume_url),
+    }
+    return await asyncio.to_thread(_send_sync, params)
+
+
 def _template_purchase_html(client_name: str, template_title: str,
                             amount: float, download_url: str) -> str:
     body = f"""

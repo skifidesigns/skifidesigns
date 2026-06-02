@@ -65,6 +65,14 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
   - **Order-completed email** (admin): "ORDER COMPLETED" tag, green success callout with checkmark, mono session reference, same branded footer.
 - All four transactional touchpoints (payment receipt, project delivery, revision request, order completion) now feel like one cohesive brand experience.
 
+### 2026-06-02 (abandoned-checkout recovery email)
+- **Friendly 24h nudge** for clients who abandoned checkout. Same hourly background loop as the auto-expiry job now also calls `_send_recovery_emails`:
+  - **Targets** orders where `payment_status='pending'`, age between `RECOVERY_EMAIL_DELAY_HOURS` (default 24h) and `RECOVERY_EMAIL_MAX_AGE_DAYS` (default 5d), no prior `recovery_email_sent_at`, and a valid `email` + `amount > 0`.
+  - **Idempotent**: stamps `recovery_email_sent_at` so re-running never double-sends. Verified end-to-end: 36h-old never-nudged → email sent + flag set; 2h-old (too fresh) → skipped; 36h-old already-nudged → skipped.
+  - Configurable via env (`RECOVERY_EMAIL_DELAY_HOURS`, `RECOVERY_EMAIL_MAX_AGE_DAYS`, `PUBLIC_FRONTEND_URL`).
+- **Email design** (new `_recovery_html`): branded "PICK UP WHERE YOU LEFT OFF" header, bold headline, $-amount summary, big blue "Complete my payment →" CTA, "Secure checkout via Stripe" trust line, "Changed your mind?" reply prompt. Reuses the shared `_email_header` / `_email_footer` chrome with Nohemi + Outfit fonts.
+- **Recovery deep-link**: CTA points at `https://skifidesigns.com/dashboard?recover=<session_id>`. `ClientDashboard` reads the param after orders load → smooth-scrolls to that order's amber "Complete payment" card + highlights it with an amber ring for ~3.5s so the client sees exactly what to click.
+
 ### 2026-06-02 (admin period quick-filters + pending auto-expiry)
 - **Admin Orders**: added "This Week" + "This Month" quick chips next to the existing All-time calendar picker (matches the Stripe/Shopify pattern). Clicking a chip sets the date range; the calendar reflects it; clicking again or picking a different chip swaps cleanly. Active state is the same dark pill style as the calendar.
 - **Pending auto-expiry**: new background loop (`_pending_expiry_loop`) runs every hour. Any `payment_status='pending'` row in `payment_transactions` or `template_purchases` older than `PENDING_ORDER_EXPIRY_DAYS` (default 7d, env-tunable) gets flipped to `payment_status='expired'` with an `expired_at` timestamp. Side effect: stale pending orders fall out of the All/Pending tabs automatically while preserving the audit trail for forensics. Verified end-to-end with seeded fixtures (10-day-old → expired, 2-day-old → still pending).

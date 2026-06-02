@@ -2826,6 +2826,12 @@ async def shutdown_db_client():
 # audit trail for forensics. Configurable via env, defaults to 7 days.
 PENDING_ORDER_EXPIRY_DAYS = int(os.environ.get("PENDING_ORDER_EXPIRY_DAYS", "7"))
 
+# Recovery email config: nudge clients ~24h after an abandoned checkout.
+# Only sent if the order is still pending AND we haven't nudged before.
+RECOVERY_EMAIL_DELAY_HOURS = int(os.environ.get("RECOVERY_EMAIL_DELAY_HOURS", "24"))
+RECOVERY_EMAIL_MAX_AGE_DAYS = int(os.environ.get("RECOVERY_EMAIL_MAX_AGE_DAYS", "5"))
+PUBLIC_FRONTEND_URL = os.environ.get("PUBLIC_FRONTEND_URL", "https://skifidesigns.com")
+
 
 async def _expire_stale_pending_orders():
     """Mark `payment_status='expired'` on any order/template purchase that's
@@ -2847,10 +2853,60 @@ async def _expire_stale_pending_orders():
         logger.exception("Failed to expire stale pending orders")
 
 
+async def _send_recovery_emails():
+    """Send a 'finish your checkout' nudge to clients with abandoned orders.
+
+    Targets orders that have been pending for between RECOVERY_EMAIL_DELAY_HOURS
+    and RECOVERY_EMAIL_MAX_AGE_DAYS, haven't received a nudge yet, and have an
+    email + project info on file. Idempotent via the `recovery_email_sent_at`
+    flag so re-running never double-sends.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        upper_cutoff = (now - timedelta(hours=RECOVERY_EMAIL_DELAY_HOURS)).isoformat()
+        lower_cutoff = (now - timedelta(days=RECOVERY_EMAIL_MAX_AGE_DAYS)).isoformat()
+        cursor = db.payment_transactions.find({
+            "payment_status": "pending",
+            "created_at": {"$lte": upper_cutoff, "$gte": lower_cutoff},
+            "recovery_email_sent_at": {"$exists": False},
+            "email": {"$exists": True, "$ne": None},
+            "amount": {"$gt": 0},
+        }, {"_id": 0})
+
+        from email_service import send_recovery_email
+        count = 0
+        async for tx in cursor:
+            try:
+                resume_url = f"{PUBLIC_FRONTEND_URL}/dashboard?recover={tx['session_id']}"
+                result = await send_recovery_email(
+                    client_email=tx["email"],
+                    client_name=tx.get("full_name", "there"),
+                    project_type=tx.get("project_type") or "design project",
+                    amount=float(tx.get("amount") or 0),
+                    currency=tx.get("currency") or "usd",
+                    resume_url=resume_url,
+                )
+                await db.payment_transactions.update_one(
+                    {"session_id": tx["session_id"]},
+                    {"$set": {
+                        "recovery_email_sent_at": now.isoformat(),
+                        "recovery_email_result": result,
+                    }},
+                )
+                count += 1
+            except Exception:
+                logger.exception(f"Recovery email failed for {tx.get('session_id')}")
+        if count:
+            logger.info(f"Recovery emails sent: {count}")
+    except Exception:
+        logger.exception("Recovery email job failed")
+
+
 async def _pending_expiry_loop():
-    """Background loop that runs the expiry job once an hour."""
+    """Background loop: hourly expiry + recovery passes."""
     while True:
         await _expire_stale_pending_orders()
+        await _send_recovery_emails()
         await asyncio.sleep(3600)  # 1 hour
 
 

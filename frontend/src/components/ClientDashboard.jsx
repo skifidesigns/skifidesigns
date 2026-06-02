@@ -520,6 +520,25 @@ export const ClientDashboard = () => {
     if (user) load();
   }, [user, load]);
 
+  // After data loads, auto-scroll to a specific order if ?recover=<sid> is set
+  // (used by the recovery email so the client lands directly on the
+  // "Complete payment" CTA for their abandoned order).
+  useEffect(() => {
+    if (loading || !orders.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const recoverSid = params.get('recover');
+    if (!recoverSid) return;
+    const el = document.querySelector(`[data-testid="resume-checkout-card-${recoverSid}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-background');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'ring-offset-background'), 3500);
+    } else {
+      // Order isn't in the user's list - probably wrong account
+      toast.message('Sign in with the email you used to place the order.');
+    }
+  }, [loading, orders]);
+
   if (authLoading) {
     return (
       <div className="bg-background min-h-screen">
