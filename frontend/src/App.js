@@ -28,6 +28,9 @@ import { PrivacyPolicy, TermsOfService, RefundPolicy, CookiePolicy } from "./com
 import { ClientDashboard } from "./components/ClientDashboard";
 import { CaseStudies } from "./components/CaseStudies";
 import { CaseStudy } from "./components/CaseStudy";
+import { AILabLanding } from "./components/AILabLanding";
+import { AIDeckReview } from "./components/AIDeckReview";
+import { AITemplateGenerator } from "./components/AITemplateGenerator";
 import { trackPageview } from "./utils/analytics";
 
 const Home = () => {
@@ -100,6 +103,9 @@ const AppRouter = () => {
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/case-studies" element={<CaseStudies />} />
       <Route path="/case-studies/:slug" element={<CaseStudy />} />
+      <Route path="/ai-lab" element={<AILabLanding />} />
+      <Route path="/ai-lab/deck-review" element={<AIDeckReview />} />
+      <Route path="/ai-lab/template-generator" element={<AITemplateGenerator />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />

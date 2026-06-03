@@ -2770,6 +2770,13 @@ async def dynamic_sitemap():
 
 
 # ===================== App wiring =====================
+# AI Lab tools (deck review + template generator + admin leads)
+# Must register BEFORE app.include_router so admin routes added by
+# register_admin_routes() are attached to api_router first.
+from ai_lab import ai_lab_router, register_admin_routes as _register_ai_lab_admin
+_register_ai_lab_admin(api_router, require_admin)
+api_router.include_router(ai_lab_router)
+
 app.include_router(api_router)
 
 
