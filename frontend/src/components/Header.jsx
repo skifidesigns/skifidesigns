@@ -47,6 +47,7 @@ export const Header = () => {
     { label: 'Services', id: 'services', type: 'scroll' },
     { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
+    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'FAQ', id: 'faq', type: 'scroll' }
@@ -55,6 +56,7 @@ export const Header = () => {
     { label: 'Services', id: 'services', type: 'scroll' },
     { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
+    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'My Dashboard', path: '/dashboard', type: 'route' }
@@ -93,19 +95,25 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navLinks.map((link) => (
               link.type === 'route' ? (
                 <Link
                   key={link.label}
                   to={link.path}
-                  className={`skifi-link text-sm font-medium transition-colors duration-200 ${
+                  data-testid={`nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  className={`skifi-link text-sm font-medium transition-colors duration-200 inline-flex items-center gap-1.5 ${
                     location.pathname === link.path
                       ? 'text-[#2A7AFE]'
                       : 'text-foreground/75 hover:text-foreground'
                   }`}
                 >
                   {link.label}
+                  {link.badge && (
+                    <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <button
@@ -220,9 +228,15 @@ export const Header = () => {
                     key={link.label}
                     to={link.path}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-200 text-left"
+                    data-testid={`mobile-nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-200 text-left inline-flex items-center gap-2"
                   >
                     {link.label}
+                    {link.badge && (
+                      <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white">
+                        {link.badge}
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <button

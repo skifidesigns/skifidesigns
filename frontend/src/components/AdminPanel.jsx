@@ -5,7 +5,7 @@ import {
   LogOut, RefreshCw, DollarSign, CheckCircle2, Clock,
   Mail, Building2, Calendar, FileText, Search, Lock, Loader2,
   Layout, Plus, Trash2, Pencil, X, BookOpen, Eye, Paperclip, Download,
-  Upload, Send, Briefcase, Star, Receipt
+  Upload, Send, Briefcase, Star, Receipt, Sparkles
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -1401,6 +1401,253 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
 };
 
 
+const AiLabLeadsManager = ({ token }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toolFilter, setToolFilter] = useState('all');
+  const [search, setSearch] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = toolFilter !== 'all' ? { tool: toolFilter } : {};
+      const { data } = await axios.get(`${API}/admin/ai-lab/leads`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
+      setItems(data.items || []);
+    } catch {
+      toast.error('Failed to load AI Lab leads');
+    } finally {
+      setLoading(false);
+    }
+  }, [token, toolFilter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const downloadCsv = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/ai-lab/leads.csv`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ai-lab-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Export failed');
+    }
+  };
+
+  const filtered = items.filter((it) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      (it.email || '').toLowerCase().includes(q) ||
+      (it.name || '').toLowerCase().includes(q) ||
+      (it.company || '').toLowerCase().includes(q) ||
+      (it.deck_filename || '').toLowerCase().includes(q) ||
+      (it.project_name || '').toLowerCase().includes(q)
+    );
+  });
+
+  const stats = {
+    total: items.length,
+    deck: items.filter((i) => i.tool === 'deck_review').length,
+    template: items.filter((i) => i.tool === 'template_generator').length,
+  };
+
+  const toolLabel = (t) =>
+    t === 'deck_review' ? 'Deck Review' : t === 'template_generator' ? 'Template Gen' : t;
+
+  return (
+    <div className="space-y-6" data-testid="ai-lab-leads-panel">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">AI Lab Leads</h2>
+          <p className="text-sm text-muted-foreground">
+            Warm signals from founders using SkiFi's free AI tools.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={load}
+            variant="outline"
+            size="sm"
+            data-testid="ai-leads-refresh"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={downloadCsv}
+            className="bg-[#2A7AFE] hover:bg-[#3B82F6] text-white"
+            size="sm"
+            data-testid="ai-leads-export-csv"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Total leads</p>
+          <p className="text-3xl font-semibold text-foreground" data-testid="ai-leads-stat-total">{stats.total}</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Deck reviews</p>
+          <p className="text-3xl font-semibold text-foreground" data-testid="ai-leads-stat-deck">{stats.deck}</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Templates generated</p>
+          <p className="text-3xl font-semibold text-foreground" data-testid="ai-leads-stat-template">{stats.template}</p>
+        </div>
+      </div>
+
+      {/* Filter row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {[
+          { v: 'all', label: 'All' },
+          { v: 'deck_review', label: 'Deck Reviews' },
+          { v: 'template_generator', label: 'Template Generator' },
+        ].map((opt) => (
+          <button
+            key={opt.v}
+            onClick={() => setToolFilter(opt.v)}
+            data-testid={`ai-leads-filter-${opt.v}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+              toolFilter === opt.v
+                ? 'bg-foreground text-background border-foreground'
+                : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <div className="relative ml-auto w-full sm:w-64">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, email, company..."
+            className="pl-9"
+            data-testid="ai-leads-search"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="text-center py-16">
+          <Loader2 className="w-8 h-8 animate-spin text-[#2A7AFE] mx-auto" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-2xl">
+          {items.length === 0 ? 'No leads yet. Promote /ai-lab to start capturing.' : 'No leads match your filter.'}
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">When</th>
+                  <th className="px-4 py-3 font-medium">Tool</th>
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Company</th>
+                  <th className="px-4 py-3 font-medium">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((it) => (
+                  <tr
+                    key={it.id}
+                    className="border-t border-border hover:bg-muted/30"
+                    data-testid={`ai-lead-row-${it.id}`}
+                  >
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {formatDate(it.created_at)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                          it.tool === 'deck_review'
+                            ? 'bg-[#2A7AFE]/10 text-[#2A7AFE] border-[#2A7AFE]/20'
+                            : 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                        }`}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {toolLabel(it.tool)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-foreground">{it.name || '-'}</td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={`mailto:${it.email}`}
+                        className="text-[#2A7AFE] hover:underline inline-flex items-center gap-1"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        {it.email}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{it.company || '-'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {it.tool === 'deck_review' ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-foreground">
+                            {it.deck_filename || 'deck.pdf'}
+                          </span>
+                          {typeof it.overall_score === 'number' && (
+                            <span className="text-xs">
+                              Score: <span className="font-semibold text-foreground">{it.overall_score}</span>/100
+                              {it.verdict && (
+                                <span className="ml-2 italic">"{it.verdict}"</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-foreground">{it.project_name || '-'}</span>
+                          <span className="text-xs inline-flex items-center gap-1.5">
+                            {it.primary && (
+                              <span
+                                className="inline-block w-3 h-3 rounded-full border border-border"
+                                style={{ background: it.primary }}
+                                title={it.primary}
+                              />
+                            )}
+                            <span>{it.primary || ''}</span>
+                            {it.co_branded && (
+                              <span className="ml-1 px-1.5 py-0.5 rounded bg-muted text-[10px] font-semibold uppercase tracking-wider">
+                                Co-branded
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 const CaseStudiesManager = ({ token }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1662,6 +1909,18 @@ const Dashboard = ({ token, onLogout }) => {
             <Briefcase className="w-4 h-4 inline mr-2" />
             Case Studies
           </button>
+          <button
+            data-testid="admin-tab-ai-lab"
+            onClick={() => setTab('ai-lab')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === 'ai-lab'
+                ? 'border-[#2A7AFE] text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 inline mr-2" />
+            AI Lab Leads
+          </button>
         </div>
 
         {tab === 'templates' ? (
@@ -1670,6 +1929,8 @@ const Dashboard = ({ token, onLogout }) => {
           <BlogManager token={token} />
         ) : tab === 'case-studies' ? (
           <CaseStudiesManager token={token} />
+        ) : tab === 'ai-lab' ? (
+          <AiLabLeadsManager token={token} />
         ) : (
         <div className="space-y-6">
         {/* Stats */}
