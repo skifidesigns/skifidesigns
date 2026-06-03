@@ -5,7 +5,7 @@ import { HexColorPicker } from 'react-colorful';
 import { toast } from 'sonner';
 import {
   UploadCloud, ImageIcon, Loader2, ArrowLeft, Layers, Plus, X, Download, ChevronRight,
-  Sun, Moon,
+  Sun, Moon, Pipette,
 } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -58,11 +58,27 @@ const LogoSlot = ({ logo, onPick, onRemove, label, testid }) => {
 const ColorChip = ({ label, value, onChange, testid }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
+
   useEffect(() => {
     const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
+
+  const pickFromScreen = async () => {
+    if (!hasEyeDropper) return;
+    try {
+      // Native browser API - samples any pixel on the page (including the logo
+      // preview above), no extra deps. Chrome/Edge/Opera; gracefully hidden on
+      // browsers that don't support it.
+      // eslint-disable-next-line no-undef
+      const ed = new EyeDropper();
+      const { sRGBHex } = await ed.open();
+      onChange(sRGBHex);
+    } catch (_) { /* user pressed Esc - no-op */ }
+  };
+
   return (
     <div className="relative" ref={ref} data-testid={testid}>
       <button
@@ -74,11 +90,43 @@ const ColorChip = ({ label, value, onChange, testid }) => {
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
           <div className="text-sm font-mono tabular-nums text-foreground">{value}</div>
         </div>
+        {hasEyeDropper && (
+          <span
+            role="button"
+            tabIndex={0}
+            data-testid={`${testid}-eyedropper-quick`}
+            onClick={(e) => { e.stopPropagation(); pickFromScreen(); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickFromScreen(); } }}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Pick a color from the screen"
+          >
+            <Pipette className="w-4 h-4" />
+          </span>
+        )}
       </button>
       {open && (
         <div className="absolute z-30 mt-2 p-3 bg-card border border-border rounded-xl shadow-xl">
           <HexColorPicker color={value} onChange={onChange} />
-          <Input value={value} onChange={(e) => onChange(e.target.value)} className="mt-2 font-mono" />
+          <div className="flex items-center gap-2 mt-2">
+            <Input value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 font-mono" />
+            {hasEyeDropper && (
+              <button
+                type="button"
+                onClick={pickFromScreen}
+                data-testid={`${testid}-eyedropper`}
+                className="inline-flex items-center gap-1.5 px-3 h-10 rounded-md border border-border hover:border-foreground bg-background hover:bg-muted text-sm font-medium transition-colors"
+                title="Sample a color from anywhere on the page"
+              >
+                <Pipette className="w-4 h-4" />
+                Pick
+              </button>
+            )}
+          </div>
+          {hasEyeDropper && (
+            <p className="text-[10px] text-muted-foreground mt-2 text-center">
+              Tip: click "Pick" then click any pixel - even your logo above.
+            </p>
+          )}
         </div>
       )}
     </div>
