@@ -260,7 +260,7 @@ def _set_solid_fill(shape, hex_color: str) -> None:
 
 
 def _add_text(slide, *, left, top, width, height, text, color="#0A0A0A",
-              size=18, bold=False, font="Outfit", align=None):
+              size=18, bold=False, font="Inter", align=None):
     from pptx.enum.text import PP_ALIGN
     tb = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
     tf = tb.text_frame
@@ -358,34 +358,34 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
     add_logos(s1)
     add_accent_strip(s1, primary, x=0.7, y=2.6, w=1.4, h=0.08)
     _add_text(s1, left=0.7, top=2.8, width=11, height=1.4,
-              text=project_name, color=text_on_hero, size=60, bold=True, font="Nohemi")
+              text=project_name, color=text_on_hero, size=60, bold=True, font="Inter")
     _add_text(s1, left=0.7, top=4.3, width=11, height=0.6,
-              text="Tagline goes here", color=text_on_hero, size=22, font="Outfit")
+              text="Tagline goes here", color=text_on_hero, size=22, font="Inter")
     _add_text(s1, left=0.7, top=6.6, width=8, height=0.4,
-              text="Presented by — Date", color=text_on_hero, size=12, font="Outfit")
+              text="Presented by — Date", color=text_on_hero, size=12, font="Inter")
 
     # ---- 2. Agenda
     s2 = prs.slides.add_slide(blank_layout)
     add_background(s2, inner_bg)
     add_logos(s2)
     _add_text(s2, left=0.7, top=0.6, width=8, height=0.5,
-              text="AGENDA", color=primary, size=14, bold=True, font="Outfit")
+              text="AGENDA", color=primary, size=14, bold=True, font="Inter")
     _add_text(s2, left=0.7, top=1.0, width=10, height=1.2,
-              text="What we'll cover", color=text_on_inner, size=44, bold=True, font="Nohemi")
+              text="What we'll cover", color=text_on_inner, size=44, bold=True, font="Inter")
     agenda = ["01  The opportunity", "02  Our solution", "03  Traction & roadmap",
               "04  Team", "05  The ask"]
     for i, item in enumerate(agenda):
         _add_text(s2, left=0.7, top=2.8 + i * 0.7, width=10, height=0.55,
-                  text=item, color=text_on_inner, size=22, font="Outfit")
+                  text=item, color=text_on_inner, size=22, font="Inter")
 
     # ---- 3. Three-column content
     s3 = prs.slides.add_slide(blank_layout)
     add_background(s3, inner_bg)
     add_logos(s3)
     _add_text(s3, left=0.7, top=0.6, width=8, height=0.5,
-              text="OUR SOLUTION", color=primary, size=14, bold=True, font="Outfit")
+              text="OUR SOLUTION", color=primary, size=14, bold=True, font="Inter")
     _add_text(s3, left=0.7, top=1.0, width=10, height=1.2,
-              text="Three pillars", color=text_on_inner, size=44, bold=True, font="Nohemi")
+              text="Three pillars", color=text_on_inner, size=44, bold=True, font="Inter")
     cols = [
         ("01", "Pillar one", "A short, punchy description of the first value pillar - what it does and why it matters."),
         ("02", "Pillar two", "A short, punchy description of the second value pillar - the unique edge you bring."),
@@ -397,20 +397,20 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
         _set_solid_fill(rect, primary)
         rect.line.fill.background()
         _add_text(s3, left=x, top=2.95, width=0.6, height=0.5, text=num,
-                  color="#FFFFFF", size=20, bold=True, font="Nohemi", align="center")
+                  color="#FFFFFF", size=20, bold=True, font="Inter", align="center")
         _add_text(s3, left=x, top=3.7, width=3.8, height=0.6, text=title,
-                  color=text_on_inner, size=24, bold=True, font="Nohemi")
+                  color=text_on_inner, size=24, bold=True, font="Inter")
         _add_text(s3, left=x, top=4.4, width=3.8, height=2.5, text=desc,
-                  color="#555555", size=14, font="Outfit")
+                  color="#555555", size=14, font="Inter")
 
     # ---- 4. Data viz placeholder
     s4 = prs.slides.add_slide(blank_layout)
     add_background(s4, inner_bg)
     add_logos(s4)
     _add_text(s4, left=0.7, top=0.6, width=8, height=0.5,
-              text="TRACTION", color=primary, size=14, bold=True, font="Outfit")
+              text="TRACTION", color=primary, size=14, bold=True, font="Inter")
     _add_text(s4, left=0.7, top=1.0, width=10, height=1.2,
-              text="The numbers", color=text_on_inner, size=44, bold=True, font="Nohemi")
+              text="The numbers", color=text_on_inner, size=44, bold=True, font="Inter")
     metrics = [("12K+", "Active users"), ("$420K", "ARR"), ("4.8x", "YoY growth")]
     for i, (val, lbl) in enumerate(metrics):
         x = 0.7 + i * 4.2
@@ -418,9 +418,9 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
         _set_solid_fill(rect, "#FFFFFF")
         rect.line.color.rgb = RGBColor(*_hex_to_rgb("#ECEAE2"))
         _add_text(s4, left=x + 0.3, top=3.5, width=3.5, height=1.2, text=val,
-                  color=primary, size=48, bold=True, font="Nohemi")
+                  color=primary, size=48, bold=True, font="Inter")
         _add_text(s4, left=x + 0.3, top=4.9, width=3.5, height=0.6, text=lbl,
-                  color="#555555", size=16, font="Outfit")
+                  color="#555555", size=16, font="Inter")
 
     # ---- 5. Closing / Ask
     s5 = prs.slides.add_slide(blank_layout)
@@ -429,13 +429,13 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
     add_accent_strip(s5, primary, x=0.7, y=2.6, w=1.4, h=0.08)
     _add_text(s5, left=0.7, top=2.8, width=12, height=1.6,
               text="Let's build the future, together.", color=text_on_hero, size=52,
-              bold=True, font="Nohemi")
+              bold=True, font="Inter")
     _add_text(s5, left=0.7, top=5.0, width=11, height=0.7,
               text="hello@yourbrand.com  -  yourbrand.com",
-              color=text_on_hero, size=18, font="Outfit")
+              color=text_on_hero, size=18, font="Inter")
     _add_text(s5, left=0.7, top=6.6, width=10, height=0.4,
               text="Designed by SkiFi Designs - skifidesigns.com",
-              color=text_on_hero, size=11, font="Outfit")
+              color=text_on_hero, size=11, font="Inter")
 
     out = io.BytesIO()
     prs.save(out)
