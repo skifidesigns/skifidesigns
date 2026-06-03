@@ -23,7 +23,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from colorthief import ColorThief
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Cookie, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -34,7 +34,6 @@ from emergentintegrations.llm.chat import (
     LlmChat,
     UserMessage,
 )
-
 logger = logging.getLogger(__name__)
 
 ai_lab_router = APIRouter(prefix="/ai-lab", tags=["ai-lab"])
@@ -52,6 +51,19 @@ DEFAULT_TEXT = "#0A0A0A"
 DECK_REVIEW_PROMPT = """You are SkiFi's AI deck reviewer, trained on what investors judge and on a studio that has shipped 2,700+ investor decks. Review the attached pitch deck. Respond with ONLY valid JSON, no markdown, no preamble, exactly this shape:
 {"overall":<0-100 integer>,"verdict":"<=12 word investor-readiness verdict","dimensions":[{"name":"Narrative & Flow","score":<0-100>,"note":"<=16 words"},{"name":"Problem & Solution","score":0,"note":""},{"name":"Market Opportunity","score":0,"note":""},{"name":"Business Model","score":0,"note":""},{"name":"Traction & Metrics","score":0,"note":""},{"name":"Team & Credibility","score":0,"note":""},{"name":"Visual Design","score":0,"note":""},{"name":"The Ask","score":0,"note":""}],"priorities":["<=14 words","<=14 words","<=14 words"]}
 Keep all 8 dimensions in that exact order. Be honest and specific."""
+
+
+# ===================== Auth (mandatory Google sign-in) =====================
+async def _require_signed_in_user(session_token: Optional[str]) -> dict:
+    """Both AI Lab tools require Google sign-in. Returns the user dict or 401s."""
+    from server import _get_user_from_token  # lazy to avoid circular imports
+    user = await _get_user_from_token(session_token)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Please sign in with Google to use this free tool.",
+        )
+    return user
 
 
 # ===================== Lead capture =====================
@@ -104,12 +116,14 @@ def _parse_review_json(raw: str) -> dict:
 @ai_lab_router.post("/deck-review")
 async def deck_review(
     request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
     company: str = Form(""),
     pdf: UploadFile = File(...),
+    session_token: Optional[str] = Cookie(None),
 ):
     from server import db  # local import to avoid circular dep
+    user = await _require_signed_in_user(session_token)
+    name = user.get("name") or user.get("email", "").split("@")[0]
+    email = user.get("email", "")
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="LLM key not configured")
     if pdf.content_type not in ("application/pdf", "application/x-pdf"):
@@ -267,38 +281,69 @@ def _add_text(slide, *, left, top, width, height, text, color="#0A0A0A",
 
 def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
                 primary: str, dark: str, light: str,
-                project_name: str = "Your Brand") -> bytes:
-    """Builds a 5-slide branded template:
-        1. Title slide (dark bg + brand-tinted accent)
+                project_name: str = "Your Brand",
+                theme: str = "dark") -> bytes:
+    """Builds a 5-slide branded template in either DARK or LIGHT theme.
+
+    Slide list (same in both themes):
+        1. Title slide (theme-colored bg + brand accent)
         2. Agenda
         3. Content (3-column)
         4. Data viz placeholder
         5. Closing / The Ask
+
+    Theme behaviour:
+        - dark  : title + closing on `dark`,  inner slides (2-4) on `light`
+        - light : title + closing on `light`, inner slides (2-4) on `light`,
+                  accents/headlines stay branded; primary stays brand-bright.
     """
     prs = Presentation()
-    prs.slide_width = Inches(13.333)   # 16:9 widescreen
-    prs.slide_height = Inches(7.5)
+    SLIDE_W = 13.333  # inches (16:9 widescreen)
+    SLIDE_H = 7.5
+    prs.slide_width = Inches(SLIDE_W)
+    prs.slide_height = Inches(SLIDE_H)
 
     blank_layout = prs.slide_layouts[6]
-    text_on_dark = "#FFFFFF" if _luminance(_hex_to_rgb(dark)) < 0.5 else "#0A0A0A"
-    text_on_light = "#0A0A0A" if _luminance(_hex_to_rgb(light)) > 0.6 else "#FFFFFF"
 
-    def add_logos(slide, on_dark: bool, x=11.4, y=0.35, w=1.5):
-        """Top-right corner logo placement (single or co-branded pair)."""
-        cur_x = x
-        for lb in [logo1_bytes, logo2_bytes]:
-            if not lb:
-                continue
+    is_dark = (theme or "dark").lower() == "dark"
+    # Title/closing background tone toggles by theme. Inner content always on
+    # the warm-light surface for readability — even in dark theme decks.
+    hero_bg = dark if is_dark else light
+    text_on_hero = "#FFFFFF" if _luminance(_hex_to_rgb(hero_bg)) < 0.5 else "#0A0A0A"
+    inner_bg = light  # consistent inner surface
+    text_on_inner = "#0A0A0A" if _luminance(_hex_to_rgb(inner_bg)) > 0.6 else "#FFFFFF"
+
+    # ---------- Logo placement (top-right, never overflows the slide) ----------
+    LOGO_W = 1.3
+    LOGO_GAP = 0.18
+    LOGO_TOP = 0.35
+    LOGO_RIGHT_PAD = 0.5
+
+    def add_logos(slide):
+        """Top-right logos, right-aligned so a single OR a pair always
+        sits inside the slide regardless of count."""
+        logos = [b for b in (logo1_bytes, logo2_bytes) if b]
+        if not logos:
+            return
+        n = len(logos)
+        total_w = n * LOGO_W + (n - 1) * LOGO_GAP
+        start_x = SLIDE_W - LOGO_RIGHT_PAD - total_w
+        # Hard clamp so a wide logo never bleeds past the left margin
+        if start_x < 0.4:
+            start_x = 0.4
+        cur_x = start_x
+        for lb in logos:
             try:
-                slide.shapes.add_picture(io.BytesIO(lb), Inches(cur_x), Inches(y),
-                                         width=Inches(w))
-                cur_x += w + 0.15
+                slide.shapes.add_picture(
+                    io.BytesIO(lb), Inches(cur_x), Inches(LOGO_TOP),
+                    width=Inches(LOGO_W),
+                )
             except Exception:
                 pass
+            cur_x += LOGO_W + LOGO_GAP
 
     def add_background(slide, hex_color):
-        bg = slide.background
-        fill = bg.fill
+        fill = slide.background.fill
         fill.solid()
         fill.fore_color.rgb = RGBColor(*_hex_to_rgb(hex_color))
 
@@ -309,38 +354,38 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
 
     # ---- 1. Title slide
     s1 = prs.slides.add_slide(blank_layout)
-    add_background(s1, dark)
-    add_logos(s1, on_dark=True)
+    add_background(s1, hero_bg)
+    add_logos(s1)
     add_accent_strip(s1, primary, x=0.7, y=2.6, w=1.4, h=0.08)
     _add_text(s1, left=0.7, top=2.8, width=11, height=1.4,
-              text=project_name, color=text_on_dark, size=60, bold=True, font="Nohemi")
+              text=project_name, color=text_on_hero, size=60, bold=True, font="Nohemi")
     _add_text(s1, left=0.7, top=4.3, width=11, height=0.6,
-              text="Tagline goes here", color=text_on_dark, size=22, font="Outfit")
+              text="Tagline goes here", color=text_on_hero, size=22, font="Outfit")
     _add_text(s1, left=0.7, top=6.6, width=8, height=0.4,
-              text="Presented by — Date", color=text_on_dark, size=12, font="Outfit")
+              text="Presented by — Date", color=text_on_hero, size=12, font="Outfit")
 
     # ---- 2. Agenda
     s2 = prs.slides.add_slide(blank_layout)
-    add_background(s2, light)
-    add_logos(s2, on_dark=False)
+    add_background(s2, inner_bg)
+    add_logos(s2)
     _add_text(s2, left=0.7, top=0.6, width=8, height=0.5,
               text="AGENDA", color=primary, size=14, bold=True, font="Outfit")
     _add_text(s2, left=0.7, top=1.0, width=10, height=1.2,
-              text="What we'll cover", color=text_on_light, size=44, bold=True, font="Nohemi")
+              text="What we'll cover", color=text_on_inner, size=44, bold=True, font="Nohemi")
     agenda = ["01  The opportunity", "02  Our solution", "03  Traction & roadmap",
               "04  Team", "05  The ask"]
     for i, item in enumerate(agenda):
         _add_text(s2, left=0.7, top=2.8 + i * 0.7, width=10, height=0.55,
-                  text=item, color=text_on_light, size=22, font="Outfit")
+                  text=item, color=text_on_inner, size=22, font="Outfit")
 
     # ---- 3. Three-column content
     s3 = prs.slides.add_slide(blank_layout)
-    add_background(s3, light)
-    add_logos(s3, on_dark=False)
+    add_background(s3, inner_bg)
+    add_logos(s3)
     _add_text(s3, left=0.7, top=0.6, width=8, height=0.5,
               text="OUR SOLUTION", color=primary, size=14, bold=True, font="Outfit")
     _add_text(s3, left=0.7, top=1.0, width=10, height=1.2,
-              text="Three pillars", color=text_on_light, size=44, bold=True, font="Nohemi")
+              text="Three pillars", color=text_on_inner, size=44, bold=True, font="Nohemi")
     cols = [
         ("01", "Pillar one", "A short, punchy description of the first value pillar - what it does and why it matters."),
         ("02", "Pillar two", "A short, punchy description of the second value pillar - the unique edge you bring."),
@@ -348,26 +393,24 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
     ]
     for i, (num, title, desc) in enumerate(cols):
         x = 0.7 + i * 4.2
-        # Number rect
         rect = s3.shapes.add_shape(1, Inches(x), Inches(2.9), Inches(0.6), Inches(0.6))
         _set_solid_fill(rect, primary)
         rect.line.fill.background()
         _add_text(s3, left=x, top=2.95, width=0.6, height=0.5, text=num,
                   color="#FFFFFF", size=20, bold=True, font="Nohemi", align="center")
         _add_text(s3, left=x, top=3.7, width=3.8, height=0.6, text=title,
-                  color=text_on_light, size=24, bold=True, font="Nohemi")
+                  color=text_on_inner, size=24, bold=True, font="Nohemi")
         _add_text(s3, left=x, top=4.4, width=3.8, height=2.5, text=desc,
                   color="#555555", size=14, font="Outfit")
 
     # ---- 4. Data viz placeholder
     s4 = prs.slides.add_slide(blank_layout)
-    add_background(s4, light)
-    add_logos(s4, on_dark=False)
+    add_background(s4, inner_bg)
+    add_logos(s4)
     _add_text(s4, left=0.7, top=0.6, width=8, height=0.5,
               text="TRACTION", color=primary, size=14, bold=True, font="Outfit")
     _add_text(s4, left=0.7, top=1.0, width=10, height=1.2,
-              text="The numbers", color=text_on_light, size=44, bold=True, font="Nohemi")
-    # Three metric blocks
+              text="The numbers", color=text_on_inner, size=44, bold=True, font="Nohemi")
     metrics = [("12K+", "Active users"), ("$420K", "ARR"), ("4.8x", "YoY growth")]
     for i, (val, lbl) in enumerate(metrics):
         x = 0.7 + i * 4.2
@@ -381,18 +424,18 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
 
     # ---- 5. Closing / Ask
     s5 = prs.slides.add_slide(blank_layout)
-    add_background(s5, dark)
-    add_logos(s5, on_dark=True)
+    add_background(s5, hero_bg)
+    add_logos(s5)
     add_accent_strip(s5, primary, x=0.7, y=2.6, w=1.4, h=0.08)
     _add_text(s5, left=0.7, top=2.8, width=12, height=1.6,
-              text="Let's build the future, together.", color=text_on_dark, size=52,
+              text="Let's build the future, together.", color=text_on_hero, size=52,
               bold=True, font="Nohemi")
     _add_text(s5, left=0.7, top=5.0, width=11, height=0.7,
               text="hello@yourbrand.com  -  yourbrand.com",
-              color=text_on_dark, size=18, font="Outfit")
+              color=text_on_hero, size=18, font="Outfit")
     _add_text(s5, left=0.7, top=6.6, width=10, height=0.4,
               text="Designed by SkiFi Designs - skifidesigns.com",
-              color=text_on_dark, size=11, font="Outfit")
+              color=text_on_hero, size=11, font="Outfit")
 
     out = io.BytesIO()
     prs.save(out)
@@ -402,17 +445,23 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
 @ai_lab_router.post("/template/generate")
 async def generate_template(
     request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
     company: str = Form(""),
     project_name: str = Form("Your Brand"),
     primary: str = Form(DEFAULT_PRIMARY),
     dark: str = Form(DEFAULT_DARK),
     light: str = Form(DEFAULT_LIGHT),
+    theme: str = Form("dark"),
     logo1: UploadFile = File(...),
     logo2: Optional[UploadFile] = File(None),
+    session_token: Optional[str] = Cookie(None),
 ):
     from server import db
+    user = await _require_signed_in_user(session_token)
+    name = user.get("name") or user.get("email", "").split("@")[0]
+    email = user.get("email", "")
+    theme_norm = theme.lower().strip() if theme else "dark"
+    if theme_norm not in ("dark", "light"):
+        theme_norm = "dark"
     await _enforce_daily_limit(db, tool="template_generator", email=email,
                                 cap=TEMPLATE_GEN_DAILY_LIMIT)
 
@@ -437,12 +486,13 @@ async def generate_template(
         logo2_bytes=_to_png(logo2_bytes) if logo2_bytes else None,
         primary=primary, dark=dark, light=light,
         project_name=project_name,
+        theme=theme_norm,
     )
 
     await _record_lead(db, tool="template_generator", name=name, email=email,
                        company=company or None, request=request,
                        extra={"project_name": project_name, "primary": primary,
-                              "dark": dark, "light": light,
+                              "dark": dark, "light": light, "theme": theme_norm,
                               "co_branded": logo2_bytes is not None})
 
     safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", project_name)[:40] or "SkiFi-Template"
@@ -479,7 +529,7 @@ def register_admin_routes(api_router, require_admin):
         writer = csv.DictWriter(buf, fieldnames=[
             "created_at", "tool", "name", "email", "company", "overall_score",
             "verdict", "deck_filename", "project_name", "primary", "dark", "light",
-            "co_branded", "source_ip",
+            "theme", "co_branded", "source_ip",
         ], extrasaction="ignore")
         writer.writeheader()
         for it in items:

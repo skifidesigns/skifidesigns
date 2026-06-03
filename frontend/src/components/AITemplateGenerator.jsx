@@ -5,6 +5,7 @@ import { HexColorPicker } from 'react-colorful';
 import { toast } from 'sonner';
 import {
   UploadCloud, ImageIcon, Loader2, ArrowLeft, Layers, Plus, X, Download, ChevronRight,
+  Sun, Moon,
 } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -12,6 +13,7 @@ import { FloatingContact } from './FloatingContact';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useAuth } from '../context/AuthContext';
+import { AILabSignInGate } from './AILabSignInGate';
 import { trackEvent } from '../utils/analytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -84,7 +86,7 @@ const ColorChip = ({ label, value, onChange, testid }) => {
 };
 
 export const AITemplateGenerator = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const [logo1, setLogo1] = useState(null);
   const [logo2, setLogo2] = useState(null);
   const [coBranded, setCoBranded] = useState(false);
@@ -92,16 +94,11 @@ export const AITemplateGenerator = () => {
   const [primary, setPrimary] = useState('#2A7AFE');
   const [dark, setDark] = useState('#0A0F1E');
   const [light, setLight] = useState('#F5F4EE');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
   const [company, setCompany] = useState('');
   const [projectName, setProjectName] = useState('');
   const [extracting, setExtracting] = useState(false);
   const [generating, setGenerating] = useState(false);
-
-  useEffect(() => {
-    if (user) { setName(user.name || ''); setEmail(user.email || ''); }
-  }, [user]);
 
   // Auto-extract palette from logo1 whenever it changes
   useEffect(() => {
@@ -136,28 +133,29 @@ export const AITemplateGenerator = () => {
 
   const onGenerate = async () => {
     if (!logo1) return toast.error('Drop your primary logo first');
-    if (!name.trim() || !email.trim()) return toast.error('We need your name and email to send the file.');
     setGenerating(true);
-    trackEvent('ai_lab_template_started', { co_branded: coBranded && !!logo2 });
+    trackEvent('ai_lab_template_started', { co_branded: coBranded && !!logo2, theme });
     try {
       const fd = new FormData();
-      fd.append('name', name); fd.append('email', email); fd.append('company', company);
+      fd.append('company', company);
       fd.append('project_name', projectName || 'Your Brand');
       fd.append('primary', primary); fd.append('dark', dark); fd.append('light', light);
+      fd.append('theme', theme);
       fd.append('logo1', logo1);
       if (coBranded && logo2) fd.append('logo2', logo2);
 
       const res = await axios.post(`${API}/ai-lab/template/generate`, fd, {
         responseType: 'blob',
+        withCredentials: true,
         timeout: 60000,
       });
       const url = URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
       const fn = (projectName || 'YourBrand').replace(/[^A-Za-z0-9_-]+/g, '_');
-      a.href = url; a.download = `SkiFi-${fn}-Template.pptx`;
+      a.href = url; a.download = `SkiFi-${fn}-${theme === 'light' ? 'Light' : 'Dark'}-Template.pptx`;
       document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
-      trackEvent('ai_lab_template_completed', { co_branded: coBranded && !!logo2 });
+      trackEvent('ai_lab_template_completed', { co_branded: coBranded && !!logo2, theme });
       toast.success('Template downloaded - open it in PowerPoint or Keynote');
     } catch (err) {
       let detail = 'Generation failed - please try again';
@@ -191,6 +189,7 @@ export const AITemplateGenerator = () => {
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 space-y-8" data-testid="template-form">
+            <AILabSignInGate toolLabel="Logo → Branded Template">
             {/* Logos */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -208,6 +207,61 @@ export const AITemplateGenerator = () => {
                 {coBranded && (
                   <LogoSlot logo={logo2} onPick={(f) => { const v = validatePick(f); if (v) setLogo2(v); }} onRemove={() => setLogo2(null)} label="Partner logo" testid="logo-slot-2" />
                 )}
+              </div>
+            </div>
+
+            {/* Theme picker */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Template style</h3>
+              <div className="grid grid-cols-2 gap-3" data-testid="theme-picker">
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  data-testid="theme-dark"
+                  className={`group relative rounded-xl border-2 p-4 text-left transition-all ${
+                    theme === 'dark'
+                      ? 'border-[#2A7AFE] shadow-[0_0_0_4px_rgba(42,122,254,0.12)]'
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                >
+                  <div className="aspect-[16/9] rounded-md mb-3 relative overflow-hidden" style={{ background: dark }}>
+                    <div className="absolute bottom-2 left-2 right-8">
+                      <div className="h-0.5 w-6 mb-1.5 rounded" style={{ background: primary }} />
+                      <div className="h-2 w-3/4 mb-1 rounded bg-white/90" />
+                      <div className="h-1 w-1/2 rounded bg-white/40" />
+                    </div>
+                    <div className="absolute top-2 right-2 h-2 w-4 rounded-sm bg-white/30" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Moon className="w-4 h-4 text-foreground" />
+                    <div className="font-semibold text-sm text-foreground">Dark theme</div>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Bold investor-style title + closing</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  data-testid="theme-light"
+                  className={`group relative rounded-xl border-2 p-4 text-left transition-all ${
+                    theme === 'light'
+                      ? 'border-[#2A7AFE] shadow-[0_0_0_4px_rgba(42,122,254,0.12)]'
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                >
+                  <div className="aspect-[16/9] rounded-md mb-3 relative overflow-hidden border border-border" style={{ background: light }}>
+                    <div className="absolute bottom-2 left-2 right-8">
+                      <div className="h-0.5 w-6 mb-1.5 rounded" style={{ background: primary }} />
+                      <div className="h-2 w-3/4 mb-1 rounded bg-foreground/90" />
+                      <div className="h-1 w-1/2 rounded bg-foreground/40" />
+                    </div>
+                    <div className="absolute top-2 right-2 h-2 w-4 rounded-sm" style={{ background: 'rgba(0,0,0,0.15)' }} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sun className="w-4 h-4 text-foreground" />
+                    <div className="font-semibold text-sm text-foreground">Light theme</div>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Editorial / clean / minimal</div>
+                </button>
               </div>
             </div>
 
@@ -232,12 +286,25 @@ export const AITemplateGenerator = () => {
               )}
             </div>
 
-            {/* Lead capture */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input data-testid="tpl-input-project" placeholder="Project name (e.g. Acme Ventures)" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
-              <Input data-testid="tpl-input-company" placeholder="Company (optional)" value={company} onChange={(e) => setCompany(e.target.value)} />
-              <Input data-testid="tpl-input-name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-              <Input data-testid="tpl-input-email" type="email" placeholder="you@brand.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            {/* Lead capture - now only project name + company; identity comes from Google */}
+            <div>
+              <div className="flex flex-wrap items-center gap-3 mb-3" data-testid="tpl-signed-in-as">
+                {user?.picture ? (
+                  <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#2A7AFE] text-white text-xs font-semibold flex items-center justify-center">
+                    {(user?.name || user?.email || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-foreground">{user?.name || user?.email}</div>
+                  <div className="text-xs text-muted-foreground">{user?.email}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input data-testid="tpl-input-project" placeholder="Project name (e.g. Acme Ventures)" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
+                <Input data-testid="tpl-input-company" placeholder="Company (optional)" value={company} onChange={(e) => setCompany(e.target.value)} />
+              </div>
             </div>
 
             <Button
@@ -250,9 +317,9 @@ export const AITemplateGenerator = () => {
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              {user ? 'Signed in. ' : <button type="button" onClick={login} className="text-[#2A7AFE] hover:underline">Sign in with Google</button>}
-              {' '}5 editable slides: title, agenda, content, traction, closing.
+              5 editable slides: title, agenda, content, traction, closing.
             </p>
+            </AILabSignInGate>
           </div>
         </div>
       </main>

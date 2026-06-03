@@ -12,6 +12,7 @@ import { FloatingContact } from './FloatingContact';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useAuth } from '../context/AuthContext';
+import { AILabSignInGate } from './AILabSignInGate';
 import { trackEvent } from '../utils/analytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -80,7 +81,7 @@ const verdictBadge = (overall) => {
 };
 
 export const AIDeckReview = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -113,21 +114,20 @@ export const AIDeckReview = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) return toast.error('Upload your deck PDF first');
-    if (!name.trim() || !email.trim()) return toast.error('We need your name and email to send results.');
 
     setSubmitting(true);
     trackEvent('ai_lab_deck_review_started', { has_company: !!company });
     try {
       const fd = new FormData();
-      fd.append('name', name); fd.append('email', email); fd.append('company', company);
+      fd.append('company', company);
       fd.append('pdf', file);
       const { data } = await axios.post(`${API}/ai-lab/deck-review`, fd, {
         timeout: 90000,
+        withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setResult(data);
       trackEvent('ai_lab_deck_review_completed', { overall: data.overall });
-      // Smooth scroll to results
       setTimeout(() => document.getElementById('deck-results')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (err) {
       toast.error(err?.response?.data?.detail || 'Review failed - please try again');
@@ -164,6 +164,7 @@ export const AIDeckReview = () => {
           </div>
 
           {!result && (
+            <AILabSignInGate toolLabel="AI Pitch Deck Review">
             <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 sm:p-8 space-y-6" data-testid="deck-review-form">
               <div
                 className={`relative rounded-xl border-2 border-dashed transition-colors cursor-pointer ${
@@ -193,10 +194,25 @@ export const AIDeckReview = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Input data-testid="deck-input-name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-                <Input data-testid="deck-input-email" type="email" placeholder="you@startup.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <Input data-testid="deck-input-company" placeholder="Company (optional)" value={company} onChange={(e) => setCompany(e.target.value)} />
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 text-sm" data-testid="deck-signed-in-as">
+                  {user?.picture ? (
+                    <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-[#2A7AFE] text-white text-xs font-semibold flex items-center justify-center">
+                      {(name || email || 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span className="font-medium text-foreground">{name || email}</span>
+                  <span className="text-muted-foreground">&middot; {email}</span>
+                </div>
+                <Input
+                  data-testid="deck-input-company"
+                  placeholder="Company (optional)"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  className="flex-1 min-w-[200px]"
+                />
               </div>
 
               <Button
@@ -219,10 +235,10 @@ export const AIDeckReview = () => {
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                {user ? 'Signed in. ' : <button type="button" onClick={login} className="text-[#2A7AFE] hover:underline">Sign in with Google</button>}
-                {' '}Your deck is used only to run this review &mdash; not stored or shared.
+                Your deck is used only to run this review &mdash; not stored or shared.
               </p>
             </form>
+            </AILabSignInGate>
           )}
 
           {result && (
