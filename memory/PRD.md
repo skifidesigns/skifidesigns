@@ -39,6 +39,16 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-03 (AI Lab — free tools for founders)
+- **New lead-gen funnel at `/ai-lab`**. Two free tools that capture warm signals (active deck = active fundraise = ideal redesign client):
+  - **AI Pitch Deck Review** (`/ai-lab/deck-review`) — Gemini 2.5 Pro parses the uploaded PDF and returns an 8-dimension investor-readiness scorecard (Narrative & Flow, Problem & Solution, Market Opportunity, Business Model, Traction & Metrics, Team & Credibility, Visual Design, The Ask) + overall score, 12-word verdict, and top 3 priorities. Daily cap of 2 reviews/email.
+  - **Logo → Branded Template** (`/ai-lab/template-generator`) — extracts brand palette via `colorthief` + Pillow, lets the user override colors via `react-colorful` picker, supports an optional second logo for co-branded decks, and ships a real editable 5-slide `.pptx` built with `python-pptx` (Title / Agenda / 3-pillar Content / Data viz / Closing). Daily cap of 3 templates/email.
+- **Lead capture**: every successful run inserts a row in `ai_lab_leads` (name, email, company, tool, deck_filename, overall_score, verdict, project_name, primary/dark/light hex, co_branded flag, source_ip, created_at). Failed LLM calls do NOT burn the quota.
+- **Admin "AI Lab Leads" tab** (`/admin` → AI Lab Leads): stats grid (Total / Deck reviews / Templates generated), filter chips, search, table with mailto links + per-row context (deck filename + score for reviews, project name + primary color swatch + co-branded badge for template gens), one-click **CSV export** (`/api/admin/ai-lab/leads.csv`).
+- **Header nav**: added "AI Lab" link with **NEW** badge on both desktop and mobile.
+- **Backend**: new module `/app/backend/ai_lab.py` (491 lines). Endpoints: `POST /api/ai-lab/deck-review`, `POST /api/ai-lab/template/extract-palette`, `POST /api/ai-lab/template/generate`, `GET /api/admin/ai-lab/leads(.csv)`. New deps installed: `colorthief`, `python-pptx`, `react-colorful`.
+- **Verified end-to-end**: 11/11 pytest cases pass (palette happy/bad-mime/oversize, template happy, 3/day rate-limit 429, deck PDF validation, admin auth + list + filter + CSV). Frontend Playwright run confirmed Header → /ai-lab → tool cards → generator → real 35 KB .pptx download + admin tab with CSV export.
+
 ### 2026-06-01 (native Google OAuth migration)
 - **Migrated from Emergent-managed Google Auth to native Google OAuth 2.0** so the consent screen shows the SkiFi brand directly.
 - **Backend**: Added Authlib + Starlette `SessionMiddleware` (used only for transient OAuth state in a signed 10-min cookie; keeps the existing httpOnly `session_token` app cookie unchanged). New endpoints:
@@ -167,10 +177,16 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 - [ ] **P2** Email support@emergent.sh to remove "Made with Emergent" badge
 
 ## Roadmap
-- [ ] P2 — Split `AdminPanel.jsx` into sub-components (Orders, Templates, Blog)
-- [ ] P2 — Add SEO-friendly `/services/[slug]` landing pages (e.g., `/services/investor-pitch-deck-design`) — high SEO leverage
+- [ ] P1 — Move admin token from `localStorage` → `httpOnly` cookie + `/api/admin/me` session check (XSS hardening)
+- [ ] P1 — Meta Conversions API server-side (recover events lost to ad-blockers)
+- [ ] P2 — Trustpilot TrustBox widget embed on Hero/Pricing (after 5+ reviews land)
+- [ ] P2 — Template `gallery` field (multi-slide preview in TemplateModal, mirroring case studies)
+- [ ] P2 — Split `AdminPanel.jsx` (>2.1k lines) into Orders/Templates/Blog/CaseStudies/AiLabLeads sub-files
+- [ ] P2 — Split `server.py` (>2.5k lines) into isolated route modules
+- [ ] P2 — Add SEO-friendly `/services/[slug]` landing pages (e.g., `/services/investor-pitch-deck-design`)
 - [ ] P3 — Lead-magnet email opt-in on `/resources` and `/blog`
 - [ ] P3 — Author profile / multi-author support for blog
+- [ ] P3 — AI Lab Tool #3: "Slide Content Generator" (idea → slide-by-slide outline) — already teased on `/ai-lab` as Coming Soon
 
 ## 3rd-Party Integrations
 - **Stripe** — live keys; one-time + subscription
