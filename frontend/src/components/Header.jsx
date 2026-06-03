@@ -47,18 +47,17 @@ export const Header = () => {
     { label: 'Services', id: 'services', type: 'scroll' },
     { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
-    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
-    { label: 'FAQ', id: 'faq', type: 'scroll' }
+    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' }
   ];
   const mobileNavLinks = [
     { label: 'Services', id: 'services', type: 'scroll' },
     { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
-    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
+    { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
     { label: 'My Dashboard', path: '/dashboard', type: 'route' }
   ];
   const navLinks = desktopNavLinks;
@@ -110,7 +109,7 @@ export const Header = () => {
                 >
                   {link.label}
                   {link.badge && (
-                    <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white">
+                    <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white whitespace-nowrap leading-none">
                       {link.badge}
                     </span>
                   )}
@@ -233,7 +232,7 @@ export const Header = () => {
                   >
                     {link.label}
                     {link.badge && (
-                      <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white">
+                      <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#2A7AFE] text-white whitespace-nowrap leading-none">
                         {link.badge}
                       </span>
                     )}
