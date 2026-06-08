@@ -270,7 +270,7 @@ export const AIDeckReview = () => {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Top 3 priorities</h3>
                 <ol className="space-y-3">
                   {(result.priorities || []).map((p, i) => (
-                    <li key={i} className="flex gap-4 items-start">
+                    <li key={`${i}-${(p || '').slice(0, 20)}`} className="flex gap-4 items-start">
                       <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#2A7AFE] text-white font-semibold text-xs flex items-center justify-center">{i + 1}</span>
                       <span className="text-sm sm:text-base text-foreground leading-relaxed pt-0.5">{p}</span>
                     </li>
@@ -282,7 +282,7 @@ export const AIDeckReview = () => {
                 <h3 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
                   This is what AI sees in 60 seconds.
                 </h3>
-                <p className="text-white/70 mb-7 max-w-xl mx-auto">Imagine what our designers do with it. We've shipped 2,700+ investor decks &mdash; let's make yours one of them.</p>
+                <p className="text-white/70 mb-7 max-w-xl mx-auto">Imagine what our designers do with it. We&apos;ve shipped 2,700+ investor decks - let&apos;s make yours one of them.</p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <a href="/#pricing" className="inline-flex items-center gap-1.5 px-6 py-3 rounded-xl bg-[#2A7AFE] hover:bg-[#3B82F6] text-white font-semibold transition-colors">
                     Start a project <ArrowUpRight className="w-4 h-4" />

@@ -45,7 +45,9 @@ export const TemplateModal = ({ template, open, onClose }) => {
         setOwned(isOwned);
       } catch (err) {
         // non-fatal; user can still try the action
-        console.warn('[TemplateModal] ownership check failed:', err);
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[TemplateModal] ownership check failed:', err);
+        }
       } finally {
         setOwnershipChecking(false);
       }

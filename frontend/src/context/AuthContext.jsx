@@ -49,7 +49,9 @@ export const AuthProvider = ({ children }) => {
       await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
     } catch (err) {
       // logout endpoint best-effort; cookie clear is what matters
-      console.warn('[Auth] logout request failed (continuing):', err);
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[Auth] logout request failed (continuing):', err);
+      }
     }
     setUser(null);
   };
