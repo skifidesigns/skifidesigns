@@ -39,6 +39,20 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-06-08 (new pricing model: 3 tiers, replaces $15/slide + $999/mo)
+- **Pricing rewrite** across frontend + backend + Stripe + receipts:
+  - **Starter Deck $1,500** (one-time) - up to 20 slides, 5-7 day turnaround
+  - **Premium Deck $2,500** (one-time, MOST POPULAR) - up to 40 slides, unlimited revisions, 3-5 day turnaround
+  - **Monthly Retainer $3,000/mo** (up from $999) - 100 credits, 48hr priority, rollover up to 50
+- Wizard updated to 3-tier picker; new `one_time` checkout branch in `server.py` for the fixed-price tiers; legacy `per_slide` retained so historical orders + receipts still render correctly.
+- Receipt renderer now itemises each new tier with the right line description + meta.
+- **WhatsApp tertiary CTA** added under pricing for sub-20-slide custom projects.
+- **8 FAQs** updated (cost / rush / upgrade path / turnaround / redesign / tools / storytelling / startups).
+- **Layout polish**: responsive price font (`text-[2.75rem] sm:text-5xl xl:text-[3.5rem]`), `whitespace-nowrap` on price + unit + "MOST POPULAR" badge so nothing overflows at 1024-1366px.
+- All em-dashes (`—`) replaced with hyphens (`-`) in user-facing copy.
+- AI Lab template closing slide placeholder email updated `hello@yourbrand.com` → `contact@yourbrand.com`.
+- **End-to-end verified via live Stripe**: all 3 tiers create real `cs_live_…` sessions at the right amounts.
+
 ### 2026-06-03 (AI Lab — free tools for founders)
 - **New lead-gen funnel at `/ai-lab`**. Two free tools that capture warm signals (active deck = active fundraise = ideal redesign client):
   - **AI Pitch Deck Review** (`/ai-lab/deck-review`) — Gemini 2.5 Pro parses the uploaded PDF and returns an 8-dimension investor-readiness scorecard (Narrative & Flow, Problem & Solution, Market Opportunity, Business Model, Traction & Metrics, Team & Credibility, Visual Design, The Ask) + overall score, 12-word verdict, and top 3 priorities. Daily cap of 2 reviews/email.
