@@ -362,7 +362,7 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
     _add_text(s1, left=0.7, top=4.3, width=11, height=0.6,
               text="Tagline goes here", color=text_on_hero, size=22, font="Inter")
     _add_text(s1, left=0.7, top=6.6, width=8, height=0.4,
-              text="Presented by — Date", color=text_on_hero, size=12, font="Inter")
+              text="Presented by - Date", color=text_on_hero, size=12, font="Inter")
 
     # ---- 2. Agenda
     s2 = prs.slides.add_slide(blank_layout)
@@ -431,7 +431,7 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
               text="Let's build the future, together.", color=text_on_hero, size=52,
               bold=True, font="Inter")
     _add_text(s5, left=0.7, top=5.0, width=11, height=0.7,
-              text="hello@yourbrand.com  -  yourbrand.com",
+              text="contact@yourbrand.com  -  yourbrand.com",
               color=text_on_hero, size=18, font="Inter")
     _add_text(s5, left=0.7, top=6.6, width=10, height=0.4,
               text="Designed by SkiFi Designs - skifidesigns.com",

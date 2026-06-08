@@ -57,7 +57,7 @@ const pricingPlans = [
     features: [
       'Up to 100 slide credits per month',
       'Priority turnaround (48-hour standard)',
-      'Dedicated design team — same designers every time',
+      'Dedicated design team - same designers every time',
       'Brand presentation system built in month 1',
       'Slack / WhatsApp direct access',
       'Monthly strategy call included',
@@ -119,7 +119,7 @@ export const Pricing = () => {
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2A7AFE] text-white text-xs font-semibold px-4 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2A7AFE] text-white text-[11px] font-semibold tracking-wider px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap leading-none">
                     <Star className="w-3.5 h-3.5 fill-white" />
                     MOST POPULAR
                   </div>
@@ -131,13 +131,13 @@ export const Pricing = () => {
                   }`}>
                     {plan.name}
                   </p>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className={`text-5xl sm:text-6xl font-semibold tabular-nums ${
+                  <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1 mb-3">
+                    <span className={`text-[2.75rem] sm:text-5xl xl:text-[3.5rem] font-semibold tabular-nums leading-none whitespace-nowrap ${
                       isHighlighted ? 'text-[#2A7AFE]' : isLight ? 'text-gray-900' : 'text-white'
                     }`}>
                       {plan.price}
                     </span>
-                    <span className={`text-xs font-medium tracking-wider ${isLight ? 'text-gray-500' : 'text-white/50'}`}>
+                    <span className={`text-[11px] font-semibold tracking-wider whitespace-nowrap ${isLight ? 'text-gray-500' : 'text-white/55'}`}>
                       {plan.unit}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export const Pricing = () => {
         >
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-5">
             Not sure which plan fits? Book a free 15-minute call and we&apos;ll tell you exactly what
-            your presentation needs &mdash; no sales pitch, just honest advice.
+            your presentation needs - no sales pitch, just honest advice.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <button

@@ -118,7 +118,7 @@ export const faqs = [
   {
     id: 5,
     question: "Do you redesign existing presentations?",
-    answer: "Yes. We can redesign old decks into modern, professional presentations — just upload the existing file during checkout and we'll take it from there."
+    answer: "Yes. We can redesign old decks into modern, professional presentations - just upload the existing file during checkout and we'll take it from there."
   },
   {
     id: 6,
@@ -133,7 +133,7 @@ export const faqs = [
   {
     id: 8,
     question: "Do you work with startups?",
-    answer: "Yes — startups and founders are one of our core focuses. We've shipped 2,700+ investor decks across 30 countries."
+    answer: "Yes - startups and founders are one of our core focuses. We've shipped 2,700+ investor decks across 30 countries."
   }
 ];
 

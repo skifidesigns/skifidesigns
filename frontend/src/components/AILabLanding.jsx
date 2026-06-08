@@ -33,7 +33,7 @@ const TOOLS = [
     href: '#',
     label: 'Slide Content Generator',
     tagline: 'From idea to outline',
-    description: 'Type your business idea — get a slide-by-slide content outline that turns into a deck.',
+    description: 'Type your business idea - get a slide-by-slide content outline that turns into a deck.',
     icon: Sparkles,
     cta: 'Coming soon',
     active: false,
