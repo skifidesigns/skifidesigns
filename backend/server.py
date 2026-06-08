@@ -54,17 +54,35 @@ stripe_sdk.api_key = STRIPE_API_KEY
 
 # Fixed pricing packages
 PACKAGES = {
-    "per_slide": {
-        "name": "Per Slide",
-        "price": 15.00,
+    # ===== Active tiers (Feb 2026 pricing) =====
+    "starter_deck": {
+        "name": "Starter Deck",
+        "price": 1500.00,
         "currency": "usd",
-        "type": "per_unit",
+        "type": "one_time",
+        "description": "Up to 20 custom slides - 5-7 business day turnaround",
+    },
+    "premium_deck": {
+        "name": "Premium Deck",
+        "price": 2500.00,
+        "currency": "usd",
+        "type": "one_time",
+        "description": "Up to 40 custom slides - 3-5 business day turnaround",
     },
     "monthly_retainer": {
         "name": "Monthly Retainer",
-        "price": 999.00,
+        "price": 3000.00,
         "currency": "usd",
         "type": "subscription",
+        "description": "100 slide credits / month - 48hr priority turnaround",
+    },
+    # ===== Legacy (kept for receipt/resume compatibility on historical orders) =====
+    "per_slide": {
+        "name": "Per Slide (legacy)",
+        "price": 15.00,
+        "currency": "usd",
+        "type": "per_unit",
+        "legacy": True,
     },
 }
 
@@ -247,8 +265,31 @@ async def create_onboarding_checkout(payload: OnboardingRequest, http_request: R
         session_url = session.url
         session_id = session.session_id
         mode = "payment"   # treated as one-time; manual renewal until price_id is wired
+    elif pkg["type"] == "one_time":
+        # Fixed-price one-time tiers (Starter Deck, Premium Deck)
+        quantity = 1
+        total_amount = float(pkg["price"])
+
+        host_url = str(http_request.base_url).rstrip("/")
+        webhook_url = f"{host_url}/api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        checkout_request = CheckoutSessionRequest(
+            amount=total_amount,
+            currency=pkg["currency"],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata=metadata,
+        )
+        try:
+            session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+        except Exception as e:
+            logger.exception("Stripe checkout creation failed")
+            raise HTTPException(status_code=500, detail=f"Payment provider error: {str(e)}")
+        session_url = session.url
+        session_id = session.session_id
+        mode = "payment"
     else:
-        # Per-slide one-time via emergentintegrations
+        # Legacy per-slide one-time via emergentintegrations
         if not payload.slide_count or payload.slide_count < 1:
             raise HTTPException(status_code=400, detail="Slide count required for per-slide package")
         quantity = payload.slide_count
@@ -1727,18 +1768,33 @@ def _render_receipt_html(tx: dict) -> str:
     sid_clean = "".join(c for c in session_id if c.isalnum())
     invoice_no = f"SKF-{sid_clean[-10:].upper()}" if sid_clean else "SKF-INVOICE"
 
-    if package_id == "per_slide":
-        line_desc = "Pitch Deck / Presentation Design - Per Slide"
+    if package_id == "starter_deck":
+        line_desc = "Starter Deck - Up to 20 custom slides"
+        qty = 1
+        unit_price = float(PACKAGES["starter_deck"]["price"])
+        line_total = unit_price
+        item_meta = "1 project &times; $1,500.00"
+    elif package_id == "premium_deck":
+        line_desc = "Premium Deck - Up to 40 custom slides + unlimited revisions"
+        qty = 1
+        unit_price = float(PACKAGES["premium_deck"]["price"])
+        line_total = unit_price
+        item_meta = "1 project &times; $2,500.00"
+    elif package_id == "per_slide":
+        line_desc = "Pitch Deck / Presentation Design - Per Slide (legacy)"
         qty = slide_count if slide_count > 0 else max(1, round(amount / 15))
         unit_price = 15.00
         line_total = round(unit_price * qty, 2)
         item_meta = f"{qty} slide{'s' if qty != 1 else ''} &times; ${unit_price:.2f}"
     elif package_id == "monthly_retainer":
-        line_desc = "Monthly Design Retainer (up to 100 slide credits)"
+        retainer_price = float(PACKAGES["monthly_retainer"]["price"])
+        # Honour the stored amount on receipts for historical $999 orders so the
+        # legacy retainer receipts stay accurate after the 2026 price update.
+        unit_price = amount if amount and amount > 0 else retainer_price
+        line_desc = "Monthly Design Retainer (100 slide credits, 48hr priority)"
         qty = 1
-        unit_price = 999.00
-        line_total = 999.00
-        item_meta = "1 month &times; $999.00"
+        line_total = unit_price
+        item_meta = f"1 month &times; ${unit_price:,.2f}"
     elif package_id == "template":
         # Digital template / presentation asset purchase
         tpl_title = (tx.get("template_title") or "Premium Template").strip()

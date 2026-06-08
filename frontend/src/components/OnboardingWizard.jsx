@@ -39,7 +39,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
-    package_id: initialPlan || 'per_slide',
+    package_id: initialPlan || 'starter_deck',
     slide_count: 10,
     full_name: '',
     email: '',
@@ -109,13 +109,36 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
   };
 
   const totalSteps = 4;
-  const isPerSlide = formData.package_id === 'per_slide';
+  const PLAN_META = {
+    starter_deck: {
+      name: 'Starter Deck',
+      price: 1500,
+      priceLabel: '$1,500',
+      unit: 'one-time',
+      summary: 'Up to 20 custom slides · 5-7 business day turnaround',
+    },
+    premium_deck: {
+      name: 'Premium Deck',
+      price: 2500,
+      priceLabel: '$2,500',
+      unit: 'one-time',
+      summary: 'Up to 40 slides · unlimited revisions · 3-5 day turnaround',
+    },
+    monthly_retainer: {
+      name: 'Monthly Retainer',
+      price: 3000,
+      priceLabel: '$3,000',
+      unit: '/ month',
+      summary: '100 slide credits · 48hr priority · dedicated team',
+    },
+  };
+  const planMeta = PLAN_META[formData.package_id] || PLAN_META.starter_deck;
+  const isPerSlide = false; // per-slide legacy is no longer offered in the wizard
 
   // Validation per step
   const canProceed = () => {
     if (step === 1) {
-      if (isPerSlide && (!formData.slide_count || formData.slide_count < 1)) return false;
-      return true;
+      return !!PLAN_META[formData.package_id];
     }
     if (step === 2) {
       return (
@@ -129,10 +152,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
     return true;
   };
 
-  const computedTotal = () => {
-    if (isPerSlide) return 15 * (formData.slide_count || 0);
-    return 999;
-  };
+  const computedTotal = () => planMeta.price;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -209,58 +229,44 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                 <Label className="text-foreground mb-3 block text-base font-medium">
                   Selected plan
                 </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {['per_slide', 'monthly_retainer'].map((pid) => (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {Object.entries(PLAN_META).map(([pid, meta]) => (
                     <button
                       key={pid}
                       data-testid={`wizard-plan-${pid}`}
                       onClick={() => updateField('package_id', pid)}
                       className={`p-4 rounded-xl border text-left transition-all ${
                         formData.package_id === pid
-                          ? 'border-[#2A7AFE] bg-[#2A7AFE]/10'
+                          ? 'border-[#2A7AFE] bg-[#2A7AFE]/10 shadow-[0_0_0_3px_rgba(42,122,254,0.08)]'
                           : 'border-border hover:border-[#2A7AFE]/50'
                       }`}
                     >
-                      <p className="text-sm font-semibold text-foreground">
-                        {pid === 'per_slide' ? 'Per Slide' : 'Monthly Retainer'}
+                      <p className="text-sm font-semibold text-foreground">{meta.name}</p>
+                      <p className="text-xs text-[#2A7AFE] font-semibold mt-1 tabular-nums">
+                        {meta.priceLabel} <span className="text-muted-foreground font-normal">{meta.unit}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {pid === 'per_slide' ? '$15 / slide' : '$999 / month'}
+                      <p className="text-[11px] text-muted-foreground mt-2 leading-snug">
+                        {meta.summary}
                       </p>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {isPerSlide && (
-                <div>
-                  <Label htmlFor="slide_count" className="text-foreground mb-2 block">
-                    Number of slides
-                  </Label>
-                  <Input
-                    id="slide_count"
-                    data-testid="wizard-slide-count"
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={formData.slide_count}
-                    onChange={(e) => updateField('slide_count', e.target.value)}
-                    className="bg-card border-border text-foreground"
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Estimated total: <span className="text-foreground font-semibold">${computedTotal()}</span>
+              <div className="p-4 bg-card border border-border rounded-xl">
+                <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="text-sm text-foreground font-medium">{planMeta.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{planMeta.summary}</p>
+                  </div>
+                  <p className="text-2xl font-semibold text-[#2A7AFE] tabular-nums whitespace-nowrap">
+                    {planMeta.priceLabel}
+                    <span className="text-xs text-muted-foreground font-normal ml-1">
+                      {planMeta.unit}
+                    </span>
                   </p>
                 </div>
-              )}
-
-              {!isPerSlide && (
-                <div className="p-4 bg-card border border-border rounded-xl">
-                  <p className="text-sm text-foreground font-medium">Monthly Retainer</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    $999 / month - up to 100 slide credits. Priority queue and consistent design system.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -421,15 +427,9 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Plan</span>
                     <span className="text-foreground font-medium">
-                      {isPerSlide ? 'Per Slide' : 'Monthly Retainer'}
+                      {planMeta.name}
                     </span>
                   </div>
-                  {isPerSlide && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Slides</span>
-                      <span className="text-foreground font-medium">{formData.slide_count} × $15</span>
-                    </div>
-                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Project type</span>
                     <span className="text-foreground font-medium">{formData.project_type}</span>
@@ -450,16 +450,18 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                   )}
                   <div className="pt-3 mt-3 border-t border-border flex justify-between items-baseline">
                     <span className="text-foreground font-semibold">Total</span>
-                    <span className="text-2xl font-semibold text-[#2A7AFE]">
-                      ${computedTotal()}
-                      <span className="text-sm text-muted-foreground ml-1">USD</span>
+                    <span className="text-2xl font-semibold text-[#2A7AFE] tabular-nums">
+                      {planMeta.priceLabel}
+                      <span className="text-sm text-muted-foreground ml-1">
+                        USD {planMeta.unit === '/ month' ? '/ mo' : ''}
+                      </span>
                     </span>
                   </div>
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                You'll be redirected to Stripe for secure checkout.
+                You&apos;ll be redirected to Stripe for secure checkout.
               </p>
             </div>
           )}

@@ -97,28 +97,43 @@ export const processSteps = [
 export const faqs = [
   {
     id: 1,
-    question: "How fast is your turnaround?",
-    answer: "Most projects are delivered within a few days depending on complexity and slide count."
+    question: "How much does a full pitch deck cost?",
+    answer: "Most investor pitch decks fall in the $1,500–$3,500 range depending on scope, number of slides, and turnaround time. The Starter Deck ($1,500) covers up to 20 slides; the Premium Deck ($2,500) covers up to 40 slides with unlimited revisions. Book a free call and we'll give you an exact quote within 24 hours."
   },
   {
     id: 2,
-    question: "Do you redesign existing presentations?",
-    answer: "Yes. We can redesign old decks into modern, professional presentations."
+    question: "Do you offer rush delivery?",
+    answer: "Yes. Rush delivery (48 hours) is available on Premium and Retainer plans. For Starter projects, rush delivery can be added for $200."
   },
   {
     id: 3,
-    question: "What tools do you use?",
-    answer: "PowerPoint, Google Slides, Keynote, Figma, and Adobe Creative Suite."
+    question: "Can I upgrade from a project to a retainer?",
+    answer: "Absolutely. Many clients start with a single project and move to a retainer once they see the results. We'll credit your first project cost toward your first month."
   },
   {
     id: 4,
-    question: "Can you help with storytelling/content?",
-    answer: "Absolutely. We help structure and improve messaging as well."
+    question: "How fast is your turnaround?",
+    answer: "Starter projects ship in 5–7 business days, Premium in 3–5 business days, and Retainer clients get 48-hour priority turnaround on standard slide work."
   },
   {
     id: 5,
+    question: "Do you redesign existing presentations?",
+    answer: "Yes. We can redesign old decks into modern, professional presentations — just upload the existing file during checkout and we'll take it from there."
+  },
+  {
+    id: 6,
+    question: "What tools do you use?",
+    answer: "PowerPoint, Google Slides, Keynote, Figma, and Adobe Creative Suite. You'll receive your final deck in PowerPoint and PDF as standard (Keynote is included with Premium)."
+  },
+  {
+    id: 7,
+    question: "Can you help with storytelling and content?",
+    answer: "Absolutely. We help structure narrative, sharpen messaging, and on the Premium tier we also write speaker notes for you."
+  },
+  {
+    id: 8,
     question: "Do you work with startups?",
-    answer: "Yes - startups and founders are one of our core focuses."
+    answer: "Yes — startups and founders are one of our core focuses. We've shipped 2,700+ investor decks across 30 countries."
   }
 ];
 
