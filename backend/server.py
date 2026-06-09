@@ -2803,6 +2803,18 @@ async def dynamic_sitemap():
         (f"{base}/services/pitch-deck-design", today, "0.9", "weekly"),
         (f"{base}/services/powerpoint-redesign", today, "0.9", "weekly"),
         (f"{base}/services/investor-pitch-deck-design", today, "0.9", "weekly"),
+        (f"{base}/services/sales-deck-design", today, "0.85", "weekly"),
+        (f"{base}/services/powerpoint-template-design", today, "0.85", "weekly"),
+        (f"{base}/services/google-slides-design", today, "0.85", "weekly"),
+        # Alternative / competitor-comparison pages (high-intent buyers)
+        (f"{base}/alternatives/gamma-ai", today, "0.85", "monthly"),
+        (f"{base}/alternatives/canva-presentations", today, "0.85", "monthly"),
+        (f"{base}/alternatives/beautiful-ai", today, "0.85", "monthly"),
+        # Local-SEO landing pages
+        (f"{base}/locations/new-york", today, "0.8", "monthly"),
+        (f"{base}/locations/san-francisco", today, "0.8", "monthly"),
+        (f"{base}/locations/london", today, "0.8", "monthly"),
+        (f"{base}/locations/dubai", today, "0.8", "monthly"),
         (f"{base}/privacy", today, "0.3", "yearly"),
         (f"{base}/terms", today, "0.3", "yearly"),
         (f"{base}/refund-policy", today, "0.3", "yearly"),

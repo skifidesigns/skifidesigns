@@ -32,6 +32,8 @@ import { AILabLanding } from "./components/AILabLanding";
 import { AIDeckReview } from "./components/AIDeckReview";
 import { AITemplateGenerator } from "./components/AITemplateGenerator";
 import { ServiceLanding } from "./components/ServiceLanding";
+import { AlternativeLanding } from "./components/AlternativeLanding";
+import { LocationLanding } from "./components/LocationLanding";
 import { trackPageview } from "./utils/analytics";
 
 const Home = () => {
@@ -108,6 +110,8 @@ const AppRouter = () => {
       <Route path="/ai-lab/deck-review" element={<AIDeckReview />} />
       <Route path="/ai-lab/template-generator" element={<AITemplateGenerator />} />
       <Route path="/services/:slug" element={<ServiceLanding />} />
+      <Route path="/alternatives/:slug" element={<AlternativeLanding />} />
+      <Route path="/locations/:slug" element={<LocationLanding />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />

@@ -39,7 +39,20 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
-### 2026-06-09 (SEO foundations: 4 service landing pages + AI-search readiness)
+### 2026-06-09b (SEO expansion: 14 total landing pages, AI-search ready)
+- **3 additional service pages** (extends the original 4): `/services/sales-deck-design`, `/services/powerpoint-template-design`, `/services/google-slides-design`
+- **3 alternatives / comparison pages** built on a new `AlternativeLanding.jsx`:
+  - `/alternatives/gamma-ai` — captures "gamma ai alternative" (#20 keyword in Fiverr data, Low comp)
+  - `/alternatives/canva-presentations` — captures "canva alternative" / "canva presentation alternative"
+  - `/alternatives/beautiful-ai` — captures "beautiful.ai alternative"
+  - Each: honest "where competitor shines" + 4-5 gap → SkiFi-delivers comparison rows + 4 service-specific FAQs with FAQPage JSON-LD
+- **4 location pages** built on a new `LocationLanding.jsx`:
+  - `/locations/new-york`, `/locations/san-francisco`, `/locations/london`, `/locations/dubai`
+  - Each: hero with city + region, time-zone fit explanation, 4 local-context bullets, 8 named local-ecosystem VCs, transparent pricing snapshot, Service + BreadcrumbList JSON-LD
+- **Sitemap**: 31 URLs total (up from ~17), all new pages at priority 0.8-0.9, weekly/monthly changefreq
+- **`/llms.txt`**: updated with all 14 service/alternative/location pages so AI assistants surface SkiFi for the exact keyword someone asks about
+
+### 2026-06-09a (SEO foundations: 4 service landing pages + AI-search readiness)
 - **4 new keyword-targeted service landing pages** (based on Fiverr conversion data):
   - `/services/powerpoint-design` — #1 keyword "powerpoint design" (High conv, High comp)
   - `/services/pitch-deck-design` — #10 keyword (High conv, Med comp - sweet spot)

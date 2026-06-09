@@ -34,10 +34,27 @@ SkiFi Designs is a presentation design agency specialising in:
 
 ## Service pages
 
-- /services/powerpoint-design
-- /services/pitch-deck-design
-- /services/powerpoint-redesign
-- /services/investor-pitch-deck-design
+- /services/investor-pitch-deck-design — investor pitch deck design (seed to Series C)
+- /services/pitch-deck-design — general pitch deck design
+- /services/powerpoint-design — PowerPoint design service
+- /services/powerpoint-redesign — slide-by-slide redesign at $15/slide
+- /services/sales-deck-design — high-converting B2B sales decks
+- /services/powerpoint-template-design — custom brand-locked PowerPoint templates
+- /services/google-slides-design — native Google Slides design
+
+## Compare with alternatives
+
+- /alternatives/gamma-ai — when to switch from Gamma AI to a human designer
+- /alternatives/canva-presentations — when you have outgrown Canva for high-stakes decks
+- /alternatives/beautiful-ai — Beautiful.AI vs custom human design
+
+## Locations served
+
+- /locations/new-york — pitch deck designers for New York founders
+- /locations/san-francisco — pitch deck designers for SF/Bay Area founders
+- /locations/london — pitch deck designers for London / UK founders
+- /locations/dubai — pitch deck designers for Dubai / MENA founders
+- We work globally; these pages just call out specific time zone + investor ecosystem fit.
 
 ## Contact
 
