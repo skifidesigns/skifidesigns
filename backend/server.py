@@ -76,13 +76,13 @@ PACKAGES = {
         "type": "subscription",
         "description": "100 slide credits / month - 48hr priority turnaround",
     },
-    # ===== Legacy (kept for receipt/resume compatibility on historical orders) =====
+    # ===== Slide-redesign offering ($15/slide - existing/AI-generated content) =====
     "per_slide": {
-        "name": "Per Slide (legacy)",
+        "name": "Slide Redesign",
         "price": 15.00,
         "currency": "usd",
         "type": "per_unit",
-        "legacy": True,
+        "description": "Redesign existing or AI-generated slides with custom animation",
     },
 }
 
@@ -1781,7 +1781,7 @@ def _render_receipt_html(tx: dict) -> str:
         line_total = unit_price
         item_meta = "1 project &times; $2,500.00"
     elif package_id == "per_slide":
-        line_desc = "Pitch Deck / Presentation Design - Per Slide (legacy)"
+        line_desc = "Slide Redesign - Per Slide (existing or AI-generated content)"
         qty = slide_count if slide_count > 0 else max(1, round(amount / 15))
         unit_price = 15.00
         line_total = round(unit_price * qty, 2)

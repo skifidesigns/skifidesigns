@@ -131,14 +131,24 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
       unit: '/ month',
       summary: '100 slide credits · 48hr priority · dedicated team',
     },
+    per_slide: {
+      name: 'Slide Redesign',
+      price: 15,
+      priceLabel: '$15',
+      unit: '/ slide',
+      summary: 'Redesign existing or AI-generated slides with custom animation',
+      isPerSlide: true,
+    },
   };
   const planMeta = PLAN_META[formData.package_id] || PLAN_META.starter_deck;
-  const isPerSlide = false; // per-slide legacy is no longer offered in the wizard
+  const isPerSlide = formData.package_id === 'per_slide';
 
   // Validation per step
   const canProceed = () => {
     if (step === 1) {
-      return !!PLAN_META[formData.package_id];
+      if (!PLAN_META[formData.package_id]) return false;
+      if (isPerSlide && (!formData.slide_count || formData.slide_count < 1)) return false;
+      return true;
     }
     if (step === 2) {
       return (
@@ -152,7 +162,10 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
     return true;
   };
 
-  const computedTotal = () => planMeta.price;
+  const computedTotal = () => {
+    if (isPerSlide) return 15 * (Number(formData.slide_count) || 0);
+    return planMeta.price;
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -229,7 +242,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                 <Label className="text-foreground mb-3 block text-base font-medium">
                   Selected plan
                 </Label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {Object.entries(PLAN_META).map(([pid, meta]) => (
                     <button
                       key={pid}
@@ -253,6 +266,27 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                 </div>
               </div>
 
+              {isPerSlide && (
+                <div>
+                  <Label htmlFor="slide_count" className="text-foreground mb-2 block">
+                    How many slides to redesign?
+                  </Label>
+                  <Input
+                    id="slide_count"
+                    data-testid="wizard-slide-count"
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={formData.slide_count}
+                    onChange={(e) => updateField('slide_count', e.target.value)}
+                    className="bg-card border-border text-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Estimated total: <span className="text-foreground font-semibold tabular-nums">${computedTotal()}</span>
+                  </p>
+                </div>
+              )}
+
               <div className="p-4 bg-card border border-border rounded-xl">
                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                   <div>
@@ -260,9 +294,9 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                     <p className="text-xs text-muted-foreground mt-1">{planMeta.summary}</p>
                   </div>
                   <p className="text-2xl font-semibold text-[#2A7AFE] tabular-nums whitespace-nowrap">
-                    {planMeta.priceLabel}
+                    {isPerSlide ? `$${computedTotal()}` : planMeta.priceLabel}
                     <span className="text-xs text-muted-foreground font-normal ml-1">
-                      {planMeta.unit}
+                      {isPerSlide ? `(${formData.slide_count || 0} × $15)` : planMeta.unit}
                     </span>
                   </p>
                 </div>
@@ -430,6 +464,12 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                       {planMeta.name}
                     </span>
                   </div>
+                  {isPerSlide && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Slides</span>
+                      <span className="text-foreground font-medium tabular-nums">{formData.slide_count} × $15</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Project type</span>
                     <span className="text-foreground font-medium">{formData.project_type}</span>
@@ -451,7 +491,7 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
                   <div className="pt-3 mt-3 border-t border-border flex justify-between items-baseline">
                     <span className="text-foreground font-semibold">Total</span>
                     <span className="text-2xl font-semibold text-[#2A7AFE] tabular-nums">
-                      {planMeta.priceLabel}
+                      {isPerSlide ? `$${computedTotal()}` : planMeta.priceLabel}
                       <span className="text-sm text-muted-foreground ml-1">
                         USD {planMeta.unit === '/ month' ? '/ mo' : ''}
                       </span>

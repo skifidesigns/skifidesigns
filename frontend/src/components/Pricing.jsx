@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ArrowUpRight, Star, MessageCircle, Calendar } from 'lucide-react';
+import { Check, ArrowUpRight, Star, MessageCircle, Calendar, Sparkles } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -184,6 +184,86 @@ export const Pricing = () => {
             );
           })}
         </div>
+
+        {/* Redesign band - slide-by-slide for existing or AI-generated content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mt-10 max-w-6xl mx-auto"
+          data-testid="pricing-redesign-band"
+        >
+          <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 ${
+            theme === 'dark'
+              ? 'bg-[#0A0F1E] border border-[#2A7AFE]/25'
+              : 'bg-[#F5F4EE] border border-[#2A7AFE]/15'
+          }`}>
+            {/* Decorative gradient blob */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20"
+                 style={{ background: 'radial-gradient(circle, #2A7AFE 0%, transparent 70%)' }} />
+
+            <div className="relative grid grid-cols-1 md:grid-cols-[1.6fr_auto] gap-6 md:gap-10 items-center">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.18em] uppercase mb-3">
+                  <Sparkles className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-[#7AB0FF]' : 'text-[#2A7AFE]'}`} />
+                  <span className={theme === 'dark' ? 'text-[#7AB0FF]' : 'text-[#2A7AFE]'}>
+                    Already have content?
+                  </span>
+                </div>
+                <h3 className={`text-2xl sm:text-3xl font-semibold tracking-tight leading-snug mb-2 ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                  We just make it beautiful.
+                </h3>
+                <p className={`text-sm sm:text-base leading-relaxed max-w-2xl ${
+                  theme === 'dark' ? 'text-white/70' : 'text-gray-600'
+                }`}>
+                  Bring your AI-generated draft, an old deck, or scattered slides. We&apos;ll redesign
+                  each one with custom motion, brand polish, and the storytelling rhythm that wins rooms.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs">
+                  {[
+                    'Slide-by-slide pricing',
+                    'Custom animation included',
+                    'Brand-matched design',
+                    'No minimum order',
+                  ].map((feat) => (
+                    <span key={feat} className={`inline-flex items-center gap-1.5 ${
+                      theme === 'dark' ? 'text-white/65' : 'text-gray-600'
+                    }`}>
+                      <Check className="w-3.5 h-3.5 text-[#2A7AFE]" strokeWidth={3} />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col items-start md:items-end gap-3">
+                <div className="flex items-baseline gap-1.5">
+                  <span className={`text-5xl font-semibold tabular-nums leading-none ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    $15
+                  </span>
+                  <span className={`text-xs font-semibold tracking-wider ${
+                    theme === 'dark' ? 'text-white/55' : 'text-gray-500'
+                  }`}>
+                    / SLIDE
+                  </span>
+                </div>
+                <button
+                  data-testid="pricing-cta-per_slide"
+                  onClick={() => handleSelectPlan('per_slide')}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#2A7AFE] text-white font-semibold text-sm uppercase tracking-wide hover:bg-[#3B82F6] hover:shadow-xl hover:shadow-[#2A7AFE]/30 transition-all duration-300 hover:scale-[1.02] whitespace-nowrap"
+                >
+                  Redesign My Slides
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Trust line + tertiary CTAs */}
         <motion.div
