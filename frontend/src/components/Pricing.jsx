@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ArrowUpRight, Star, MessageCircle, Calendar, Sparkles } from 'lucide-react';
+import { Check, ArrowUpRight, Star, Calendar, Sparkles } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { useTheme } from '../context/ThemeContext';
-
-const WHATSAPP_HREF =
-  'https://wa.me/917827087878?text=' +
-  encodeURIComponent(
-    "Hi SkiFi team - I have a smaller project (under 20 slides) and would like to discuss a custom quote.",
-  );
 
 const pricingPlans = [
   {
@@ -277,7 +271,7 @@ export const Pricing = () => {
             Not sure which plan fits? Book a free 15-minute call and we&apos;ll tell you exactly what
             your presentation needs - no sales pitch, just honest advice.
           </p>
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex justify-center">
             <button
               data-cal-link="skifi/30min"
               data-cal-namespace="30min"
@@ -288,16 +282,6 @@ export const Pricing = () => {
               <Calendar className="w-4 h-4" />
               Book a Free Call
             </button>
-            <a
-              href={WHATSAPP_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="pricing-whatsapp-small-project"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border bg-card hover:border-[#25D366] hover:text-[#25D366] text-foreground font-semibold text-sm transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Less than 20 slides? Chat on WhatsApp
-            </a>
           </div>
         </motion.div>
       </div>
