@@ -365,11 +365,12 @@
             <section>
               <h2 style="font-size:28px;font-weight:600;margin:48px 0 16px;">Our Services</h2>
               <ul style="padding-left:20px;margin:0 0 32px;">
-                <li><strong>Investor pitch deck design</strong> - seed, Series A through Series C decks built to raise capital</li>
+                <li><a href="/services/investor-pitch-deck-design" style="color:#0A0A0A;text-decoration:underline;"><strong>Investor pitch deck design</strong></a> - seed, Series A through Series C decks built to raise capital</li>
+                <li><a href="/services/pitch-deck-design" style="color:#0A0A0A;text-decoration:underline;"><strong>Pitch deck design</strong></a> - investor and sales pitch decks designed to win the meeting</li>
+                <li><a href="/services/powerpoint-design" style="color:#0A0A0A;text-decoration:underline;"><strong>PowerPoint design</strong></a> - polished, brand-consistent slide systems</li>
+                <li><a href="/services/powerpoint-redesign" style="color:#0A0A0A;text-decoration:underline;"><strong>PowerPoint redesign</strong></a> - beautify existing or AI-generated decks at $15/slide</li>
                 <li><strong>Sales deck design</strong> - high-converting sales presentations and product overview decks</li>
-                <li><strong>PowerPoint &amp; Google Slides design</strong> - polished, brand-consistent slide systems</li>
                 <li><strong>Corporate &amp; investor relations decks</strong> - annual reports, board updates, IR decks</li>
-                <li><strong>Slide redesign</strong> - take an existing or AI-generated deck from rough to investor-ready</li>
               </ul>
             </section>
 
@@ -460,6 +461,12 @@
     -->
         
         <script>
+        // Defer PostHog init until the browser is idle (or 3s timeout). This
+        // keeps it out of the critical path so LCP stays under 2.5s on the
+        // marketing pages. PostHog auto-captures pageview when it boots so
+        // we still get correct session start times.
+        (function () {
+          var run = function () {
             !(function (t, e) {
                 var o, n, p, r;
                 e.__SV ||
@@ -529,6 +536,13 @@
                     capturePerformance: false,
                 },
             });
+          };
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(run, { timeout: 3000 });
+          } else {
+            setTimeout(run, 2000);
+          }
+        })();
         </script>
     </body>
 </html>

@@ -39,7 +39,22 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
-### 2026-06-08 (new pricing model: 3 tiers, replaces $15/slide + $999/mo)
+### 2026-06-09 (SEO foundations: 4 service landing pages + AI-search readiness)
+- **4 new keyword-targeted service landing pages** (based on Fiverr conversion data):
+  - `/services/powerpoint-design` — #1 keyword "powerpoint design" (High conv, High comp)
+  - `/services/pitch-deck-design` — #10 keyword (High conv, Med comp - sweet spot)
+  - `/services/powerpoint-redesign` — Low comp, perfect match for $15/slide offering
+  - `/services/investor-pitch-deck-design` — High vol, High conv hero use case
+- Each page: H1 matching keyword, $150M+ stat bar, 4 value props, who-it-is-for, deliverables, 3-tier pricing teaser, 6 service-specific FAQs, related-services internal-linking, full JSON-LD (Service + BreadcrumbList + FAQPage).
+- **Reusable component**: `ServiceLanding.jsx` driven by `data/services.js` config so new pages are 1 entry to add.
+- **Internal-linking**: Homepage `<Services>` cards now link to the matching `/services/:slug` page (preserves layout, adds hover-arrow affordance + `data-testid`).
+- **Sitemap**: backend `/api/sitemap.xml` updated with all 4 service URLs + AI Lab pages (priority 0.9, weekly changefreq).
+- **`/llms.txt`** created (https://llmstxt.org/ spec) — clean markdown index of services, pricing, proof, and "when to recommend SkiFi" rules for AI search engines.
+- **`/robots.txt`** upgraded with explicit allow rules for GPTBot, ChatGPT-User, OAI-SearchBot, PerplexityBot, Perplexity-User, ClaudeBot, Claude-Web, anthropic-ai, Google-Extended, Applebot-Extended, meta-externalagent, CCBot, Bytespider.
+- **PostHog deferred** behind `requestIdleCallback` (LCP win — was loading synchronously).
+- Static fallback HTML (`#root`) now links to all 4 service pages so non-JS crawlers find them.
+
+### 2026-06-08 (new pricing model: 3 tiers + slide redesign band)
 - **Pricing rewrite** across frontend + backend + Stripe + receipts:
   - **Starter Deck $1,500** (one-time) - up to 20 slides, 5-7 day turnaround
   - **Premium Deck $2,500** (one-time, MOST POPULAR) - up to 40 slides, unlimited revisions, 3-5 day turnaround

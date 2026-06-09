@@ -6,37 +6,43 @@ export const services = [
     id: 1,
     title: "Pitch Deck Design",
     description: "Investor-ready pitch decks designed to help startups raise funding and tell compelling stories.",
-    icon: "presentation"
+    icon: "presentation",
+    slug: "pitch-deck-design",
   },
   {
     id: 2,
     title: "Corporate Presentations",
     description: "Modern business presentations for meetings, reports, conferences, and internal communications.",
-    icon: "briefcase"
+    icon: "briefcase",
+    slug: "powerpoint-design",
   },
   {
     id: 3,
     title: "Sales Decks",
     description: "High-converting sales presentations that help teams close deals faster.",
-    icon: "trending-up"
+    icon: "trending-up",
+    slug: "powerpoint-design",
   },
   {
     id: 4,
     title: "Webinar & Keynote Slides",
     description: "Visually engaging presentations for speakers, educators, and online events.",
-    icon: "video"
+    icon: "video",
+    slug: null,
   },
   {
     id: 5,
-    title: "Infographics",
-    description: "Data visualization and infographic design that simplify complex information.",
-    icon: "bar-chart"
+    title: "Investor Pitch Decks",
+    description: "Seed to Series C investor decks. $150M+ raised by SkiFi clients using these decks.",
+    icon: "bar-chart",
+    slug: "investor-pitch-deck-design",
   },
   {
     id: 6,
-    title: "Brand Presentation Systems",
-    description: "Consistent slide templates and presentation systems for growing brands.",
-    icon: "layers"
+    title: "PowerPoint Redesign",
+    description: "Bring an existing or AI-generated deck. We redesign every slide at $15/slide with custom animation.",
+    icon: "layers",
+    slug: "powerpoint-redesign",
   }
 ];
 
