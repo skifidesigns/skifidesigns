@@ -45,16 +45,16 @@ export const Header = () => {
   // hidden on small screens.
   const desktopNavLinks = [
     { label: 'Services', id: 'services', type: 'scroll' },
-    { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
+    { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' }
   ];
   const mobileNavLinks = [
     { label: 'Services', id: 'services', type: 'scroll' },
-    { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Pricing', id: 'pricing', type: 'scroll' },
+    { label: 'Case Studies', id: 'portfolio', type: 'scroll' },
     { label: 'Resources', path: '/resources', type: 'route' },
     { label: 'Blog', path: '/blog', type: 'route' },
     { label: 'AI Lab', path: '/ai-lab', type: 'route', badge: 'NEW' },
