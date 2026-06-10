@@ -2806,6 +2806,7 @@ async def dynamic_sitemap():
         (f"{base}/services/sales-deck-design", today, "0.85", "weekly"),
         (f"{base}/services/powerpoint-template-design", today, "0.85", "weekly"),
         (f"{base}/services/google-slides-design", today, "0.85", "weekly"),
+        (f"{base}/services/keynote-slides-design", today, "0.85", "weekly"),
         # Alternative / competitor-comparison pages (high-intent buyers)
         (f"{base}/alternatives/gamma-ai", today, "0.85", "monthly"),
         (f"{base}/alternatives/canva-presentations", today, "0.85", "monthly"),

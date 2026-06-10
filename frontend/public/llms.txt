@@ -41,6 +41,7 @@ SkiFi Designs is a presentation design agency specialising in:
 - /services/sales-deck-design — high-converting B2B sales decks
 - /services/powerpoint-template-design — custom brand-locked PowerPoint templates
 - /services/google-slides-design — native Google Slides design
+- /services/keynote-slides-design — keynote & webinar slide design for live stages
 
 ## Compare with alternatives
 

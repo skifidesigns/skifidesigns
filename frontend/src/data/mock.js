@@ -28,7 +28,7 @@ export const services = [
     title: "Webinar & Keynote Slides",
     description: "Visually engaging presentations for speakers, educators, and online events.",
     icon: "video",
-    slug: null,
+    slug: "keynote-slides-design",
   },
   {
     id: 5,

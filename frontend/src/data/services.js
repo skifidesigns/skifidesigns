@@ -439,6 +439,64 @@ export const SERVICES = {
     ctaPrimary: 'Build My Google Slides',
     ctaSecondary: 'See Examples',
   },
+  'keynote-slides-design': {
+    slug: 'keynote-slides-design',
+    title: 'Keynote & Webinar Slide Design',
+    h1: 'Keynote & Webinar Slides Built for Stages, Screens, and Standing Ovations.',
+    metaTitle: 'Keynote & Webinar Slide Design | Stage-Ready Decks | SkiFi Designs',
+    metaDescription: 'Keynote and webinar slide design for conference speakers, educators, and online event hosts. Stage-ready typography, bold visuals, and visuals that read from row 30. Starts at $1,500.',
+    keyword: 'keynote slides design',
+    eyebrow: 'Keynote & Webinar Slides',
+    subhead: 'Slides built for the room, not the inbox. Big type, bold visuals, single-idea slides, and pacing that lets your story breathe. Whether it is a TED-style keynote, a SaaStr session, or a 500-attendee webinar.',
+    statBar: ['Stage-ready typography', '$150M+ raised by clients', '2,700+ decks shipped', '150+ clients'],
+    valueProps: [
+      { title: 'One idea per slide', body: 'Stage decks live by a different rule than investor decks: one slide, one idea, one image. We design around the audience experience, not the slide count.' },
+      { title: 'Readable from row 30', body: 'Type sized for the back of a 500-seat hall and the back of a 13-inch screen. Hierarchy that survives the projector, the live stream, and the recording cut-ups.' },
+      { title: 'Visuals over bullets', body: 'Custom illustrations, hero photography, full-bleed quotes. The kind of slides that get screenshotted and shared on LinkedIn after your talk.' },
+      { title: 'Speaker notes (Premium)', body: 'On Premium we write slide-by-slide talk track plus transition prompts so you can rehearse like a pro and improvise like a human.' },
+    ],
+    whoFor: [
+      'Founders speaking at conferences (SaaStr, Web Summit, TC Disrupt, RISE)',
+      'Operators leading webinars, virtual summits, and hosted events',
+      'Educators and course creators recording flagship lessons',
+      'Keynote speakers, panelists, and category-defining founders',
+    ],
+    deliverables: [
+      'Stage-ready deck in PowerPoint and PDF',
+      'Optional Keynote export (Premium tier)',
+      'Speaker notes and talk-track (Premium tier)',
+      '16:9 widescreen by default (vertical/portrait on request)',
+      'Title cards, section dividers, and shareable closing slide',
+    ],
+    pricingHook: {
+      starter: 'Starter Keynote Deck',
+      starterDesc: 'Up to 20 stage-ready slides',
+      starterPrice: '$1,500',
+      premium: 'Premium Keynote Deck',
+      premiumDesc: 'Up to 40 slides, speaker notes, unlimited revisions',
+      premiumPrice: '$2,500',
+      perSlide: 'Refresh an existing keynote deck at',
+      perSlidePrice: '$15 / slide',
+    },
+    faqs: [
+      {
+        q: 'What is the difference between a keynote and an investor deck?',
+        a: 'Investor decks are read silently in 3 minutes. Keynote decks are watched live for 20-45 minutes. Different pacing, different type size, different ratio of visuals to text. We design for the format you are actually presenting in.',
+      },
+      {
+        q: 'Can you match an event\'s brand palette (e.g. SaaStr, Web Summit)?',
+        a: 'Yes. Send us the event branding guidelines and we make sure your deck sits well inside the conference visual system without disappearing into it.',
+      },
+      {
+        q: 'Do you design webinars and online events too?',
+        a: 'Absolutely. Webinars need slightly tighter slides than physical stages (smaller screens, more distractions). We adjust visual hierarchy for the recorded-then-replayed format.',
+      },
+      ...COMMON_FAQS_FOOTER,
+    ],
+    relatedServices: ['pitch-deck-design', 'powerpoint-design', 'powerpoint-redesign'],
+    ctaPrimary: 'Design My Keynote',
+    ctaSecondary: 'See Examples',
+  },
 };
 
 export const SERVICE_SLUGS = Object.keys(SERVICES);
