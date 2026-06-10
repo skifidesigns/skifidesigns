@@ -40,19 +40,19 @@ export const Services = () => {
             const Icon = iconMap[service.icon];
             const cardBody = (
               <>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2A7AFE] to-[#60A5FA] flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg shadow-[#2A7AFE]/30">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2A7AFE] to-[#60A5FA] flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg shadow-[#2A7AFE]/30 flex-shrink-0">
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2 min-h-[2rem]">
                   {service.title}
                   {service.slug && (
                     <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                   )}
                 </h3>
-                <p className="text-muted-foreground text-[15px] leading-relaxed">{service.description}</p>
+                <p className="text-muted-foreground text-[15px] leading-relaxed flex-grow">{service.description}</p>
               </>
             );
-            const baseClasses = 'skifi-card skifi-spotlight rounded-2xl p-8 group cursor-pointer hover:-translate-y-1 transition-transform duration-300 block';
+            const baseClasses = 'skifi-card skifi-spotlight rounded-2xl p-8 group cursor-pointer hover:-translate-y-1 transition-transform duration-300 h-full flex flex-col';
             return (
               <motion.div
                 key={service.id}
@@ -61,6 +61,7 @@ export const Services = () => {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.45, delay: i * 0.06 }}
                 onMouseMove={handleMove}
+                className="h-full"
               >
                 {service.slug ? (
                   <Link to={`/services/${service.slug}`} className={baseClasses} data-testid={`service-link-${service.slug}`}>
