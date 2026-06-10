@@ -46,7 +46,7 @@ const pricingPlans = [
     name: 'MONTHLY RETAINER',
     price: '$3,000',
     unit: '/ MONTH',
-    bestFor: 'Agencies, scale-ups, and in-house marketing teams with ongoing presentations and',
+    bestFor: 'Agencies, scale-ups, and in-house marketing teams with ongoing presentations',
     popular: false,
     features: [
       'Up to 100 slide credits per month',
