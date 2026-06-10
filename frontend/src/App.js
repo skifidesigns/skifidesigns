@@ -64,13 +64,13 @@ const Home = () => {
         <Services />
       </div>
       <WhySkiFi />
-      <div id="portfolio">
-        <Portfolio />
-      </div>
       <div id="process">
         <Process />
       </div>
       <Pricing />
+      <div id="portfolio">
+        <Portfolio />
+      </div>
       <div id="testimonials">
         <Testimonials />
       </div>
