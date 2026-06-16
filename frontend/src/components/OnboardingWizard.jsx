@@ -112,22 +112,22 @@ export const OnboardingWizard = ({ open, onClose, initialPlan }) => {
   const PLAN_META = {
     starter_deck: {
       name: 'Starter Deck',
-      price: 1500,
-      priceLabel: '$1,500',
+      price: 1499,
+      priceLabel: '$1,499',
       unit: 'one-time',
       summary: 'Up to 20 custom slides · 5-7 business day turnaround',
     },
     premium_deck: {
       name: 'Premium Deck',
-      price: 2500,
-      priceLabel: '$2,500',
+      price: 2499,
+      priceLabel: '$2,499',
       unit: 'one-time',
       summary: 'Up to 40 slides · unlimited revisions · 3-5 day turnaround',
     },
     monthly_retainer: {
       name: 'Monthly Retainer',
-      price: 3000,
-      priceLabel: '$3,000',
+      price: 999,
+      priceLabel: '$999',
       unit: '/ month',
       summary: '100 slide credits · 48hr priority · dedicated team',
     },

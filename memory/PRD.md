@@ -39,6 +39,14 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-02-17 — Pricing reduction (Starter/Premium/Retainer)
+- **Backend `PACKAGES`** updated: Starter `$1,500 → $1,499`, Premium `$2,500 → $2,499`, Monthly Retainer `$3,000 → $999`. `$15/slide` redesign unchanged.
+- **Removed** `STRIPE_MONTHLY_PRICE_ID` env var → subscription checkout now uses ad-hoc `price_data` (`unit_amount=99900`, `recurring=month`) — no Stripe dashboard work needed for the new $999/mo retainer.
+- Frontend updates: `Pricing.jsx`, `OnboardingWizard.jsx`, `LocationLanding.jsx` price chips, all SEO data (`services.js`, `locations.js`, `alternatives.js`, `mock.js` FAQ), static `index.html` (JSON-LD Offers + `priceRange` + crawler fallback) and `llms.txt`.
+- Backend invoice line-meta updated for Starter/Premium receipts.
+- **Verified live**: Stripe checkout sessions create at `1499 / 2499 / 999` against the live key.
+
+
 ### 2026-06-09b (SEO expansion: 14 total landing pages, AI-search ready)
 - **3 additional service pages** (extends the original 4): `/services/sales-deck-design`, `/services/powerpoint-template-design`, `/services/google-slides-design`
 - **3 alternatives / comparison pages** built on a new `AlternativeLanding.jsx`:

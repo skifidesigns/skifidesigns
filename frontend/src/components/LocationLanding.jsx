@@ -172,12 +172,12 @@ export const LocationLanding = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl border border-border bg-card">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Starter Deck</p>
-              <p className="text-2xl font-semibold text-foreground tabular-nums mb-1">$1,500</p>
+              <p className="text-2xl font-semibold text-foreground tabular-nums mb-1">$1,499</p>
               <p className="text-xs text-muted-foreground">Up to 20 slides &middot; 5-7 day turnaround</p>
             </div>
             <div className="p-5 rounded-2xl border-2 border-[#2A7AFE] bg-[#2A7AFE]/5 shadow-lg shadow-[#2A7AFE]/10">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#2A7AFE] mb-2">Premium Deck &middot; Most popular</p>
-              <p className="text-2xl font-semibold text-[#2A7AFE] tabular-nums mb-1">$2,500</p>
+              <p className="text-2xl font-semibold text-[#2A7AFE] tabular-nums mb-1">$2,499</p>
               <p className="text-xs text-muted-foreground">Up to 40 slides &middot; unlimited revisions</p>
             </div>
             <div className="p-5 rounded-2xl border border-border bg-card">

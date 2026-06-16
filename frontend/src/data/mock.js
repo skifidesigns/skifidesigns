@@ -104,7 +104,7 @@ export const faqs = [
   {
     id: 1,
     question: "How much does a full pitch deck cost?",
-    answer: "Most investor pitch decks fall in the $1,500–$3,500 range depending on scope, number of slides, and turnaround time. The Starter Deck ($1,500) covers up to 20 slides; the Premium Deck ($2,500) covers up to 40 slides with unlimited revisions. Book a free call and we'll give you an exact quote within 24 hours."
+    answer: "Most investor pitch decks fall in the $1,499–$3,500 range depending on scope, number of slides, and turnaround time. The Starter Deck ($1,499) covers up to 20 slides; the Premium Deck ($2,499) covers up to 40 slides with unlimited revisions. Book a free call and we'll give you an exact quote within 24 hours."
   },
   {
     id: 2,

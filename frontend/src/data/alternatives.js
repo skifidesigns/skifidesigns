@@ -58,7 +58,7 @@ export const ALTERNATIVES = {
       starter: 'Redesign your Gamma export at',
       starterPrice: '$15 / slide',
       premium: 'Or rebuild it from scratch',
-      premiumPrice: '$1,500 - $2,500',
+      premiumPrice: '$1,499 - $2,499',
       callout: 'Most founders pick redesign: keep your AI-generated content, swap the AI design for human craft.',
     },
     faqs: [
@@ -68,7 +68,7 @@ export const ALTERNATIVES = {
       },
       {
         q: 'Do I keep the content Gamma generated?',
-        a: 'Absolutely. Redesign preserves your content - we only change the visual design and animation. If you want help refining the content too, the Premium Deck tier ($2,500) includes full narrative strategy.',
+        a: 'Absolutely. Redesign preserves your content - we only change the visual design and animation. If you want help refining the content too, the Premium Deck tier ($2,499) includes full narrative strategy.',
       },
       {
         q: 'Why not just keep using Gamma if it works?',
@@ -76,7 +76,7 @@ export const ALTERNATIVES = {
       },
       {
         q: 'How much does this cost?',
-        a: 'Slide-by-slide redesign starts at $15/slide. A typical 20-slide Gamma deck redesigned by SkiFi costs $300. If you want a full ground-up rebuild (custom narrative + design), Starter is $1,500 and Premium is $2,500.',
+        a: 'Slide-by-slide redesign starts at $15/slide. A typical 20-slide Gamma deck redesigned by SkiFi costs $300. If you want a full ground-up rebuild (custom narrative + design), Starter is $1,499 and Premium is $2,499.',
       },
     ],
     relatedAlternatives: ['canva-presentations', 'beautiful-ai'],
@@ -91,7 +91,7 @@ export const ALTERNATIVES = {
     title: 'Canva Presentation Alternative',
     h1: 'Outgrown Canva Presentations? Get a Real Designer.',
     metaTitle: 'Canva Presentation Alternative | Investor-Grade Deck Design | SkiFi',
-    metaDescription: 'Canva works for simple decks. When you need investor-ready, brand-locked presentations with proper PowerPoint masters, SkiFi takes over. Starts at $1,500.',
+    metaDescription: 'Canva works for simple decks. When you need investor-ready, brand-locked presentations with proper PowerPoint masters, SkiFi takes over. Starts at $1,499.',
     keyword: 'canva presentation alternative',
     eyebrow: 'Canva vs SkiFi Designs',
     subhead: 'Canva is the right tool for a wedding invite, a quick LinkedIn carousel, or a one-off team meeting deck. When the meeting is with an investor, a procurement committee, or the entire C-suite - the limits show up fast.',
@@ -132,9 +132,9 @@ export const ALTERNATIVES = {
     ],
     pricingHook: {
       starter: 'Custom deck from scratch',
-      starterPrice: '$1,500',
+      starterPrice: '$1,499',
       premium: 'Or unlimited revisions + speaker notes',
-      premiumPrice: '$2,500',
+      premiumPrice: '$2,499',
       callout: 'Redesign your Canva deck at $15/slide if the content is solid.',
     },
     faqs: [
@@ -152,7 +152,7 @@ export const ALTERNATIVES = {
       },
       {
         q: 'How does the pricing compare?',
-        a: 'Canva Pro is $13/month. SkiFi is a one-time $1,500-$2,500 for a custom deck or $15/slide for redesign. You will keep using Canva for marketing assets; SkiFi handles the high-stakes presentations.',
+        a: 'Canva Pro is $13/month. SkiFi is a one-time $1,499-$2,499 for a custom deck or $15/slide for redesign. You will keep using Canva for marketing assets; SkiFi handles the high-stakes presentations.',
       },
     ],
     relatedAlternatives: ['gamma-ai', 'beautiful-ai'],
@@ -167,7 +167,7 @@ export const ALTERNATIVES = {
     title: 'Beautiful.AI Alternative',
     h1: 'Beautiful.AI Alternative: When Smart Templates Are Not Enough.',
     metaTitle: 'Beautiful.AI Alternative | Custom Pitch Deck Design | SkiFi Designs',
-    metaDescription: 'Beautiful.AI auto-arranges slides but still feels template-y. SkiFi delivers custom human-designed investor decks. $150M+ raised by clients. From $1,500.',
+    metaDescription: 'Beautiful.AI auto-arranges slides but still feels template-y. SkiFi delivers custom human-designed investor decks. $150M+ raised by clients. From $1,499.',
     keyword: 'beautiful ai alternative',
     eyebrow: 'Beautiful.AI vs SkiFi Designs',
     subhead: 'Beautiful.AI is a smart slide-builder with auto-arranging layouts. It works great for in-house product decks. For investor meetings and big sales pitches, "auto-arranged" still reads as "template" - and investors notice.',
@@ -204,9 +204,9 @@ export const ALTERNATIVES = {
     ],
     pricingHook: {
       starter: 'Custom deck from scratch',
-      starterPrice: '$1,500',
+      starterPrice: '$1,499',
       premium: 'Premium investor-grade deck',
-      premiumPrice: '$2,500',
+      premiumPrice: '$2,499',
       callout: 'Slide-by-slide redesign of your Beautiful.AI export at $15/slide.',
     },
     faqs: [
@@ -224,7 +224,7 @@ export const ALTERNATIVES = {
       },
       {
         q: 'How does the pricing compare?',
-        a: 'Beautiful.AI is $12-40/user/month. SkiFi is a one-time investment: $1,500-$2,500 for a custom deck, $15/slide for redesign. Most clients keep Beautiful.AI for internal decks and bring SkiFi in for the high-stakes ones.',
+        a: 'Beautiful.AI is $12-40/user/month. SkiFi is a one-time investment: $1,499-$2,499 for a custom deck, $15/slide for redesign. Most clients keep Beautiful.AI for internal decks and bring SkiFi in for the high-stakes ones.',
       },
     ],
     relatedAlternatives: ['gamma-ai', 'canva-presentations'],

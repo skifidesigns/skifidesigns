@@ -57,21 +57,21 @@ PACKAGES = {
     # ===== Active tiers (Feb 2026 pricing) =====
     "starter_deck": {
         "name": "Starter Deck",
-        "price": 1500.00,
+        "price": 1499.00,
         "currency": "usd",
         "type": "one_time",
         "description": "Up to 20 custom slides - 5-7 business day turnaround",
     },
     "premium_deck": {
         "name": "Premium Deck",
-        "price": 2500.00,
+        "price": 2499.00,
         "currency": "usd",
         "type": "one_time",
         "description": "Up to 40 custom slides - 3-5 business day turnaround",
     },
     "monthly_retainer": {
         "name": "Monthly Retainer",
-        "price": 3000.00,
+        "price": 999.00,
         "currency": "usd",
         "type": "subscription",
         "description": "100 slide credits / month - 48hr priority turnaround",
@@ -1773,13 +1773,13 @@ def _render_receipt_html(tx: dict) -> str:
         qty = 1
         unit_price = float(PACKAGES["starter_deck"]["price"])
         line_total = unit_price
-        item_meta = "1 project &times; $1,500.00"
+        item_meta = "1 project &times; $1,499.00"
     elif package_id == "premium_deck":
         line_desc = "Premium Deck - Up to 40 custom slides + unlimited revisions"
         qty = 1
         unit_price = float(PACKAGES["premium_deck"]["price"])
         line_total = unit_price
-        item_meta = "1 project &times; $2,500.00"
+        item_meta = "1 project &times; $2,499.00"
     elif package_id == "per_slide":
         line_desc = "Slide Redesign - Per Slide (existing or AI-generated content)"
         qty = slide_count if slide_count > 0 else max(1, round(amount / 15))

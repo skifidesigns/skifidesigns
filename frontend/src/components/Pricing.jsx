@@ -8,7 +8,7 @@ const pricingPlans = [
   {
     id: 'starter_deck',
     name: 'STARTER DECK',
-    price: '$1,500',
+    price: '$1,499',
     unit: '/ PROJECT',
     bestFor: 'Early-stage startups, one-off pitch decks, and quick turnarounds',
     popular: false,
@@ -25,7 +25,7 @@ const pricingPlans = [
   {
     id: 'premium_deck',
     name: 'PREMIUM DECK',
-    price: '$2,500',
+    price: '$2,499',
     unit: '/ PROJECT',
     bestFor: 'Investor pitch decks, high-stakes sales decks, and Series A/B fundraising',
     popular: true,
@@ -44,7 +44,7 @@ const pricingPlans = [
   {
     id: 'monthly_retainer',
     name: 'MONTHLY RETAINER',
-    price: '$3,000',
+    price: '$999',
     unit: '/ MONTH',
     bestFor: 'Agencies, scale-ups, and in-house marketing teams with ongoing presentations',
     popular: false,
