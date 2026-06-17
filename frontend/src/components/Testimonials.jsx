@@ -78,9 +78,19 @@ export const Testimonials = () => {
                 {testimonial.country && (
                   <div
                     data-testid={`testimonial-country-${testimonial.id}`}
-                    className="text-xs text-muted-foreground/85 mt-1.5 inline-flex items-center gap-1.5"
+                    className="text-xs text-muted-foreground/85 mt-1.5 inline-flex items-center gap-2"
                   >
-                    <span aria-hidden="true" className="text-sm leading-none">{testimonial.flag}</span>
+                    {testimonial.countryCode && (
+                      <img
+                        src={`https://flagcdn.com/w40/${testimonial.countryCode}.png`}
+                        srcSet={`https://flagcdn.com/w80/${testimonial.countryCode}.png 2x`}
+                        alt={`${testimonial.country} flag`}
+                        loading="lazy"
+                        width="20"
+                        height="14"
+                        className="w-5 h-[14px] rounded-[2px] object-cover ring-1 ring-border/50"
+                      />
+                    )}
                     <span>{testimonial.country}</span>
                   </div>
                 )}

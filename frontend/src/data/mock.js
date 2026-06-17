@@ -53,7 +53,7 @@ export const testimonials = [
     role: "Director",
     company: "Underberg America",
     country: "United States",
-    flag: "🇺🇸",
+    countryCode: "us",
     text: "Working with SkiFi has been a great experience. I genuinely consider them part of our team and look forward to working with them on each project. Highly recommend!",
     rating: 5
   },
@@ -63,7 +63,7 @@ export const testimonials = [
     role: "Founder",
     company: "",
     country: "Morocco",
-    flag: "🇲🇦",
+    countryCode: "ma",
     text: "I looked for multiple people to help but this agency was first to respond, clear communication and professionalism. I would use them again 100% and it only took one revision to fix a couple of things. Super happy and took a big weight off me.",
     rating: 5
   },
@@ -73,7 +73,7 @@ export const testimonials = [
     role: "Founder",
     company: "Business Successor",
     country: "Switzerland",
-    flag: "🇨🇭",
+    countryCode: "ch",
     text: "Transparent and professional collaboration. SkiFi kept me informed throughout the process and found the best possible solutions for us. A very positive experience, I would happily work with them again.",
     rating: 5
   },
@@ -83,7 +83,7 @@ export const testimonials = [
     role: "Founder",
     company: "BeFit4Health",
     country: "United States",
-    flag: "🇺🇸",
+    countryCode: "us",
     text: "Exceeded my expectations. Extremely satisfied with the quality and the fast turnaround; everything arrived exactly as described and was professionally done. I'll be back!",
     rating: 5
   },
@@ -93,7 +93,7 @@ export const testimonials = [
     role: "Co-founder",
     company: "UniversityCity",
     country: "United States",
-    flag: "🇺🇸",
+    countryCode: "us",
     text: "Does excellent work; understands the brand and keeps language and communication simple. We've done a number of different projects with the team and will continue to.",
     rating: 5
   },
@@ -103,7 +103,7 @@ export const testimonials = [
     role: "Founder",
     company: "",
     country: "Japan",
-    flag: "🇯🇵",
+    countryCode: "jp",
     text: "It was great to work with SkiFi; they deeply understood our brand value and positioning to deliver a deck that really matched our company. Great design, smooth transitions, and timely delivery.",
     rating: 5
   }
