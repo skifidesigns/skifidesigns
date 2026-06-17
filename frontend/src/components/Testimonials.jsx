@@ -23,30 +23,6 @@ export const Testimonials = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Don't take our word for it - here's what teams say after working with us.
           </p>
-
-          <a
-            href="https://www.fiverr.com/skifidesigns"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="fiverr-vetted-pro-badge"
-            className="mt-6 inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#1DBF73]/30 bg-[#1DBF73]/[0.06] hover:bg-[#1DBF73]/[0.12] hover:border-[#1DBF73]/55 hover:-translate-y-0.5 transition-all duration-300 group"
-            aria-label="Vetted Pro on Fiverr - view our profile"
-          >
-            <img
-              src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/50cfc067-d28f-4b86-920d-fbaa5f618fd1.png?w=128&h=128&fit=max&dpr=3&auto=format&q=50"
-              alt="Fiverr Pro badge"
-              loading="lazy"
-              width="22"
-              height="22"
-              className="w-[22px] h-[22px] rounded-sm"
-            />
-            <span className="text-sm font-semibold text-foreground/85 tracking-tight">
-              Vetted Pro on Fiverr
-            </span>
-            <span className="text-xs font-medium text-muted-foreground/80 inline-flex items-center gap-1 border-l border-border/60 pl-2.5">
-              5.0 <Star className="w-3 h-3 fill-[#1DBF73] text-[#1DBF73]" />
-            </span>
-          </a>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

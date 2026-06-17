@@ -54,10 +54,10 @@ export const Hero = () => {
           }}
           className="space-y-5 sm:space-y-8"
         >
-          {/* Availability Badge */}
+          {/* Availability + Vetted Pro on Fiverr badges */}
           <motion.div
             variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-            className="flex justify-center"
+            className="flex flex-wrap justify-center items-center gap-2 sm:gap-3"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 skifi-glass-pill rounded-full">
               <span className="relative flex h-2 w-2">
@@ -68,6 +68,30 @@ export const Hero = () => {
                 Available for new projects
               </span>
             </div>
+
+            <a
+              href="https://www.fiverr.com/skifidesigns"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="hero-fiverr-vetted-pro-badge"
+              aria-label="Vetted Pro on Fiverr in Presentation Design - view our profile"
+              className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-[#1DBF73]/35 bg-[#1DBF73]/[0.07] hover:bg-[#1DBF73]/[0.13] hover:border-[#1DBF73]/60 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <img
+                src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/50cfc067-d28f-4b86-920d-fbaa5f618fd1.png?w=128&h=128&fit=max&dpr=3&auto=format&q=50"
+                alt="Fiverr Pro"
+                loading="lazy"
+                width="16"
+                height="16"
+                className="w-4 h-4 rounded-[3px]"
+              />
+              <span className="text-[11px] sm:text-xs font-semibold text-foreground/85 whitespace-nowrap tracking-wide">
+                Vetted Pro on Fiverr
+              </span>
+              <span className="hidden sm:inline text-[10px] font-medium text-muted-foreground/80 border-l border-border/60 pl-2">
+                Presentation Design
+              </span>
+            </a>
           </motion.div>
 
           <motion.h1
