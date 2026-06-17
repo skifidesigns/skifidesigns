@@ -126,7 +126,7 @@ export const CaseStudy = () => {
                     <CheckCircle2 className="w-4 h-4 text-[#2A7AFE] flex-shrink-0 mt-0.5" />
                     <span>{o}</span>
                   </li>
-                )) : <li className="text-sm text-muted-foreground">—</li>}
+                )) : <li className="text-sm text-muted-foreground">-</li>}
               </ul>
             </div>
           </section>

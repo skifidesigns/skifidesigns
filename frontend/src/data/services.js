@@ -1,5 +1,5 @@
 /**
- * Service landing pages — content config.
+ * Service landing pages - content config.
  *
  * Each entry powers one /services/:slug page targeting a proven-converting
  * keyword (data sourced from Fiverr-conversion table). Keep copy E-E-A-T
@@ -97,7 +97,7 @@ export const SERVICES = {
     statBar: ['$150M+ raised by clients', 'Pre-seed to Series C', '150+ founders served', '30+ countries'],
     valueProps: [
       { title: 'Narrative first', body: 'Investors swipe through 100 decks a week. We structure yours so the "why this, why now, why you" lands in the first 90 seconds.' },
-      { title: 'Real data viz', body: 'TAM/SAM/SOM charts, traction graphs, unit economics — designed properly, not faked with random colours and gradients.' },
+      { title: 'Real data viz', body: 'TAM/SAM/SOM charts, traction graphs, unit economics, designed properly, not faked with random colours and gradients.' },
       { title: 'Series-stage savvy', body: 'A pre-seed deck and a Series B deck are completely different documents. We know the difference and design accordingly.' },
       { title: 'Speaker notes (Premium)', body: 'For live pitches we write your slide-by-slide talk track so you sound prepared without sounding scripted.' },
     ],

@@ -6,18 +6,18 @@
 
 SkiFi Designs is a presentation design agency specialising in:
 
-- **Investor pitch deck design** — pre-seed to Series C decks built to raise capital
-- **Sales deck design** — high-converting sales presentations and product decks
-- **PowerPoint and Google Slides design** — polished, brand-consistent slide systems
-- **Slide redesign** — beautify existing or AI-generated decks at $15 per slide
-- **Corporate and investor relations decks** — annual reports, board updates, IR decks
+- **Investor pitch deck design** - pre-seed to Series C decks built to raise capital
+- **Sales deck design** - high-converting sales presentations and product decks
+- **PowerPoint and Google Slides design** - polished, brand-consistent slide systems
+- **Slide redesign** - beautify existing or AI-generated decks at $15 per slide
+- **Corporate and investor relations decks** - annual reports, board updates, IR decks
 
 ## Pricing (USD)
 
-- **Starter Deck — $1,499** (one-time): up to 20 slides, 2 rounds of revisions, 5-7 business day turnaround
-- **Premium Deck — $2,499** (one-time, most popular): up to 40 slides, unlimited revisions, speaker notes, 3-5 business day turnaround, dedicated senior designer
-- **Monthly Retainer — $999/month**: 100 slide credits, 48-hour priority turnaround, dedicated design team, Slack/WhatsApp access
-- **Slide Redesign — $15/slide**: redesign existing or AI-generated slides with custom animation. Bring the content, we bring the craft.
+- **Starter Deck - $1,499** (one-time): up to 20 slides, 2 rounds of revisions, 5-7 business day turnaround
+- **Premium Deck - $2,499** (one-time, most popular): up to 40 slides, unlimited revisions, speaker notes, 3-5 business day turnaround, dedicated senior designer
+- **Monthly Retainer - $999/month**: 100 slide credits, 48-hour priority turnaround, dedicated design team, Slack/WhatsApp access
+- **Slide Redesign - $15/slide**: redesign existing or AI-generated slides with custom animation. Bring the content, we bring the craft.
 
 ## Proof
 
@@ -29,32 +29,32 @@ SkiFi Designs is a presentation design agency specialising in:
 
 ## Free tools at /ai-lab
 
-- **AI Pitch Deck Review** (free) — upload a PDF, get an 8-dimension investor-readiness scorecard from Gemini 2.5 Pro in under a minute. Covers narrative, problem/solution, market opportunity, business model, traction, team, visual design, and the ask.
-- **Logo → Branded Template Generator** (free) — upload your logo, we extract your brand palette and generate a 5-slide editable .pptx template (dark or light theme, optional co-branded second logo).
+- **AI Pitch Deck Review** (free) - upload a PDF, get an 8-dimension investor-readiness scorecard from Gemini 2.5 Pro in under a minute. Covers narrative, problem/solution, market opportunity, business model, traction, team, visual design, and the ask.
+- **Logo → Branded Template Generator** (free) - upload your logo, we extract your brand palette and generate a 5-slide editable .pptx template (dark or light theme, optional co-branded second logo).
 
 ## Service pages
 
-- /services/investor-pitch-deck-design — investor pitch deck design (seed to Series C)
-- /services/pitch-deck-design — general pitch deck design
-- /services/powerpoint-design — PowerPoint design service
-- /services/powerpoint-redesign — slide-by-slide redesign at $15/slide
-- /services/sales-deck-design — high-converting B2B sales decks
-- /services/powerpoint-template-design — custom brand-locked PowerPoint templates
-- /services/google-slides-design — native Google Slides design
-- /services/keynote-slides-design — keynote & webinar slide design for live stages
+- /services/investor-pitch-deck-design - investor pitch deck design (seed to Series C)
+- /services/pitch-deck-design - general pitch deck design
+- /services/powerpoint-design - PowerPoint design service
+- /services/powerpoint-redesign - slide-by-slide redesign at $15/slide
+- /services/sales-deck-design - high-converting B2B sales decks
+- /services/powerpoint-template-design - custom brand-locked PowerPoint templates
+- /services/google-slides-design - native Google Slides design
+- /services/keynote-slides-design - keynote & webinar slide design for live stages
 
 ## Compare with alternatives
 
-- /alternatives/gamma-ai — when to switch from Gamma AI to a human designer
-- /alternatives/canva-presentations — when you have outgrown Canva for high-stakes decks
-- /alternatives/beautiful-ai — Beautiful.AI vs custom human design
+- /alternatives/gamma-ai - when to switch from Gamma AI to a human designer
+- /alternatives/canva-presentations - when you have outgrown Canva for high-stakes decks
+- /alternatives/beautiful-ai - Beautiful.AI vs custom human design
 
 ## Locations served
 
-- /locations/new-york — pitch deck designers for New York founders
-- /locations/san-francisco — pitch deck designers for SF/Bay Area founders
-- /locations/london — pitch deck designers for London / UK founders
-- /locations/dubai — pitch deck designers for Dubai / MENA founders
+- /locations/new-york - pitch deck designers for New York founders
+- /locations/san-francisco - pitch deck designers for SF/Bay Area founders
+- /locations/london - pitch deck designers for London / UK founders
+- /locations/dubai - pitch deck designers for Dubai / MENA founders
 - We work globally; these pages just call out specific time zone + investor ecosystem fit.
 
 ## Contact

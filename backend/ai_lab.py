@@ -1,9 +1,9 @@
-"""AI Lab — free AI tools for founders.
+"""AI Lab - free AI tools for founders.
 
 Phase 1 tools:
-  1. AI Pitch Deck Review — Gemini 2.5 Pro analyses the PDF and returns an
+  1. AI Pitch Deck Review - Gemini 2.5 Pro analyses the PDF and returns an
      8-dimension investor-readiness scorecard + top 3 priorities.
-  2. Logo → Branded Template Generator — extracts brand colors from one (or
+  2. Logo → Branded Template Generator - extracts brand colors from one (or
      two co-branded) logos and generates a 5-slide .pptx the user can open
      and edit. User can override any color via the color picker on the UI.
 
@@ -307,7 +307,7 @@ def _build_pptx(*, logo1_bytes: Optional[bytes], logo2_bytes: Optional[bytes],
 
     is_dark = (theme or "dark").lower() == "dark"
     # Title/closing background tone toggles by theme. Inner content always on
-    # the warm-light surface for readability — even in dark theme decks.
+    # the warm-light surface for readability - even in dark theme decks.
     hero_bg = dark if is_dark else light
     text_on_hero = "#FFFFFF" if _luminance(_hex_to_rgb(hero_bg)) < 0.5 else "#0A0A0A"
     inner_bg = light  # consistent inner surface

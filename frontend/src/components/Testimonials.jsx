@@ -30,7 +30,7 @@ export const Testimonials = () => {
             rel="noopener noreferrer"
             data-testid="fiverr-vetted-pro-badge"
             className="mt-6 inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#1DBF73]/30 bg-[#1DBF73]/[0.06] hover:bg-[#1DBF73]/[0.12] hover:border-[#1DBF73]/55 hover:-translate-y-0.5 transition-all duration-300 group"
-            aria-label="Vetted Pro on Fiverr — view our profile"
+            aria-label="Vetted Pro on Fiverr - view our profile"
           >
             <img
               src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/50cfc067-d28f-4b86-920d-fbaa5f618fd1.png?w=128&h=128&fit=max&dpr=3&auto=format&q=50"
