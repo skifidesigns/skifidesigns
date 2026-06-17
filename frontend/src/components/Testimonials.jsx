@@ -47,7 +47,19 @@ export const Testimonials = () => {
               </p>
               <div className="border-t border-border/60 pt-5">
                 <div className="font-semibold text-foreground">{testimonial.name}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{testimonial.role}, {testimonial.company}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {testimonial.role}
+                  {testimonial.company ? `, ${testimonial.company}` : ''}
+                </div>
+                {testimonial.country && (
+                  <div
+                    data-testid={`testimonial-country-${testimonial.id}`}
+                    className="text-xs text-muted-foreground/85 mt-1.5 inline-flex items-center gap-1.5"
+                  >
+                    <span aria-hidden="true" className="text-sm leading-none">{testimonial.flag}</span>
+                    <span>{testimonial.country}</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

@@ -49,26 +49,52 @@ export const services = [
 export const testimonials = [
   {
     id: 1,
-    name: "Sarah Chen",
-    company: "TechStart Ventures",
-    role: "CEO",
-    text: "SkiFi transformed our pitch deck completely. The presentation looked world-class and helped us communicate with confidence.",
+    name: "Patrick Brane",
+    role: "Director",
+    company: "Underberg America",
+    country: "United States",
+    flag: "🇺🇸",
+    text: "Working with SkiFi has been a great experience. I genuinely consider them part of our team and look forward to working with them on each project. Highly recommend!",
     rating: 5
   },
   {
     id: 2,
-    name: "Michael Roberts",
-    company: "Global Solutions Inc",
-    role: "Marketing Director",
-    text: "Fast, creative, and incredibly easy to work with. They understood our brand immediately.",
+    name: "Nadia Shaheen",
+    role: "Founder",
+    company: "",
+    country: "United Kingdom",
+    flag: "🇬🇧",
+    text: "I looked for multiple people to help but this agency was first to respond — clear communication and professionalism. I would use them again 100% and it only took one revision to fix a couple of things. Super happy and took a big weight off me.",
     rating: 5
   },
   {
     id: 3,
-    name: "Priya Sharma",
-    company: "Innovation Labs",
+    name: "Grace Bitag",
     role: "Founder",
-    text: "The attention to detail and storytelling approach made all the difference. Our investor meetings have never gone better.",
+    company: "Business Successor",
+    country: "Switzerland",
+    flag: "🇨🇭",
+    text: "Thank you for the transparent and professional collaboration. Communication was always open and they were consistently receptive to feedback. SkiFi kept me informed throughout the process and worked closely with me to find the best possible solutions. A very positive experience — I would happily work with them again.",
+    rating: 5
+  },
+  {
+    id: 4,
+    name: "Anna",
+    role: "Founder",
+    company: "BeFit4Health",
+    country: "United States",
+    flag: "🇺🇸",
+    text: "The project completion exceeded my expectations. I'm extremely satisfied with the quality and the fast delivery turnaround. Everything arrived exactly as described, professionally done, and the overall experience was smooth and efficient from start to finish. I'll be back!",
+    rating: 5
+  },
+  {
+    id: 5,
+    name: "James",
+    role: "Co-founder",
+    company: "UniversityCity",
+    country: "United States",
+    flag: "🇺🇸",
+    text: "Does excellent work — understands the brand and keeps language and communication simple. We've done a number of different projects with the team and will continue to.",
     rating: 5
   }
 ];
