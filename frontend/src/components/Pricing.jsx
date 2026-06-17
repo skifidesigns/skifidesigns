@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ArrowUpRight, Star, Calendar, Sparkles } from 'lucide-react';
+import { Check, ArrowUpRight, Star, Calendar, Sparkles, ShieldCheck } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -174,6 +174,18 @@ export const Pricing = () => {
                   {plan.cta}
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
+
+                {plan.popular && (
+                  <div
+                    data-testid="pricing-money-back-guarantee"
+                    className={`mt-4 flex items-center justify-center gap-2 text-xs font-medium ${
+                      isLight ? 'text-gray-600' : 'text-white/70'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#2A7AFE]" strokeWidth={2.25} />
+                    <span>30-day money-back guarantee</span>
+                  </div>
+                )}
               </motion.div>
             );
           })}

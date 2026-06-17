@@ -39,6 +39,10 @@ Premium landing page + lead-gen SaaS for **SkiFi Designs**, a presentation desig
 
 ## Implementation Log
 
+### 2026-02-17 — 30-day money-back guarantee badge
+- Added a `ShieldCheck` + "30-day money-back guarantee" row beneath the **Start a Project** CTA on the Premium card only (gated by `plan.popular`).
+- Test ID: `pricing-money-back-guarantee`.
+
 ### 2026-02-17 — Pricing reduction (Starter/Premium/Retainer)
 - **Backend `PACKAGES`** updated: Starter `$1,500 → $1,499`, Premium `$2,500 → $2,499`, Monthly Retainer `$3,000 → $999`. `$15/slide` redesign unchanged.
 - **Removed** `STRIPE_MONTHLY_PRICE_ID` env var → subscription checkout now uses ad-hoc `price_data` (`unit_amount=99900`, `recurring=month`) — no Stripe dashboard work needed for the new $999/mo retainer.
