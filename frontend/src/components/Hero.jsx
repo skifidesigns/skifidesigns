@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Calendar, ArrowDown, ArrowUpRight, Star } from 'lucide-react';
+import { Sparkles, Calendar, ArrowDown } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { trackEvent } from '../utils/analytics';
 
@@ -136,15 +136,7 @@ export const Hero = () => {
                 className="w-3.5 h-3.5 rounded-[3px]"
               />
               <span className="font-semibold tracking-wide">
-                Vetted Pro on Fiverr in Presentation Design
-              </span>
-              <span className="inline-flex items-center gap-0.5 text-foreground/85">
-                <span className="font-semibold tabular-nums">5.0</span>
-                <Star className="w-3 h-3 fill-[#1DBF73] text-[#1DBF73]" />
-              </span>
-              <span className="inline-flex items-center gap-0.5 text-[#1DBF73] font-semibold underline-offset-4 group-hover:underline">
-                View profile
-                <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                Vetted Pro Agency on Fiverr in Presentation Design Category
               </span>
             </a>
           </motion.div>
