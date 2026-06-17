@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Calendar, ArrowDown } from 'lucide-react';
+import { Sparkles, Calendar, ArrowDown, ArrowUpRight } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { trackEvent } from '../utils/analytics';
 
@@ -135,9 +135,10 @@ export const Hero = () => {
                 height="14"
                 className="w-3.5 h-3.5 rounded-[3px]"
               />
-              <span className="font-semibold tracking-wide">
-                Vetted Pro Agency on Fiverr in Presentation Design Category
+              <span className="tracking-wide">
+                <span className="font-bold">Vetted Pro</span> Agency on Fiverr in Presentation Design
               </span>
+              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           </motion.div>
 
