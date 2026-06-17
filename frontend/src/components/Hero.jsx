@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Calendar, ArrowDown } from 'lucide-react';
+import { Sparkles, Calendar, ArrowDown, ArrowUpRight, Star } from 'lucide-react';
 import { OnboardingWizard } from './OnboardingWizard';
 import { trackEvent } from '../utils/analytics';
 
@@ -54,10 +54,10 @@ export const Hero = () => {
           }}
           className="space-y-5 sm:space-y-8"
         >
-          {/* Availability + Vetted Pro on Fiverr badges */}
+          {/* Availability Badge */}
           <motion.div
             variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-            className="flex flex-wrap justify-center items-center gap-2 sm:gap-3"
+            className="flex justify-center"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 skifi-glass-pill rounded-full">
               <span className="relative flex h-2 w-2">
@@ -68,30 +68,6 @@ export const Hero = () => {
                 Available for new projects
               </span>
             </div>
-
-            <a
-              href="https://www.fiverr.com/skifidesigns"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="hero-fiverr-vetted-pro-badge"
-              aria-label="Vetted Pro on Fiverr in Presentation Design - view our profile"
-              className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-[#1DBF73]/35 bg-[#1DBF73]/[0.07] hover:bg-[#1DBF73]/[0.13] hover:border-[#1DBF73]/60 hover:-translate-y-0.5 transition-all duration-300"
-            >
-              <img
-                src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/50cfc067-d28f-4b86-920d-fbaa5f618fd1.png?w=128&h=128&fit=max&dpr=3&auto=format&q=50"
-                alt="Fiverr Pro"
-                loading="lazy"
-                width="16"
-                height="16"
-                className="w-4 h-4 rounded-[3px]"
-              />
-              <span className="text-[11px] sm:text-xs font-semibold text-foreground/85 whitespace-nowrap tracking-wide">
-                Vetted Pro on Fiverr
-              </span>
-              <span className="hidden sm:inline text-[10px] font-medium text-muted-foreground/80 border-l border-border/60 pl-2">
-                Presentation Design
-              </span>
-            </a>
           </motion.div>
 
           <motion.h1
@@ -136,6 +112,41 @@ export const Hero = () => {
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#2A7AFE] group-hover:rotate-12 transition-transform duration-300" />
               Start a Project
             </button>
+          </motion.div>
+
+          {/* Vetted Pro on Fiverr - thin trust line under CTAs */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+            className="flex justify-center -mt-1 sm:-mt-2"
+          >
+            <a
+              href="https://www.fiverr.com/skifidesigns"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="hero-fiverr-vetted-pro-badge"
+              aria-label="Vetted Pro on Fiverr in Presentation Design - view our profile"
+              className="group inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors duration-300"
+            >
+              <img
+                src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/50cfc067-d28f-4b86-920d-fbaa5f618fd1.png?w=128&h=128&fit=max&dpr=3&auto=format&q=50"
+                alt="Fiverr Pro"
+                loading="lazy"
+                width="14"
+                height="14"
+                className="w-3.5 h-3.5 rounded-[3px]"
+              />
+              <span className="font-semibold tracking-wide">
+                Vetted Pro on Fiverr in Presentation Design
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-foreground/85">
+                <span className="font-semibold tabular-nums">5.0</span>
+                <Star className="w-3 h-3 fill-[#1DBF73] text-[#1DBF73]" />
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-[#1DBF73] font-semibold underline-offset-4 group-hover:underline">
+                View profile
+                <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
+            </a>
           </motion.div>
 
           {/* Stats - glass card with interactive spotlight */}
