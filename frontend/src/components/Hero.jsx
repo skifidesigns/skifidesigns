@@ -136,9 +136,9 @@ export const Hero = () => {
                 className="w-3.5 h-3.5 rounded-[3px]"
               />
               <span className="tracking-wide">
-                <span className="font-bold">Vetted Pro</span> Agency on Fiverr in Presentation Design
+                <span className="font-bold">Vetted Pro</span> Agency on Fiverr in <span className="font-bold">Presentation Design</span>
               </span>
-              <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <ArrowUpRight className="w-3 h-3 text-[#2A7AFE] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           </motion.div>
 
