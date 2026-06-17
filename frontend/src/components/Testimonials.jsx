@@ -34,7 +34,7 @@ export const Testimonials = () => {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.45, delay: i * 0.08 }}
               onMouseMove={handleMove}
-              className="skifi-card skifi-spotlight rounded-2xl p-8 group relative hover:-translate-y-1 transition-transform duration-300"
+              className="skifi-card skifi-spotlight rounded-2xl p-8 group relative hover:-translate-y-1 transition-transform duration-300 flex flex-col h-full"
             >
               <Quote className="absolute top-6 right-6 w-8 h-8 text-[#2A7AFE]/15" strokeWidth={1} />
               <div className="flex gap-0.5 mb-5">
@@ -45,7 +45,7 @@ export const Testimonials = () => {
               <p className="text-foreground text-[15px] leading-relaxed mb-6">
                 "{testimonial.text}"
               </p>
-              <div className="border-t border-border/60 pt-5">
+              <div className="border-t border-border/60 pt-5 mt-auto">
                 <div className="font-semibold text-foreground">{testimonial.name}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">
                   {testimonial.role}
