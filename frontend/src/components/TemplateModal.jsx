@@ -13,6 +13,20 @@ const assetUrl = (u) => {
   return `${process.env.REACT_APP_BACKEND_URL}${u.startsWith('/') ? u : '/' + u}`;
 };
 
+// Request a smaller pre-generated variant of an uploaded image
+// (thumb = ~480w WebP, preview = ~1280w WebP). External URLs are passed through.
+// If the backend has no variant for that file, it transparently falls back to
+// the original on the server side, so this is always safe to call.
+const variantUrl = (u, variant) => {
+  const full = assetUrl(u);
+  if (!full) return '';
+  if (!variant) return full;
+  // Only attach ?v= to our own /api/files/<id> URLs to avoid breaking
+  // external image URLs (Unsplash, Behance, etc.)
+  if (!full.includes('/api/files/')) return full;
+  return full + (full.includes('?') ? '&' : '?') + `v=${variant}`;
+};
+
 /**
  * TemplateModal - opens when a user clicks a template card on /resources.
  *
@@ -234,8 +248,10 @@ export const TemplateModal = ({ template, open, onClose }) => {
             >
               {slides.length > 0 ? (
                 <img
-                  src={assetUrl(slides[active])}
+                  src={variantUrl(slides[active], 'preview')}
                   alt={`${template.title} - slide ${active + 1}`}
+                  loading="eager"
+                  decoding="async"
                   className="w-full h-full object-contain cursor-zoom-in bg-white"
                   onClick={() => setLightboxOpen(true)}
                 />
@@ -330,7 +346,13 @@ export const TemplateModal = ({ template, open, onClose }) => {
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   >
-                    <img src={assetUrl(url)} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={variantUrl(url, 'thumb')}
+                      alt={`Thumb ${idx + 1}`}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>

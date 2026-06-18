@@ -14,6 +14,12 @@ import { trackEvent } from '../utils/analytics';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 const assetUrl = (p) => (!p ? '' : (/^https?:/i.test(p) ? p : `${BACKEND}${p.startsWith('/') ? '' : '/'}${p}`));
+// Lightweight WebP-variant helper - safely a no-op for external URLs
+const variantUrl = (p, variant) => {
+  const full = assetUrl(p);
+  if (!full || !variant || !full.includes('/api/files/')) return full;
+  return full + (full.includes('?') ? '&' : '?') + `v=${variant}`;
+};
 
 const CATEGORIES = [
   'All',
@@ -65,10 +71,13 @@ const TemplateCard = ({ template, onOpen, onQuickDownload, isFocused, isDownload
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img
-          src={assetUrl(template.thumbnail_url)}
+          src={variantUrl(template.thumbnail_url, 'preview')}
+          srcSet={`${variantUrl(template.thumbnail_url, 'thumb')} 480w, ${variantUrl(template.thumbnail_url, 'preview')} 1280w`}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           alt={template.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
         />
         <div className="absolute top-3 left-3 flex items-center gap-2">
           {isPaid ? (

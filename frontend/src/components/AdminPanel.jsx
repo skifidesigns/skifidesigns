@@ -133,6 +133,13 @@ const absoluteUrl = (path) => {
   if (/^https?:/i.test(path)) return path;
   return `${process.env.REACT_APP_BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
+// Request a smaller pre-generated variant (thumb/preview) of an /api/files/<id> URL.
+// Safely no-ops for external URLs or when no variant param is supplied.
+const variantUrl = (path, variant) => {
+  const full = absoluteUrl(path);
+  if (!full || !variant || !full.includes('/api/files/')) return full;
+  return full + (full.includes('?') ? '&' : '?') + `v=${variant}`;
+};
 
 const AdminImageUploader = ({ value, onChange, token, testId }) => {
   const [uploading, setUploading] = useState(false);
@@ -277,8 +284,10 @@ const TemplatePreviewGalleryUploader = ({ value = [], onChange, token }) => {
           {value.map((url, idx) => (
             <div key={`${url}-${idx}`} className="relative group rounded-md overflow-hidden border border-border bg-muted">
               <img
-                src={absoluteUrl(url)}
+                src={variantUrl(url, 'thumb')}
                 alt={`Slide ${idx + 1}`}
+                loading="lazy"
+                decoding="async"
                 className="w-full aspect-video object-cover"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />

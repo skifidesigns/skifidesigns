@@ -1310,7 +1310,12 @@ async def admin_list_order_files(session_id: str, _: str = Depends(require_admin
 
 
 # Helper: stream any GridFS file (used by multiple endpoints)
-async def _stream_gridfs(file_id: str, force_download: bool = True) -> StreamingResponse:
+async def _stream_gridfs(file_id: str, force_download: bool = True, variant: Optional[str] = None) -> StreamingResponse:
+    """Stream a GridFS file by id.
+    If `variant` is provided ('thumb' or 'preview') and the original file has
+    a matching pre-generated variant id stored in its metadata, that smaller
+    variant is served instead. Falls back to the original if no variant exists.
+    """
     try:
         oid = ObjectId(file_id)
     except Exception:
@@ -1318,6 +1323,21 @@ async def _stream_gridfs(file_id: str, force_download: bool = True) -> Streaming
     file_doc = await db["onboarding_uploads.files"].find_one({"_id": oid})
     if not file_doc:
         raise HTTPException(status_code=404, detail="File not found")
+
+    # Resolve to a variant if requested + available
+    if variant in {"thumb", "preview"}:
+        variants = (file_doc.get("metadata") or {}).get("variants") or {}
+        variant_id = variants.get(variant)
+        if variant_id:
+            try:
+                v_oid = ObjectId(variant_id)
+                v_doc = await db["onboarding_uploads.files"].find_one({"_id": v_oid})
+                if v_doc:
+                    oid = v_oid
+                    file_doc = v_doc
+            except Exception:
+                pass  # fall back to original silently
+
     stream = await fs_bucket.open_download_stream(oid)
     content_type = (file_doc.get("metadata") or {}).get("content_type") or "application/octet-stream"
     filename = file_doc.get("filename", "download.bin")
@@ -1331,15 +1351,84 @@ async def _stream_gridfs(file_id: str, force_download: bool = True) -> Streaming
 
     disposition = "attachment" if force_download else "inline"
     headers = {"Content-Disposition": f'{disposition}; filename="{filename}"'}
+    # Long, immutable cache for inline files (the file id is a non-guessable ObjectId
+    # so a content change always produces a new id). Skip for forced-download paths
+    # where Auth/ownership might change between requests.
+    if not force_download:
+        headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        headers["ETag"] = f'"{file_id}"'
+    # Content-Length helps browsers show accurate progress and parallelize.
+    length = file_doc.get("length")
+    if length is not None:
+        headers["Content-Length"] = str(length)
     return StreamingResponse(iterator(), media_type=content_type, headers=headers)
 
 
 # Public file (images) - used for template thumbnails and blog covers
 @api_router.get("/files/{file_id}")
-async def public_get_file(file_id: str):
+async def public_get_file(file_id: str, v: Optional[str] = None):
     """Public, inline-served file (designed for images: thumbnails, blog covers, etc.).
-    The file id is a non-guessable ObjectId, so files are unlisted but not authenticated."""
-    return await _stream_gridfs(file_id, force_download=False)
+    The file id is a non-guessable ObjectId, so files are unlisted but not authenticated.
+    Pass ?v=thumb (~480w WebP) or ?v=preview (~1280w WebP) to get a smaller pre-generated
+    variant; omit for the original.
+    """
+    return await _stream_gridfs(file_id, force_download=False, variant=v)
+
+
+async def _generate_and_store_image_variants(image_bytes: bytes, base_filename: str) -> dict:
+    """Resize an uploaded image into smaller WebP variants and store each as a
+    separate GridFS file. Returns a dict {'thumb': file_id, 'preview': file_id}.
+    Skips silently and returns empty dict if the bytes aren't a decodable image.
+    Pillow is already a runtime dependency.
+    """
+    from PIL import Image, ImageOps, UnidentifiedImageError
+    try:
+        src = Image.open(io.BytesIO(image_bytes))
+        src.load()
+    except (UnidentifiedImageError, OSError, Exception):
+        return {}
+    # Drop EXIF orientation so the saved variant renders consistently in browsers
+    try:
+        src = ImageOps.exif_transpose(src)
+    except Exception:
+        pass
+    # WebP doesn't keep alpha well as lossy; flatten transparent images onto white
+    if src.mode in ("RGBA", "LA", "P"):
+        bg = Image.new("RGB", src.size, (255, 255, 255))
+        try:
+            mask = src.convert("RGBA").split()[-1]
+            bg.paste(src.convert("RGB"), mask=mask)
+        except Exception:
+            bg.paste(src.convert("RGB"))
+        src = bg
+    elif src.mode != "RGB":
+        src = src.convert("RGB")
+
+    out: dict = {}
+    name_root = base_filename.rsplit(".", 1)[0] if "." in base_filename else base_filename
+    for variant_name, max_w, quality in (("thumb", 480, 75), ("preview", 1280, 82)):
+        if src.width <= max_w:
+            # No point upscaling - reuse a copy at native size for this variant.
+            resized = src.copy()
+        else:
+            ratio = max_w / float(src.width)
+            new_size = (max_w, int(src.height * ratio))
+            resized = src.resize(new_size, Image.LANCZOS)
+        buf = io.BytesIO()
+        resized.save(buf, format="WEBP", quality=quality, method=6)
+        buf.seek(0)
+        v_filename = f"{name_root}.{variant_name}.webp"
+        v_metadata = {
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "content_type": "image/webp",
+            "original_name": v_filename,
+            "uploader": "admin",
+            "variant_of": None,  # Filled after parent id is known by caller (cosmetic)
+            "variant": variant_name,
+        }
+        v_id = await fs_bucket.upload_from_stream(v_filename, buf, metadata=v_metadata)
+        out[variant_name] = str(v_id)
+    return out
 
 
 # Generic admin upload - returns file_id AND a stable public URL
@@ -1365,11 +1454,24 @@ async def admin_upload(
     buffer.seek(0)
     if total == 0:
         raise HTTPException(status_code=400, detail="Empty file.")
+
+    # For images, pre-generate smaller WebP variants for the admin grid + public
+    # thumbnail strip + main preview. The original is still kept for the lightbox.
+    content_type = (file.content_type or "application/octet-stream").lower()
+    variants: dict = {}
+    if content_type.startswith("image/") and ext in {".png", ".jpg", ".jpeg", ".webp"}:
+        try:
+            variants = await _generate_and_store_image_variants(buffer.getvalue(), filename)
+        except Exception as exc:  # noqa: BLE001 - never block uploads on variant failure
+            logger.warning("Image variant generation failed for %s: %s", filename, exc)
+            variants = {}
+
     metadata = {
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "content_type": file.content_type or "application/octet-stream",
         "original_name": filename,
         "uploader": "admin",
+        "variants": variants,  # {'thumb': '<id>', 'preview': '<id>'} or {}
     }
     file_id = await fs_bucket.upload_from_stream(filename, buffer, metadata=metadata)
     return {
@@ -1378,6 +1480,10 @@ async def admin_upload(
         "size": total,
         "url": f"/api/files/{file_id}",
         "content_type": metadata["content_type"],
+        "variants": {
+            "thumb_url": f"/api/files/{file_id}?v=thumb" if variants.get("thumb") else None,
+            "preview_url": f"/api/files/{file_id}?v=preview" if variants.get("preview") else None,
+        },
     }
 
 
