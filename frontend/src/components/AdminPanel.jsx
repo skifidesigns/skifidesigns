@@ -121,6 +121,8 @@ const emptyTemplateForm = {
   file_url: '',
   template_file_id: '',
   preview_url: '',
+  preview_image_urls: [],
+  slide_count: '',
   tags: '',
   is_published: true,
 };
@@ -192,6 +194,129 @@ const AdminImageUploader = ({ value, onChange, token, testId }) => {
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
+    </div>
+  );
+};
+
+/**
+ * Multi-image uploader for template preview slides.
+ * Accepts multiple files at once, supports drag-and-drop reorder via simple
+ * up/down buttons (keeps the surface area minimal), and lets admin remove
+ * individual images.
+ */
+const TemplatePreviewGalleryUploader = ({ value = [], onChange, token }) => {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef(null);
+
+  const handleFiles = async (files) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const uploaded = [];
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 50 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 50 MB, skipped`);
+          continue;
+        }
+        const fd = new FormData();
+        fd.append('file', file);
+        const { data } = await axios.post(`${API}/admin/upload`, fd, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        });
+        uploaded.push(data.url);
+      }
+      if (uploaded.length) {
+        onChange([...(value || []), ...uploaded]);
+        toast.success(`${uploaded.length} preview slide${uploaded.length === 1 ? '' : 's'} uploaded`);
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const move = (idx, delta) => {
+    const next = [...value];
+    const target = idx + delta;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  };
+  const remove = (idx) => onChange(value.filter((_, i) => i !== idx));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          data-testid="tpl-form-preview-gallery-upload"
+        >
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-1.5" />}
+          {uploading ? 'Uploading…' : 'Add preview slides'}
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {value.length} slide{value.length === 1 ? '' : 's'} added
+        </span>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      {value.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {value.map((url, idx) => (
+            <div key={`${url}-${idx}`} className="relative group rounded-md overflow-hidden border border-border bg-muted">
+              <img
+                src={absoluteUrl(url)}
+                alt={`Slide ${idx + 1}`}
+                className="w-full aspect-video object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="absolute top-1 left-1 text-[10px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">
+                {idx + 1}
+              </span>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(idx, -1)}
+                  disabled={idx === 0}
+                  className="w-7 h-7 rounded bg-white text-black text-xs font-bold disabled:opacity-30"
+                  aria-label="Move left"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(idx, 1)}
+                  disabled={idx === value.length - 1}
+                  className="w-7 h-7 rounded bg-white text-black text-xs font-bold disabled:opacity-30"
+                  aria-label="Move right"
+                >
+                  ›
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(idx)}
+                  className="w-7 h-7 rounded bg-red-500 text-white text-xs font-bold"
+                  aria-label="Remove"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -294,6 +419,10 @@ const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
       const payload = {
         ...form,
         price: Number(form.price) || 0,
+        slide_count: form.slide_count ? Number(form.slide_count) : null,
+        preview_image_urls: Array.isArray(form.preview_image_urls)
+          ? form.preview_image_urls.filter(Boolean)
+          : [],
         tags: form.tags
           ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
           : [],
@@ -442,6 +571,34 @@ const TemplateFormModal = ({ open, onClose, onSave, initial, token }) => {
               onChange={(e) => update('preview_url', e.target.value)}
               placeholder="Behance link, Figma, etc."
               className="bg-background border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Slide count</Label>
+            <Input
+              data-testid="tpl-form-slide-count"
+              type="number"
+              min="1"
+              max="500"
+              value={form.slide_count || ''}
+              onChange={(e) => update('slide_count', e.target.value)}
+              placeholder="e.g. 16"
+              className="bg-background border-border mt-1 max-w-[160px]"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Shown on the template card and inside the preview modal.
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm text-foreground">Preview slides (swipeable gallery)</Label>
+            <p className="text-xs text-muted-foreground mt-1 mb-2">
+              Upload PNG/JPG screenshots of each slide. First image is shown as the main preview;
+              arrows + thumbnails on the buttons let you reorder or remove.
+            </p>
+            <TemplatePreviewGalleryUploader
+              value={form.preview_image_urls || []}
+              onChange={(urls) => update('preview_image_urls', urls)}
+              token={token}
             />
           </div>
           <div>

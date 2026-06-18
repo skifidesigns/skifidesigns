@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { X, Share2, Check, Download, Lock, ShoppingBag, Loader2, Sparkles, Tag } from 'lucide-react';
+import { X, Share2, Check, Download, Lock, ShoppingBag, Loader2, Sparkles, Tag, ChevronLeft, ChevronRight, Maximize2, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { GoogleIcon } from './icons/GoogleIcon';
@@ -61,6 +61,51 @@ export const TemplateModal = ({ template, open, onClose }) => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
   }, [open]);
+
+  // ============ Preview gallery state (hooks must run before any early return) ============
+  // Build the slide list from preview_image_urls (admin-uploaded) and fall back
+  // to the single thumbnail_url so older templates without a gallery still work.
+  const slides = (() => {
+    const arr = Array.isArray(template?.preview_image_urls)
+      ? template.preview_image_urls.filter(Boolean)
+      : [];
+    if (arr.length > 0) return arr;
+    return template?.thumbnail_url ? [template.thumbnail_url] : [];
+  })();
+  const slideCount = template?.slide_count || slides.length || null;
+  const [active, setActive] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const touchStartX = useRef(null);
+
+  // Reset carousel position whenever a new template is opened
+  useEffect(() => {
+    setActive(0);
+    setLightboxOpen(false);
+  }, [template?.id]);
+
+  const goPrev = useCallback(() => {
+    setActive((i) => (i === 0 ? slides.length - 1 : i - 1));
+  }, [slides.length]);
+  const goNext = useCallback(() => {
+    setActive((i) => (i === slides.length - 1 ? 0 : i + 1));
+  }, [slides.length]);
+
+  // Keyboard navigation: ← → on the modal, Esc closes whichever layer is open
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        if (lightboxOpen) { setLightboxOpen(false); return; }
+        onClose();
+        return;
+      }
+      if (slides.length < 2) return;
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'ArrowRight') goNext();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, slides.length, goPrev, goNext, lightboxOpen, onClose]);
 
   if (!open || !template) return null;
 
@@ -152,6 +197,17 @@ export const TemplateModal = ({ template, open, onClose }) => {
     ctaLabel = 'Download now';
   }
 
+  // Touch swipe on mobile (non-hook helpers - safe to define after early return)
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0]?.clientX ?? null; };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) goNext(); else goPrev();
+    }
+    touchStartX.current = null;
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto"
@@ -162,31 +218,124 @@ export const TemplateModal = ({ template, open, onClose }) => {
       data-testid="template-modal"
     >
       <div
-        className="bg-card border border-border rounded-2xl w-full max-w-4xl my-8 shadow-2xl overflow-hidden"
+        className="bg-card border border-border rounded-2xl w-full max-w-6xl my-8 shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Left - cover image */}
-          <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[480px] overflow-hidden bg-muted">
-            <img
-              src={assetUrl(template.thumbnail_url)}
-              alt={template.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-4 left-4">
-              {isPaid ? (
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#2A7AFE] text-white">
-                  ${template.price}
-                </span>
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr]">
+          {/* ============ Left: preview carousel ============ */}
+          <div className="relative bg-muted/40 p-4 md:p-6 flex flex-col">
+            <div
+              className="relative aspect-[16/10] bg-muted rounded-xl overflow-hidden group"
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+              data-testid="template-modal-carousel"
+            >
+              {slides.length > 0 ? (
+                <img
+                  src={assetUrl(slides[active])}
+                  alt={`${template.title} - slide ${active + 1}`}
+                  className="w-full h-full object-cover cursor-zoom-in"
+                  onClick={() => setLightboxOpen(true)}
+                />
               ) : (
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-                  FREE
+                <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                  No preview available
+                </div>
+              )}
+
+              {/* Top-left badges: FREE/$X + slide count chip */}
+              <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
+                {isPaid ? (
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#2A7AFE] text-white">
+                    ${template.price}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-500 text-white">
+                    FREE
+                  </span>
+                )}
+                {slideCount && (
+                  <span
+                    data-testid="template-modal-slide-count"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/65 text-white backdrop-blur-sm"
+                  >
+                    <Layers className="w-3 h-3" />
+                    {slideCount} {slideCount === 1 ? 'slide' : 'slides'}
+                  </span>
+                )}
+              </div>
+
+              {/* Zoom hint on hover (top-right) */}
+              {slides.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setLightboxOpen(true)}
+                  className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  aria-label="Open fullscreen"
+                  data-testid="template-modal-zoom"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Prev/Next arrows */}
+              {slides.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-900 shadow-md flex items-center justify-center transition-all hover:scale-105"
+                    aria-label="Previous slide"
+                    data-testid="template-modal-prev"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-900 shadow-md flex items-center justify-center transition-all hover:scale-105"
+                    aria-label="Next slide"
+                    data-testid="template-modal-next"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+
+              {/* "Slide N of M" counter */}
+              {slides.length > 1 && (
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-medium bg-black/65 text-white px-2.5 py-1 rounded-full backdrop-blur-sm tabular-nums">
+                  {active + 1} / {slides.length}
                 </span>
               )}
             </div>
+
+            {/* Thumbnail strip */}
+            {slides.length > 1 && (
+              <div
+                className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin"
+                data-testid="template-modal-thumbs"
+              >
+                {slides.map((url, idx) => (
+                  <button
+                    key={`${url}-${idx}`}
+                    type="button"
+                    onClick={() => setActive(idx)}
+                    className={`flex-shrink-0 w-20 aspect-[16/10] rounded-md overflow-hidden border-2 transition-all ${
+                      active === idx
+                        ? 'border-[#2A7AFE] ring-2 ring-[#2A7AFE]/30'
+                        : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  >
+                    <img src={assetUrl(url)} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right - details */}
+          {/* ============ Right: details ============ */}
           <div className="p-6 md:p-8 flex flex-col overflow-y-auto max-h-[80vh]">
             <div className="flex items-start justify-between gap-3 mb-3">
               <p className="text-xs uppercase tracking-[0.16em] text-[#2A7AFE] font-semibold">
@@ -212,9 +361,15 @@ export const TemplateModal = ({ template, open, onClose }) => {
               </div>
             </div>
 
-            <h2 id="template-modal-title" className="text-2xl md:text-3xl font-semibold text-foreground mb-3 leading-tight">
+            <h2 id="template-modal-title" className="text-2xl md:text-3xl font-semibold text-foreground mb-2 leading-tight">
               {template.title}
             </h2>
+            {slideCount && (
+              <p className="text-xs text-muted-foreground mb-3 inline-flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#2A7AFE]" />
+                {slideCount} editable {slideCount === 1 ? 'slide' : 'slides'}
+              </p>
+            )}
 
             {template.description && (
               <p className="text-sm text-muted-foreground leading-relaxed mb-5 whitespace-pre-wrap">
@@ -275,6 +430,55 @@ export const TemplateModal = ({ template, open, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* ============ Fullscreen lightbox ============ */}
+      {lightboxOpen && slides.length > 0 && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4"
+          onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+          data-testid="template-modal-lightbox"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+            aria-label="Close fullscreen"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {slides.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+          <img
+            src={assetUrl(slides[active])}
+            alt={`${template.title} - slide ${active + 1}`}
+            className="max-w-[92vw] max-h-[88vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {slides.length > 1 && (
+            <span className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium bg-white/10 text-white px-3 py-1.5 rounded-full backdrop-blur-sm tabular-nums">
+              {active + 1} / {slides.length}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };

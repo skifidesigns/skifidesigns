@@ -969,6 +969,8 @@ class TemplateModel(BaseModel):
     file_url: Optional[str] = None             # external URL (legacy / preview)
     template_file_id: Optional[str] = None     # GridFS file id (preferred)
     preview_url: Optional[str] = None          # optional online preview link
+    preview_image_urls: List[str] = Field(default_factory=list)  # swipeable gallery
+    slide_count: Optional[int] = Field(None, ge=1, le=500)
     tags: List[str] = Field(default_factory=list)
     is_published: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -984,6 +986,8 @@ class TemplateCreate(BaseModel):
     file_url: Optional[str] = None
     template_file_id: Optional[str] = None
     preview_url: Optional[str] = None
+    preview_image_urls: List[str] = Field(default_factory=list)
+    slide_count: Optional[int] = Field(None, ge=1, le=500)
     tags: List[str] = Field(default_factory=list)
     is_published: bool = True
 
@@ -999,6 +1003,8 @@ def _public_template(doc: dict) -> dict:
         "price": doc.get("price", 0),
         "thumbnail_url": doc["thumbnail_url"],
         "preview_url": doc.get("preview_url"),
+        "preview_image_urls": doc.get("preview_image_urls", []),
+        "slide_count": doc.get("slide_count"),
         "tags": doc.get("tags", []),
         "created_at": doc.get("created_at"),
     }
@@ -2363,6 +2369,7 @@ async def admin_create_template(payload: TemplateCreate, _: str = Depends(requir
 async def admin_update_template(template_id: str, payload: dict, _: str = Depends(require_admin)):
     allowed = {"title", "description", "category", "type", "price", "thumbnail_url",
                "thumbnail_file_id", "file_url", "template_file_id", "preview_url",
+               "preview_image_urls", "slide_count",
                "tags", "is_published"}
     update_data = {k: v for k, v in payload.items() if k in allowed}
     if not update_data:

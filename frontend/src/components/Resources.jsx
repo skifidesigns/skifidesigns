@@ -70,7 +70,7 @@ const TemplateCard = ({ template, onOpen, onQuickDownload, isFocused, isDownload
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex items-center gap-2">
           {isPaid ? (
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#2A7AFE] text-white">
               ${template.price}
@@ -78,6 +78,14 @@ const TemplateCard = ({ template, onOpen, onQuickDownload, isFocused, isDownload
           ) : (
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
               FREE
+            </span>
+          )}
+          {template.slide_count && (
+            <span
+              data-testid={`template-card-slide-count-${template.id}`}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/55 text-white backdrop-blur-sm"
+            >
+              {template.slide_count} {template.slide_count === 1 ? 'slide' : 'slides'}
             </span>
           )}
         </div>
