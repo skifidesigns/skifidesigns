@@ -223,9 +223,11 @@ export const TemplateModal = ({ template, open, onClose }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr]">
           {/* ============ Left: preview carousel ============ */}
-          <div className="relative bg-muted/40 p-4 md:p-6 flex flex-col">
+          {/* min-w-0 is critical: prevents the flex-shrink-0 thumbnail strip
+              from expanding the grid track and squeezing out the right column */}
+          <div className="relative bg-muted/40 p-4 md:p-6 flex flex-col min-w-0 order-2 md:order-1">
             <div
-              className="relative aspect-[16/10] bg-muted rounded-xl overflow-hidden group"
+              className="relative w-full max-h-[55vh] md:max-h-none aspect-[16/10] bg-muted rounded-xl overflow-hidden group"
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
               data-testid="template-modal-carousel"
@@ -234,7 +236,7 @@ export const TemplateModal = ({ template, open, onClose }) => {
                 <img
                   src={assetUrl(slides[active])}
                   alt={`${template.title} - slide ${active + 1}`}
-                  className="w-full h-full object-cover cursor-zoom-in"
+                  className="w-full h-full object-contain cursor-zoom-in bg-white"
                   onClick={() => setLightboxOpen(true)}
                 />
               ) : (
@@ -313,7 +315,7 @@ export const TemplateModal = ({ template, open, onClose }) => {
             {/* Thumbnail strip */}
             {slides.length > 1 && (
               <div
-                className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin"
+                className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 min-w-0 max-w-full scrollbar-thin"
                 data-testid="template-modal-thumbs"
               >
                 {slides.map((url, idx) => (
@@ -336,7 +338,7 @@ export const TemplateModal = ({ template, open, onClose }) => {
           </div>
 
           {/* ============ Right: details ============ */}
-          <div className="p-6 md:p-8 flex flex-col overflow-y-auto max-h-[80vh]">
+          <div className="p-6 md:p-8 flex flex-col overflow-y-auto md:max-h-[80vh] min-w-0 order-1 md:order-2">
             <div className="flex items-start justify-between gap-3 mb-3">
               <p className="text-xs uppercase tracking-[0.16em] text-[#2A7AFE] font-semibold">
                 {template.category}
