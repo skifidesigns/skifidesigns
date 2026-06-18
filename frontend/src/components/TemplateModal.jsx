@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { X, Share2, Check, Download, Lock, ShoppingBag, Loader2, Sparkles, Tag, ChevronLeft, ChevronRight, Maximize2, Layers } from 'lucide-react';
 import { toast } from 'sonner';
@@ -88,21 +89,32 @@ export const TemplateModal = ({ template, open, onClose }) => {
   })();
   const slideCount = template?.slide_count || slides.length || null;
   const [active, setActive] = useState(0);
+  const [direction, setDirection] = useState(0); // -1 prev / +1 next, 0 initial
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef(null);
 
   // Reset carousel position whenever a new template is opened
   useEffect(() => {
     setActive(0);
+    setDirection(0);
     setLightboxOpen(false);
   }, [template?.id]);
 
   const goPrev = useCallback(() => {
+    setDirection(-1);
     setActive((i) => (i === 0 ? slides.length - 1 : i - 1));
   }, [slides.length]);
   const goNext = useCallback(() => {
+    setDirection(1);
     setActive((i) => (i === slides.length - 1 ? 0 : i + 1));
   }, [slides.length]);
+  const goTo = useCallback((idx) => {
+    setActive((cur) => {
+      if (idx === cur) return cur;
+      setDirection(idx > cur ? 1 : -1);
+      return idx;
+    });
+  }, []);
 
   // Keyboard navigation: ← → on the modal, Esc closes whichever layer is open
   useEffect(() => {
@@ -247,14 +259,27 @@ export const TemplateModal = ({ template, open, onClose }) => {
               data-testid="template-modal-carousel"
             >
               {slides.length > 0 ? (
-                <img
-                  src={variantUrl(slides[active], 'preview')}
-                  alt={`${template.title} - slide ${active + 1}`}
-                  loading="eager"
-                  decoding="async"
-                  className="w-full h-full object-contain cursor-zoom-in bg-white"
-                  onClick={() => setLightboxOpen(true)}
-                />
+                <AnimatePresence initial={false} mode="popLayout" custom={direction}>
+                  <motion.img
+                    key={active}
+                    src={variantUrl(slides[active], 'preview')}
+                    alt={`${template.title} - slide ${active + 1}`}
+                    loading="eager"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-contain cursor-zoom-in bg-white"
+                    onClick={() => setLightboxOpen(true)}
+                    custom={direction}
+                    variants={{
+                      enter: (dir) => ({ x: dir > 0 ? 56 : dir < 0 ? -56 : 0, opacity: 0 }),
+                      center: { x: 0, opacity: 1 },
+                      exit:  (dir) => ({ x: dir > 0 ? -56 : dir < 0 ? 56 : 0, opacity: 0 }),
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ x: { type: 'tween', duration: 0.22, ease: [0.4, 0, 0.2, 1] }, opacity: { duration: 0.18 } }}
+                  />
+                </AnimatePresence>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
                   No preview available
@@ -338,7 +363,7 @@ export const TemplateModal = ({ template, open, onClose }) => {
                   <button
                     key={`${url}-${idx}`}
                     type="button"
-                    onClick={() => setActive(idx)}
+                    onClick={() => goTo(idx)}
                     className={`flex-shrink-0 w-20 aspect-[16/10] rounded-md overflow-hidden border-2 transition-all ${
                       active === idx
                         ? 'border-[#2A7AFE] ring-2 ring-[#2A7AFE]/30'
