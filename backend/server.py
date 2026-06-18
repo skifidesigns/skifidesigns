@@ -2645,6 +2645,7 @@ class CaseStudyModel(BaseModel):
     approach: str = Field(..., min_length=2)
     outcome: List[str] = Field(default_factory=list)  # bullet points
     gallery_urls: List[str] = Field(default_factory=list)
+    slide_count: Optional[int] = Field(None, ge=1, le=500)
     tags: List[str] = Field(default_factory=list)
     is_featured: bool = False
     is_published: bool = True
@@ -2662,6 +2663,7 @@ class CaseStudyCreate(BaseModel):
     approach: str = Field(..., min_length=2)
     outcome: List[str] = Field(default_factory=list)
     gallery_urls: List[str] = Field(default_factory=list)
+    slide_count: Optional[int] = Field(None, ge=1, le=500)
     tags: List[str] = Field(default_factory=list)
     is_featured: bool = False
     is_published: bool = True
@@ -2680,6 +2682,7 @@ def _public_case_study(doc: dict) -> dict:
         "approach": doc.get("approach", ""),
         "outcome": doc.get("outcome", []),
         "gallery_urls": doc.get("gallery_urls", []),
+        "slide_count": doc.get("slide_count"),
         "tags": doc.get("tags", []),
         "is_featured": doc.get("is_featured", False),
         "is_published": doc.get("is_published", True),
@@ -2743,7 +2746,7 @@ async def admin_create_case_study(payload: CaseStudyCreate, _: str = Depends(req
 @api_router.patch("/admin/case-studies/{cs_id}")
 async def admin_update_case_study(cs_id: str, payload: dict, _: str = Depends(require_admin)):
     allowed = {"title", "client_name", "industry", "summary", "cover_image_url",
-               "challenge", "approach", "outcome", "gallery_urls", "tags",
+               "challenge", "approach", "outcome", "gallery_urls", "slide_count", "tags",
                "is_featured", "is_published"}
     update_data = {k: v for k, v in payload.items() if k in allowed}
     if not update_data:

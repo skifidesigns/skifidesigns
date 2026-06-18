@@ -7,6 +7,13 @@ import { Footer } from './Footer';
 import { FloatingContact } from './FloatingContact';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+const assetUrl = (p) => (!p ? '' : (/^https?:/i.test(p) ? p : `${BACKEND}${p.startsWith('/') ? '' : '/'}${p}`));
+const variantUrl = (p, variant) => {
+  const full = assetUrl(p);
+  if (!full || !variant || !full.includes('/api/files/')) return full;
+  return full + (full.includes('?') ? '&' : '?') + `v=${variant}`;
+};
 
 export const CaseStudies = () => {
   const [items, setItems] = useState([]);
@@ -58,13 +65,16 @@ export const CaseStudies = () => {
                   data-testid={`case-grid-${cs.slug}`}
                   className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:border-[#2A7AFE]/50 hover:-translate-y-1 transition-all duration-500"
                 >
-                  <div className="aspect-[4/3] overflow-hidden bg-muted">
+                  <div className="aspect-video overflow-hidden bg-white">
                     {cs.cover_image_url ? (
                       <img
-                        src={cs.cover_image_url}
+                        src={variantUrl(cs.cover_image_url, 'preview')}
+                        srcSet={`${variantUrl(cs.cover_image_url, 'thumb')} 480w, ${variantUrl(cs.cover_image_url, 'preview')} 1280w`}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         alt={cs.title}
                         loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        decoding="async"
+                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                       />
                     ) : null}
                   </div>

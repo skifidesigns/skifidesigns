@@ -1408,7 +1408,7 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
   const [form, setForm] = useState({
     title: '', client_name: '', industry: '', summary: '',
     cover_image_url: '', challenge: '', approach: '',
-    outcome: '', gallery_urls: '', tags: '',
+    outcome: '', gallery_urls: [], slide_count: '', tags: '',
     is_featured: false, is_published: true,
   });
   const [saving, setSaving] = useState(false);
@@ -1425,7 +1425,8 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
         challenge: initial.challenge || '',
         approach: initial.approach || '',
         outcome: (initial.outcome || []).join('\n'),
-        gallery_urls: (initial.gallery_urls || []).join('\n'),
+        gallery_urls: initial.gallery_urls || [],
+        slide_count: initial.slide_count || '',
         tags: (initial.tags || []).join(', '),
         is_featured: !!initial.is_featured,
         is_published: initial.is_published !== false,
@@ -1434,7 +1435,7 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
       setForm({
         title: '', client_name: '', industry: '', summary: '',
         cover_image_url: '', challenge: '', approach: '',
-        outcome: '', gallery_urls: '', tags: '',
+        outcome: '', gallery_urls: [], slide_count: '', tags: '',
         is_featured: false, is_published: true,
       });
     }
@@ -1455,7 +1456,10 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
         challenge: form.challenge.trim(),
         approach: form.approach.trim(),
         outcome: form.outcome.split('\n').map((s) => s.trim()).filter(Boolean),
-        gallery_urls: form.gallery_urls.split('\n').map((s) => s.trim()).filter(Boolean),
+        gallery_urls: Array.isArray(form.gallery_urls)
+          ? form.gallery_urls.filter(Boolean)
+          : [],
+        slide_count: form.slide_count ? Number(form.slide_count) : null,
         tags: form.tags.split(',').map((s) => s.trim()).filter(Boolean),
         is_featured: form.is_featured,
         is_published: form.is_published,
@@ -1538,9 +1542,33 @@ const CaseStudyFormModal = ({ open, onClose, onSave, initial, token }) => {
           <Textarea value={form.outcome} onChange={(e) => setForm({ ...form, outcome: e.target.value })} rows={4} placeholder={'Raised $5M seed\nReduced pitch length by 40%\n...'} />
         </div>
 
-        <div className="mt-3">
-          <Label>Gallery image URLs (one per line)</Label>
-          <Textarea value={form.gallery_urls} onChange={(e) => setForm({ ...form, gallery_urls: e.target.value })} rows={3} placeholder={'https://...\nhttps://...'} />
+        <div className="mt-4">
+          <Label>Slide count</Label>
+          <Input
+            type="number"
+            min="1"
+            max="500"
+            value={form.slide_count || ''}
+            onChange={(e) => setForm({ ...form, slide_count: e.target.value })}
+            placeholder="e.g. 24"
+            className="bg-background border-border mt-1 max-w-[160px]"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Shown next to the &ldquo;Selected slides&rdquo; carousel on the public case-study page.
+          </p>
+        </div>
+
+        <div className="mt-4">
+          <Label>Selected slides (swipeable gallery)</Label>
+          <p className="text-xs text-muted-foreground mt-1 mb-2">
+            Upload PNG/JPG mockups + slide screenshots. Auto-compressed to WebP on
+            upload. Drag-and-drop the buttons on each thumbnail to reorder or remove.
+          </p>
+          <TemplatePreviewGalleryUploader
+            value={form.gallery_urls || []}
+            onChange={(urls) => setForm({ ...form, gallery_urls: urls })}
+            token={token}
+          />
         </div>
 
         <div className="mt-4 flex items-center gap-6">
