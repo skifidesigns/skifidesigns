@@ -69,13 +69,13 @@ const TemplateCard = ({ template, onOpen, onQuickDownload, isFocused, isDownload
           : 'border-border hover:border-[#2A7AFE]/50 hover:shadow-xl hover:shadow-[#2A7AFE]/10'
       }`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-video overflow-hidden bg-white">
         <img
           src={variantUrl(template.thumbnail_url, 'preview')}
           srcSet={`${variantUrl(template.thumbnail_url, 'thumb')} 480w, ${variantUrl(template.thumbnail_url, 'preview')} 1280w`}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           alt={template.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
           decoding="async"
         />
