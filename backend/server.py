@@ -1350,17 +1350,30 @@ async def _stream_gridfs(file_id: str, force_download: bool = True, variant: Opt
             yield chunk
 
     disposition = "attachment" if force_download else "inline"
-    headers = {"Content-Disposition": f'{disposition}; filename="{filename}"'}
+    # RFC 5987 compliant filename (handles non-ASCII names too); also include a
+    # plain ASCII fallback so older browsers + Windows interpret the extension
+    # correctly when saving.
+    try:
+        ascii_safe = filename.encode("ascii").decode("ascii")
+    except UnicodeEncodeError:
+        ascii_safe = "download" + (("." + filename.rsplit(".", 1)[-1]) if "." in filename else "")
+    from urllib.parse import quote
+    headers = {
+        "Content-Disposition": (
+            f'{disposition}; filename="{ascii_safe}"; '
+            f"filename*=UTF-8''{quote(filename)}"
+        )
+    }
     # Long, immutable cache for inline files (the file id is a non-guessable ObjectId
     # so a content change always produces a new id). Skip for forced-download paths
     # where Auth/ownership might change between requests.
     if not force_download:
         headers["Cache-Control"] = "public, max-age=31536000, immutable"
         headers["ETag"] = f'"{file_id}"'
-    # Content-Length helps browsers show accurate progress and parallelize.
-    length = file_doc.get("length")
-    if length is not None:
-        headers["Content-Length"] = str(length)
+    # NOTE: Do NOT set Content-Length here. StreamingResponse uses chunked
+    # transfer encoding, and an explicit Content-Length conflicts with that and
+    # causes upstream proxies / browsers to truncate the body, which corrupts
+    # binary downloads such as .pptx (a ZIP-container format) and .pdf.
     return StreamingResponse(iterator(), media_type=content_type, headers=headers)
 
 
