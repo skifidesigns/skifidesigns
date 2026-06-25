@@ -31,7 +31,7 @@ export const Footer = () => {
               className="h-8 w-auto mb-4"
             />
             <p className="text-muted-foreground leading-relaxed">
-              Premium presentation design studio helping brands communicate with clarity, confidence, and impact.
+              A full-stack design + AI studio helping founders and brands raise, launch, and grow - decks, brand, web, video, and AI growth.
             </p>
           </div>
 

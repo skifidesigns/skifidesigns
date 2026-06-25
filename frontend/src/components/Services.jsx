@@ -1,12 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Presentation, Briefcase, TrendingUp, Video, BarChart, Layers, ArrowUpRight } from 'lucide-react';
+import { Presentation, Palette, Globe, Layout, Megaphone, ShoppingBag, Film, Sparkles, Briefcase, TrendingUp, Video, BarChart, Layers, ArrowUpRight } from 'lucide-react';
 import { services } from '../data/mock';
 import { useSpotlight } from '../hooks/useSpotlight';
 
 const iconMap = {
   presentation: Presentation,
+  palette: Palette,
+  globe: Globe,
+  layout: Layout,
+  megaphone: Megaphone,
+  'shopping-bag': ShoppingBag,
+  film: Film,
+  sparkles: Sparkles,
+  // Legacy icon keys kept so older entries / mock data never break
   briefcase: Briefcase,
   'trending-up': TrendingUp,
   video: Video,
@@ -31,7 +39,7 @@ export const Services = () => {
             What We <span className="skifi-gradient-text">Design</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From pitch decks to corporate presentations, we create visuals that make your message memorable.
+            From the pitch deck that raises your round to the store that sells your product - one in-house team across your whole brand.
           </p>
         </motion.div>
 

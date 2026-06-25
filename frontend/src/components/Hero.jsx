@@ -28,7 +28,7 @@ export const Hero = () => {
 
   const stats = [
     { value: '7+', label: 'Years Experience' },
-    { value: '2,700+', label: 'Presentations Designed' },
+    { value: '2,700+', label: 'Projects Delivered' },
     { value: '30+', label: 'Countries' },
     { value: '150+', label: 'Clients Worldwide' },
   ];
@@ -74,9 +74,9 @@ export const Hero = () => {
             variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }}
             className="text-[2rem] leading-[1.1] sm:text-5xl sm:leading-tight md:text-6xl lg:text-7xl font-bold text-foreground tracking-tight"
           >
-            We Design Presentations
+            We Design That Helps You
             <span className="block mt-1.5 sm:mt-2 skifi-gradient-text">
-              That Raise Money!
+              Raise, Launch & Grow.
             </span>
           </motion.h1>
 
@@ -84,8 +84,8 @@ export const Hero = () => {
             variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } }}
             className="text-sm sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2 sm:px-0"
           >
-            Premium presentation design agency specialising in investor pitch decks,
-            sales decks and PowerPoint design for founders, agencies, and global brands.
+            One studio for founders and brands - investor pitch decks, brand identity, web & UI/UX,
+            e-commerce, video, and AI growth, all under one roof.
           </motion.p>
 
           <motion.div

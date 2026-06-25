@@ -2936,6 +2936,14 @@ async def dynamic_sitemap():
         (f"{base}/services/powerpoint-template-design", today, "0.85", "weekly"),
         (f"{base}/services/google-slides-design", today, "0.85", "weekly"),
         (f"{base}/services/keynote-slides-design", today, "0.85", "weekly"),
+        # Full-stack design + AI studio services (Feb 2026 repositioning)
+        (f"{base}/services/brand-identity", today, "0.85", "weekly"),
+        (f"{base}/services/web-design", today, "0.85", "weekly"),
+        (f"{base}/services/ui-ux-design", today, "0.85", "weekly"),
+        (f"{base}/services/social-media-design", today, "0.85", "weekly"),
+        (f"{base}/services/shopify-store-design", today, "0.85", "weekly"),
+        (f"{base}/services/video-motion-design", today, "0.85", "weekly"),
+        (f"{base}/services/generative-engine-optimization", today, "0.85", "weekly"),
         # Alternative / competitor-comparison pages (high-intent buyers)
         (f"{base}/alternatives/gamma-ai", today, "0.85", "monthly"),
         (f"{base}/alternatives/canva-presentations", today, "0.85", "monthly"),

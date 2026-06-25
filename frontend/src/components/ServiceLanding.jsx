@@ -230,7 +230,7 @@ export const ServiceLanding = () => {
                 <p className="text-xs text-gray-600">{svc.pricingHook.premiumDesc}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/15">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-2">Slide-by-slide</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-2">{svc.pricingHook.tertiaryLabel || 'Slide-by-slide'}</p>
                 <p className="text-3xl font-semibold tabular-nums mb-1">{svc.pricingHook.perSlidePrice}</p>
                 <p className="text-xs text-white/70">{svc.pricingHook.perSlide}</p>
               </div>
@@ -317,10 +317,10 @@ export const ServiceLanding = () => {
         <section className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-12 pb-20">
           <div className="text-center py-12 px-6 rounded-3xl border border-border bg-card">
             <h2 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight mb-3">
-              Ready to ship a deck you&apos;re proud of?
+              {svc.finalCtaTitle || "Ready to ship a deck you're proud of?"}
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-7">
-              Get an exact quote in 24 hours. Most projects ship in 5-7 business days.
+              {svc.finalCtaBody || 'Get an exact quote in 24 hours. Most projects ship in 5-7 business days.'}
             </p>
             <button
               data-testid={`service-final-cta-${svc.slug}`}
